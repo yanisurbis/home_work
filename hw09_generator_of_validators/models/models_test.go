@@ -15,6 +15,29 @@ type Validated interface {
 func TestUserValidation(t *testing.T) {
 	requireValidation(t, User{})
 
+	goodUser := User{
+		Age:   24,
+	}
+	requireNoValidationErrors(t, goodUser)
+
+	t.Run("Age max", func(t *testing.T) {
+		u := goodUser
+		u.Age = 123
+
+		errs, err := u.Validate()
+		require.Nil(t, err)
+		requireOneFieldErr(t, errs, "Age")
+	})
+
+	t.Run("Age min", func(t *testing.T) {
+		u := goodUser
+		u.Age = 14
+
+		errs, err := u.Validate()
+		require.Nil(t, err)
+		requireOneFieldErr(t, errs, "Age")
+	})
+
 	//goodUser := User{
 	//	ID:    "0a44d582-9749-11ea-a056-9ff7f30f0608",
 	//	Name:  "John",

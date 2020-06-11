@@ -3,7 +3,7 @@
 package models
 
 func (x User) Validate() ([]ValidationError, error) {
-    errs := make([]ValidationError, 1) 
+    errs := make([]ValidationError, 0) 
 if (x.Age < 18) {
 	errs = append(errs, ValidationError{Field: "Age", Err: "Should be more than 18"})
 }

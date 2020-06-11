@@ -49,7 +49,7 @@ func generateStructValidation() string {
 package models
 
 func (x User) Validate() ([]ValidationError, error) {
-    errs := make([]ValidationError, 1) `+ generateFieldValidation() +`
+    errs := make([]ValidationError, 0) `+ generateFieldValidation() +`
 
 	return errs, nil
 }
