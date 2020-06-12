@@ -5,7 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"os"
+	"io/ioutil"
 	"strings"
 )
 
@@ -56,11 +56,19 @@ func (x User) Validate() ([]ValidationError, error) {
 `
 }
 
+func getType(content string, start int, end int) string {
+	return content[start:end]
+}
+
 func parseAST() {
 	fs := token.NewFileSet()
 	//os.Getenv("GOFILE")
 	astData, _ := parser.ParseFile(fs, "models/models.go", nil, 0)
 	//println(astData)
+
+	file, _ := ioutil.ReadFile("models/models.go")
+	fileContent := string(file)
+
 	ast.Inspect(astData, func(x ast.Node) bool {
 		typeSpec, ok := x.(*ast.TypeSpec)
 
@@ -78,19 +86,29 @@ func parseAST() {
 
 		for _, field := range structSpec.Fields.List {
 			//fmt.Println(field.Type)
-			//fmt.Println(field.Names)
-			fmt.Println(field.Tag)
+			//fmt.Println(field.Type.End())
+			//fmt.Println(field.Type.Pos())
+			fmt.Println(getType(fileContent, int(field.Type.Pos()) - 1, int(field.Type.End()) - 1))
+			fmt.Println(field.Names[0])
+			if field.Tag != nil {
+				fmt.Println(field.Tag.Value)
+			}
 		}
 
 		return false
 	})
 }
 
+
+
 func main() {
 	//println(generateStructValidation())
-	f, _ := os.Create("models/models_validation_generated.go")
-	f.WriteString(generateStructValidation())
-	f.Close()
-//	parseAST()
+	//f, _ := os.Create("models/models_validation_generated.go")
+	//f.WriteString(generateStructValidation())
+	//f.Close()
+	parseAST()
+
+	//dat, _ := ioutil.ReadFile("models/models.go")
+	//fmt.Print(string(dat))
 //	generateFieldValidation()
 }
