@@ -95,6 +95,8 @@ func parseAST() {
 			}
 		}
 
+		fmt.Println("==================")
+
 		return false
 	})
 }
