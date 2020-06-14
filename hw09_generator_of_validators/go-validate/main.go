@@ -6,6 +6,8 @@ import (
 	"go/parser"
 	"go/token"
 	"io/ioutil"
+	"log"
+	"os"
 	"strings"
 )
 
@@ -105,12 +107,21 @@ func parseAST() {
 
 func main() {
 	//println(generateStructValidation())
-	//f, _ := os.Create("models/models_validation_generated.go")
-	//f.WriteString(generateStructValidation())
-	//f.Close()
+	f, err := os.Create("models_validation_generated.go")
+	if err != nil {
+		log.Println(err)
+	}
+	f.WriteString(generateStructValidation())
+	f.Close()
 	//parseAST()
+	
+	fmt.Println(os.Getenv("GOFILE"))
 
-	fmt.Println("Hello World 123")
+	//path, err := os.Getwd()
+	//if err != nil {
+	//	log.Println(err)
+	//}
+	//fmt.Println(path)
 
 	//dat, _ := ioutil.ReadFile("models/models.go")
 	//fmt.Print(string(dat))
