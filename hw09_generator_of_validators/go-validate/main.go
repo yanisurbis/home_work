@@ -108,7 +108,9 @@ func main() {
 	//f, _ := os.Create("models/models_validation_generated.go")
 	//f.WriteString(generateStructValidation())
 	//f.Close()
-	parseAST()
+	//parseAST()
+
+	fmt.Println("Hello World 123")
 
 	//dat, _ := ioutil.ReadFile("models/models.go")
 	//fmt.Print(string(dat))
