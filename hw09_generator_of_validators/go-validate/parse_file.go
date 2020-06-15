@@ -11,7 +11,7 @@ import (
 type FieldDescription struct {
 	Name string
 	Type string
-	Tag string
+	Validations []FieldValidation
 }
 
 type InterfaceDescription struct {
@@ -93,7 +93,7 @@ func parseAST() []InterfaceDescription {
 				fieldDescriptions = append(fieldDescriptions, FieldDescription{
 					Name: field.Names[0].Name,
 					Type: correctFieldType,
-					Tag: field.Tag.Value,
+					Validations: nil,
 				})
 			}
 		}
