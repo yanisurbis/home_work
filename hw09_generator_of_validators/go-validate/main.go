@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/token"
 	"strings"
 )
 
@@ -55,82 +52,6 @@ func (x User) Validate() ([]ValidationError, error) {
 `
 }
 
-func getType(content string, start int, end int) string {
-	return content[start:end]
-}
-
-func extractCustomType(typeSpec *ast.TypeSpec) string {
-	// simple type: string, int
-	identSpec, ok := typeSpec.Type.(*ast.Ident)
-
-	if ok && (identSpec.Name == "string" || identSpec.Name == "int") {
-		return identSpec.Name
-	}
-
-	// complex type: []string, []int
-	arraySpec, ok := typeSpec.Type.(*ast.ArrayType)
-
-	if ok {
-		arrayElmSpec, ok := arraySpec.Elt.(*ast.Ident)
-		if ok && (arrayElmSpec.Name == "string" || arrayElmSpec.Name == "int") {
-			return "[]" + arrayElmSpec.Name
-		}
-	}
-
-	return ""
-}
-
-func parseAST() {
-	fs := token.NewFileSet()
-	//os.Getenv("GOFILE")
-	astData, _ := parser.ParseFile(fs, "models/models.go", nil, 0)
-	customTypes := make(map[string]string)
-	//println(astData)
-
-	//file, _ := ioutil.ReadFile("models/models.go")
-	//fileContent := string(file)
-
-	ast.Inspect(astData, func(x ast.Node) bool {
-		typeSpec, ok := x.(*ast.TypeSpec)
-
-		if !ok {
-			return true
-		}
-
-		if customType := extractCustomType(typeSpec); customType != "" {
-			customTypes[typeSpec.Name.Name] = customType
-		}
-
-		//
-		//structSpec, ok := typeSpec.Type.(*ast.StructType)
-		//
-		//if !ok {
-		//	return true
-		//}
-		//
-		//fmt.Println(typeSpec.Name)
-		//
-		//for _, field := range structSpec.Fields.List {
-		//	//fmt.Println(field.Type)
-		//	//fmt.Println(field.Type.End())
-		//	//fmt.Println(field.Type.Pos())
-		//	fmt.Println(getType(fileContent, int(field.Type.Pos()) - 1, int(field.Type.End()) - 1))
-		//	fmt.Println(field.Names[0])
-		//	if field.Tag != nil {
-		//		fmt.Println(field.Tag.Value)
-		//	}
-		//}
-
-		fmt.Println("==================")
-
-		return false
-	})
-
-	fmt.Println(customTypes)
-}
-
-
-
 func main() {
 	//println(generateStructValidation())
 	//f, err := os.Create("models_validation_generated.go")
@@ -139,7 +60,9 @@ func main() {
 	//}
 	//f.WriteString(generateStructValidation())
 	//f.Close()
-	parseAST()
+	for _, v := range parseAST() {
+		fmt.Printf("%+v\n\n\n", v)
+	}
 
 	//fmt.Println(os.Getenv("GOFILE"))
 
