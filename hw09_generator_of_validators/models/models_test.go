@@ -12,7 +12,13 @@ type Validated interface {
 	Validate() ([]ValidationError, error)
 }
 
-func TestUserValidation(t *testing.T) {
+func TestParseTag(t *testing.T) {
+	t.Run("sample", func(t *testing.T) {
+		require.Equal(t, 2, 1+1)
+	})
+}
+
+//func TestUserValidation(t *testing.T) {
 	//requireValidation(t, User{})
 	//
 	//goodUser := User{
@@ -101,7 +107,7 @@ func TestUserValidation(t *testing.T) {
 	//	}
 	//	require.ElementsMatch(t, fields, []string{"Age", "Email", "Role"})
 	//})
-}
+//}
 
 //func TestAppValidation(t *testing.T) {
 //	requireValidation(t, App{})
