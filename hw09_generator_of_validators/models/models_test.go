@@ -14,7 +14,13 @@ type Validated interface {
 
 func TestParseTag(t *testing.T) {
 	t.Run("sample", func(t *testing.T) {
-		require.Equal(t, 2, 1+1)
+		require.Equal(t, FieldValidation{
+			Type: "one",
+			Value: 2,
+		}, FieldValidation{
+			Type: "one",
+			Value: 2,
+		})
 	})
 }
 

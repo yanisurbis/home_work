@@ -93,7 +93,7 @@ func parseAST() []InterfaceDescription {
 				fieldDescriptions = append(fieldDescriptions, FieldDescription{
 					Name: field.Names[0].Name,
 					Type: correctFieldType,
-					Validations: nil,
+					Validations: parseTag(field.Tag.Value),
 				})
 			}
 		}

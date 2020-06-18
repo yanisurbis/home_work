@@ -60,9 +60,9 @@ func main() {
 	//}
 	//f.WriteString(generateStructValidation())
 	//f.Close()
-	//for _, v := range parseAST() {
-	//	fmt.Printf("%+v\n\n\n", v)
-	//}
+	for _, v := range parseAST() {
+		fmt.Printf("%+v\n\n\n", v)
+	}
 
 	//fmt.Println(os.Getenv("GOFILE"))
 
@@ -75,5 +75,5 @@ func main() {
 	//dat, _ := ioutil.ReadFile("models/models.go")
 	//fmt.Print(string(dat))
 //	generateFieldValidation()
-	fmt.Println(parseTag("hello"))
+//	fmt.Println(parseTag(""))
 }
