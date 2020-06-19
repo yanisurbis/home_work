@@ -16,16 +16,16 @@ type UserRole string
 
 type ValidationError struct {
 	Field string
-	Err string
+	Err   string
 }
 
 type (
 	User struct {
-		ID     string `json:"id" validate:"len:36"`
-		Name   string
-		Age    int      `validate:"min:18|max:50"`
-		Email  string   `validate:"regexp:^\\w+@\\w+\\.\\w+$"`
-		Role   UserRole `validate:"in:admin,stuff"`
+		ID    string `json:"id" validate:"len:36"`
+		Name  string
+		Age   int    `validate:"min:18|max:50"`
+		Email string `validate:"regexp:^\\w+@\\w+\\.\\w+$"`
+		//Role   UserRole `validate:"in:admin,stuff"`
 		Phones []string `validate:"len:11"`
 	}
 
@@ -41,6 +41,6 @@ type Token struct {
 }
 
 type Response struct {
-	Code int    `validate:"in:200,404,500"`
+	//Code int    `validate:"in:200,404,500"`
 	Body string `json:"omitempty"`
 }

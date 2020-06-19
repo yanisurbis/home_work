@@ -1,6 +1,6 @@
 package main
 
-import "fmt"
+import "regexp"
 
 //func generateStructValidation() string {
 //	return `
@@ -28,7 +28,28 @@ func main() {
 	//}
 
 	res := generateMultipleStructValidations(parseAST())
-	fmt.Println(res)
+	//fmt.Println(res)
+	regexp.MustCompile(res)
+	//	regexp.MustCompile(`
+	//package main
+	//
+	//type User struct {
+	//	ID string
+	//}
+	//type ValidationError struct {
+	//	Field string
+	//	Err string
+	//}
+	//
+	//
+	//
+	//func (x User) Validate()  ([]ValidationError, error) {
+	//	errors := make([]ValidationError, 0)
+	//
+	//
+	//	return errors, nil
+	//}
+	//`)
 	//fmt.Println(os.Getenv("GOFILE"))
 
 	//path, err := os.Getwd()

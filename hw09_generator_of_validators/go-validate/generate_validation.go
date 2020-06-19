@@ -20,7 +20,16 @@ import (
 //}
 
 func generateMultipleStructValidations(structures []InterfaceDescription) string {
-	validations := ""
+	validations := `
+package models
+import "regexp"
+
+
+type ValidationError struct {
+	Field string
+	Err string
+}
+`
 
 	for _, structure := range structures {
 		validations += generateStructValidation(structure)
@@ -44,7 +53,7 @@ func generateStructValidation(structure InterfaceDescription) string {
 
 	return `
 func (x ` + structure.Name + `) Validate()  ([]ValidationError, error) {
-errs := []ValidationError{}
+errs := make([]ValidationError, 0)
 	` + validations + `
 
 return errs, nil
