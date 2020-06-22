@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -32,6 +33,7 @@ type ValidationError struct {
 `
 
 	for _, structure := range structures {
+		fmt.Println(structure.Name)
 		validations += generateStructValidation(structure)
 	}
 
@@ -44,7 +46,7 @@ func generateStructValidation(structure InterfaceDescription) string {
 
 		for _, field := range fields {
 			for _, fieldValidation := range field.Validations {
-				validationContent += generateFieldValidation(field.Name, field.Type, fieldValidation)
+				validationContent += generateFieldValidation(field.Name, field.Type, field.TypeAlias, fieldValidation)
 			}
 		}
 
@@ -61,7 +63,7 @@ return errs, nil
 `
 }
 
-func generateFieldValidation(fieldName string, fieldType string, validation FieldValidation) string {
+func generateFieldValidation(fieldName string, fieldType string, typeAlias string, validation FieldValidation) string {
 	//validation = FieldValidation{
 	//	Type:  "min",
 	//	Value: "18",
@@ -89,7 +91,7 @@ if x.` + fieldName + ` > ` + value + ` {
 	} else if validation.Type == "len" {
 		value := validation.Value.(string)
 		validationString += `
-if len(x.` + fieldName + `) > ` + value + ` {
+if len(x.` + fieldName + `) < ` + value + ` {
 	errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: "Should be less than ` + value + `"})
 }
 `
@@ -119,13 +121,13 @@ if len(x.` + fieldName + `) > ` + value + ` {
 		validationString += `
 {
 	isIn := false
-	for _, v := range []` + fieldType + `{` + strings.Join(values, ",") + `} {
+	for _, v := range []` + typeAlias + `{` + strings.Join(values, ",") + `} {
 		if v == x.` + fieldName + ` {
 			isIn = true
 		}
 	}
 	if !isIn {
-		errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: "Element should be one of ` + strings.Join(values, ",") + `"})
+		errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: "Element should be one of ` + strings.Join(valuesArr, ",") + `"})
 	}
 }
 `

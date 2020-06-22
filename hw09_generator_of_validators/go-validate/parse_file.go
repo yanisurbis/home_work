@@ -9,13 +9,14 @@ import (
 )
 
 type FieldDescription struct {
-	Name string
-	Type string
+	Name        string
+	Type        string
+	TypeAlias   string
 	Validations []FieldValidation
 }
 
 type InterfaceDescription struct {
-	Name string
+	Name   string
 	Fields []FieldDescription
 }
 
@@ -75,7 +76,7 @@ func parseAST() []InterfaceDescription {
 		fieldDescriptions := []FieldDescription{}
 
 		for _, field := range structSpec.Fields.List {
-			fieldType := getType(fileContent, int(field.Type.Pos()) - 1, int(field.Type.End()) - 1)
+			fieldType := getType(fileContent, int(field.Type.Pos())-1, int(field.Type.End())-1)
 
 			correctFieldType := func(fieldType string, customTypes map[string]string) string {
 				if correctType, ok := customTypes[fieldType]; ok {
@@ -91,8 +92,9 @@ func parseAST() []InterfaceDescription {
 
 			if isCorrectTag && correctFieldType != "" {
 				fieldDescriptions = append(fieldDescriptions, FieldDescription{
-					Name: field.Names[0].Name,
-					Type: correctFieldType,
+					Name:        field.Names[0].Name,
+					Type:        correctFieldType,
+					TypeAlias:   fieldType,
 					Validations: parseTag(field.Tag.Value),
 				})
 			}
@@ -100,7 +102,7 @@ func parseAST() []InterfaceDescription {
 
 		if len(fieldDescriptions) != 0 {
 			interfaceDescriptions = append(interfaceDescriptions, InterfaceDescription{
-				Name: typeSpec.Name.Name,
+				Name:   typeSpec.Name.Name,
 				Fields: fieldDescriptions,
 			})
 		}
