@@ -1,6 +1,9 @@
 package main
 
-import "regexp"
+import (
+	"log"
+	"os"
+)
 
 //func generateStructValidation() string {
 //	return `
@@ -15,13 +18,19 @@ import "regexp"
 //`
 //}
 
+func writeToFile(str string, path string) {
+	//f, err := os.Create("models_validation_generated.go")
+	f, err := os.Create(path)
+	if err != nil {
+		log.Println(err)
+	}
+	f.WriteString(str)
+	f.Close()
+}
+
 func main() {
 	//println(generateStructValidation())
-	//f, err := os.Create("models_validation_generated.go")
-	//if err != nil {
-	//	log.Println(err)
-	//}
-	//f.WriteString(generateStructValidation())
+
 	//f.Close()
 	//for _, v := range parseAST() {
 	//	fmt.Printf("%+v\n\n\n", v)
@@ -29,7 +38,9 @@ func main() {
 
 	res := generateMultipleStructValidations(parseAST())
 	//fmt.Println(res)
-	regexp.MustCompile(res)
+
+	writeToFile(res, "models/models_validation_generated.go")
+
 	//	regexp.MustCompile(`
 	//package main
 	//
