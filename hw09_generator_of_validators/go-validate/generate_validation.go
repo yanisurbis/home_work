@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -33,7 +32,6 @@ type ValidationError struct {
 `
 
 	for _, structure := range structures {
-		fmt.Println(structure.Name)
 		validations += generateStructValidation(structure)
 	}
 
@@ -46,7 +44,11 @@ func generateStructValidation(structure InterfaceDescription) string {
 
 		for _, field := range fields {
 			for _, fieldValidation := range field.Validations {
-				validationContent += generateFieldValidation(field.Name, field.Type, field.TypeAlias, fieldValidation)
+				if field.Type == "[]string" || field.Type == "int[]" {
+					validationContent += generateSliceFieldValidation(field)
+				} else {
+					validationContent += generateFieldValidation(field.Name, field.Type, field.TypeAlias, fieldValidation)
+				}
 			}
 		}
 
@@ -63,15 +65,17 @@ return errs, nil
 `
 }
 
-func generateFieldValidation(fieldName string, fieldType string, typeAlias string, validation FieldValidation) string {
-	//validation = FieldValidation{
-	//	Type:  "min",
-	//	Value: "18",
-	//}
-	//fieldName := "Age"
-	//fieldType := "int"
-	//fieldTag := "min:18|max:50"
+func generateSliceFieldValidation(description FieldDescription) string {
+	validation := `
+for _, value := range x.` + description.Name + `{
+	break	
+}
+`
 
+	return validation
+}
+
+func generateFieldValidation(fieldName string, fieldType string, typeAlias string, validation FieldValidation) string {
 	validationString := ""
 
 	if validation.Type == "min" {

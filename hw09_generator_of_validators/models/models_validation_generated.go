@@ -41,6 +41,10 @@ func (x User) Validate() ([]ValidationError, error) {
 		}
 	}
 
+	for _, value := range x.Phones {
+		break
+	}
+
 	return errs, nil
 }
 
