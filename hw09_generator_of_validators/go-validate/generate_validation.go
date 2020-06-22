@@ -44,7 +44,7 @@ func generateStructValidation(structure InterfaceDescription) string {
 
 		for _, field := range fields {
 			for _, fieldValidation := range field.Validations {
-				validationContent += generateFieldValidation(field.Name, fieldValidation)
+				validationContent += generateFieldValidation(field.Name, field.Type, fieldValidation)
 			}
 		}
 
@@ -61,7 +61,7 @@ return errs, nil
 `
 }
 
-func generateFieldValidation(fieldName string, validation FieldValidation) string {
+func generateFieldValidation(fieldName string, fieldType string, validation FieldValidation) string {
 	//validation = FieldValidation{
 	//	Type:  "min",
 	//	Value: "18",
@@ -104,11 +104,22 @@ if len(x.` + fieldName + `) > ` + value + ` {
 }
 `
 	} else if validation.Type == "in" {
-		values := validation.Value.([]string)
+		valuesArr := validation.Value.([]string)
+		values := []string{}
+
+		if fieldType == "string" {
+
+			for _, v := range valuesArr {
+				values = append(values, "\""+v+"\"")
+			}
+		} else {
+			values = valuesArr
+		}
+
 		validationString += `
 {
 	isIn := false
-	for _, v := range []int{` + strings.Join(values, ",") + `} {
+	for _, v := range []` + fieldType + `{` + strings.Join(values, ",") + `} {
 		if v == x.` + fieldName + ` {
 			isIn = true
 		}
