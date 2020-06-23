@@ -14,11 +14,6 @@ type UserRole string
 //	Phones []string `validate:"len:11"`
 //}
 
-type ValidationError struct {
-	Field string
-	Err string
-}
-
 type (
 	User struct {
 		ID     string `json:"id" validate:"len:36"`
