@@ -46,7 +46,7 @@ func generateStructValidation(structure InterfaceDescription) string {
 
 		for _, field := range fields {
 			for _, fieldValidation := range field.Validations {
-				if field.Type == "[]string" || field.Type == "int[]" {
+				if field.Type == "[]string" || field.Type == "[]int" {
 					validationContent += generateSliceFieldValidation(field)
 				} else {
 					validationContent += generateFieldValidation(field.Name, field.Type, field.TypeAlias, fieldValidation)
@@ -122,7 +122,7 @@ if len(value) < ` + value + ` {
 		validationString += `
 {
 	isIn := false
-	for _, v := range []` + typeAlias + `{` + strings.Join(values, ",") + `} {
+	for _, v := range ` + typeAlias + `{` + strings.Join(values, ",") + `} {
 		if v == value {
 			isIn = true
 		}
