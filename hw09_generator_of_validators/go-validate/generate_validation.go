@@ -22,8 +22,10 @@ import (
 func generateMultipleStructValidations(structures []InterfaceDescription) string {
 	validations := `
 package models
-import "regexp"
-
+import (
+	"regexp"
+	"strconv"
+)
 
 type ValidationError struct {
 	Field string
@@ -65,14 +67,94 @@ return errs, nil
 `
 }
 
+func getArrayErrorMessage(fieldName string, errorMessage string, index int) string {
+	return `errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: "Element on position "+ strconv.Itoa(i) + " should ` + errorMessage + `"}) 
+break`
+}
+
+func generateFieldValidation1(fieldName string, fieldType string, typeAlias string, validation FieldValidation, index int) string {
+	validationString := ""
+
+	if validation.Type == "min" {
+		value := validation.Value.(string)
+		validationString += `
+if value < ` + value + ` {
+` + getArrayErrorMessage(fieldName, "should be more than "+value, index) + `	
+}
+`
+	} else if validation.Type == "max" {
+		value := validation.Value.(string)
+		validationString += `
+if value > ` + value + ` {
+` + getArrayErrorMessage(fieldName, "should be less than "+value, index) + `
+}
+`
+	} else if validation.Type == "len" {
+		value := validation.Value.(string)
+		validationString += `
+if len(value) < ` + value + ` {
+` + getArrayErrorMessage(fieldName, "the length should be more or equal than "+value, index) + `
+}
+`
+	} else if validation.Type == "regexp" {
+		value := validation.Value.(string)
+		validationString += `
+{
+	match, _ := regexp.MatchString("` + value + `", value)
+	if !match {
+` + getArrayErrorMessage(fieldName, "should satisfy the pattern "+value, index) + `
+	}
+}
+`
+	} else if validation.Type == "in" {
+		valuesArr := validation.Value.([]string)
+		values := []string{}
+
+		if fieldType == "string" {
+
+			for _, v := range valuesArr {
+				values = append(values, "\""+v+"\"")
+			}
+		} else {
+			values = valuesArr
+		}
+
+		validationString += `
+{
+	isIn := false
+	for _, v := range []` + typeAlias + `{` + strings.Join(values, ",") + `} {
+		if v == value {
+			isIn = true
+		}
+	}
+	if !isIn {
+` + getArrayErrorMessage(fieldName, "should be one of "+strings.Join(valuesArr, ","), index) + `
+	}
+}
+`
+	}
+
+	return validationString
+}
+
 func generateSliceFieldValidation(description FieldDescription) string {
+	conditions := ""
+
+	for i, validation := range description.Validations {
+		conditions += generateFieldValidation1(description.Name, description.Type, description.TypeAlias, validation, i)
+	}
+
 	validation := `
-for _, value := range x.` + description.Name + `{
-	break	
+for i, value := range x.` + description.Name + `{
+	` + conditions + `
 }
 `
 
 	return validation
+}
+
+func getErrorMessage(fieldName string, errorMessage string) string {
+	return `errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: ` + errorMessage + `})`
 }
 
 func generateFieldValidation(fieldName string, fieldType string, typeAlias string, validation FieldValidation) string {
@@ -82,21 +164,21 @@ func generateFieldValidation(fieldName string, fieldType string, typeAlias strin
 		value := validation.Value.(string)
 		validationString += `
 if x.` + fieldName + ` < ` + value + ` {
-	errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: "Should be more than ` + value + `"})
+` + getErrorMessage(fieldName, "Should be more than "+value) + `	
 }
 `
 	} else if validation.Type == "max" {
 		value := validation.Value.(string)
 		validationString += `
 if x.` + fieldName + ` > ` + value + ` {
-	errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: "Should be less than ` + value + `"})
+` + getErrorMessage(fieldName, "Should be less than "+value) + `
 }
 `
 	} else if validation.Type == "len" {
 		value := validation.Value.(string)
 		validationString += `
 if len(x.` + fieldName + `) < ` + value + ` {
-	errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: "Should be less than ` + value + `"})
+` + getErrorMessage(fieldName, "The length should be more or equal than "+value) + `
 }
 `
 	} else if validation.Type == "regexp" {
@@ -105,7 +187,7 @@ if len(x.` + fieldName + `) < ` + value + ` {
 {
 	match, _ := regexp.MatchString("` + value + `", x.` + fieldName + `)
 	if !match {
-		errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: "Should satisfy the pattern ` + value + `"})
+` + getErrorMessage(fieldName, "Should satisfy the pattern "+value) + `
 	}
 }
 `
@@ -131,20 +213,11 @@ if len(x.` + fieldName + `) < ` + value + ` {
 		}
 	}
 	if !isIn {
-		errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: "Element should be one of ` + strings.Join(valuesArr, ",") + `"})
+` + getErrorMessage(fieldName, "Element should be one of "+strings.Join(valuesArr, ",")) + `
 	}
 }
 `
 	}
-
-	//fieldRules := strings.Split(fieldTag, "|")
-	//for _, fieldRule := range fieldRules {
-	//	ruleNameAndValue := strings.Split(fieldRule, ":")
-	//	ruleName := ruleNameAndValue[0]
-	//	ruleValue := ruleNameAndValue[1]
-	//
-	//
-	//}
 
 	return validationString
 }
