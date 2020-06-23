@@ -14,20 +14,20 @@ func (x User) Validate() ([]ValidationError, error) {
 
 	for i, value := range x.Phones {
 
-		if value < 11 {
-			errs = append(errs, ValidationError{Field: "Phones", Err: "Element on position " + strconv.Itoa(i) + " should should be more than 11"})
+		if len(value) < 11 {
+			errs = append(errs, ValidationError{Field: "Phones", Err: "Element on position " + strconv.Itoa(i) + " should the length should be more or equal than 11"})
 			break
 		}
 
 		{
 			isIn := false
-			for _, v := range []int{12, 13} {
+			for _, v := range []string{"admin", "stuff"} {
 				if v == value {
 					isIn = true
 				}
 			}
 			if !isIn {
-				errs = append(errs, ValidationError{Field: "Phones", Err: "Element on position " + strconv.Itoa(i) + " should should be one of 12,13"})
+				errs = append(errs, ValidationError{Field: "Phones", Err: "Element on position " + strconv.Itoa(i) + " should should be one of admin,stuff"})
 				break
 			}
 		}
@@ -36,20 +36,20 @@ func (x User) Validate() ([]ValidationError, error) {
 
 	for i, value := range x.Phones {
 
-		if value < 11 {
-			errs = append(errs, ValidationError{Field: "Phones", Err: "Element on position " + strconv.Itoa(i) + " should should be more than 11"})
+		if len(value) < 11 {
+			errs = append(errs, ValidationError{Field: "Phones", Err: "Element on position " + strconv.Itoa(i) + " should the length should be more or equal than 11"})
 			break
 		}
 
 		{
 			isIn := false
-			for _, v := range []int{12, 13} {
+			for _, v := range []string{"admin", "stuff"} {
 				if v == value {
 					isIn = true
 				}
 			}
 			if !isIn {
-				errs = append(errs, ValidationError{Field: "Phones", Err: "Element on position " + strconv.Itoa(i) + " should should be one of 12,13"})
+				errs = append(errs, ValidationError{Field: "Phones", Err: "Element on position " + strconv.Itoa(i) + " should should be one of admin,stuff"})
 				break
 			}
 		}

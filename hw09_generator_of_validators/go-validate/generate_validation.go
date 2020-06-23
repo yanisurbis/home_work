@@ -110,7 +110,7 @@ if len(value) < ` + value + ` {
 		valuesArr := validation.Value.([]string)
 		values := []string{}
 
-		if fieldType == "string" {
+		if fieldType == "[]string" {
 
 			for _, v := range valuesArr {
 				values = append(values, "\""+v+"\"")

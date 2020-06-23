@@ -21,7 +21,7 @@ type (
 		//Age    int      `validate:"min:18|max:50"`
 		//Email  string   `validate:"regexp:^\\w+@\\w+\\.\\w+$"`
 		//Role   UserRole `validate:"in:admin,stuff"`
-		Phones []int `validate:"min:11|in:12,13"`
+		Phones []string `validate:"len:11|in:admin,stuff"`
 	}
 
 	//App struct {
