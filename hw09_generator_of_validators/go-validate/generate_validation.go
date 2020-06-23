@@ -154,7 +154,7 @@ for i, value := range x.` + description.Name + `{
 }
 
 func getErrorMessage(fieldName string, errorMessage string) string {
-	return `errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: ` + errorMessage + `})`
+	return `errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: "` + errorMessage + `"})`
 }
 
 func generateFieldValidation(fieldName string, fieldType string, typeAlias string, validation FieldValidation) string {
