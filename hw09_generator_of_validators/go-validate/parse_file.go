@@ -45,6 +45,7 @@ func extractCustomType(typeSpec *ast.TypeSpec) string {
 	return ""
 }
 
+// TODO: Refactor
 func parseAST() []InterfaceDescription {
 	fs := token.NewFileSet()
 	//os.Getenv("GOFILE")

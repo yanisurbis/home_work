@@ -4,21 +4,6 @@ import (
 	"strings"
 )
 
-//import "strings"
-
-//func appendErrorStr(fieldName string, )
-
-//type FieldDescription struct {
-//	Name string
-//	Type string
-//	Validations []FieldValidation
-//}
-//
-//type InterfaceDescription struct {
-//	Name string
-//	Fields []FieldDescription
-//}
-
 func generateMultipleStructValidations(structures []InterfaceDescription) string {
 	validations := `
 package models
@@ -67,33 +52,36 @@ return errs, nil
 `
 }
 
-func getArrayErrorMessage(fieldName string, errorMessage string, index int) string {
+func getArrayErrorMessage(fieldName string, errorMessage string) string {
 	return `errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: "Element on position "+ strconv.Itoa(i) + " should ` + errorMessage + `"}) 
 break`
 }
 
-func generateFieldValidation1(fieldName string, fieldType string, typeAlias string, validation FieldValidation, index int) string {
+// TODO: Move generateFieldValidation1 and generateFieldValidation into one function
+// TODO: Handler errors during validation
+// TODO: Split into separate files
+func generateFieldValidation1(fieldName string, fieldType string, typeAlias string, validation FieldValidation) string {
 	validationString := ""
 
 	if validation.Type == "min" {
 		value := validation.Value.(string)
 		validationString += `
 if value < ` + value + ` {
-` + getArrayErrorMessage(fieldName, "should be more than "+value, index) + `	
+` + getArrayErrorMessage(fieldName, "should be more than "+value) + `	
 }
 `
 	} else if validation.Type == "max" {
 		value := validation.Value.(string)
 		validationString += `
 if value > ` + value + ` {
-` + getArrayErrorMessage(fieldName, "should be less than "+value, index) + `
+` + getArrayErrorMessage(fieldName, "should be less than "+value) + `
 }
 `
 	} else if validation.Type == "len" {
 		value := validation.Value.(string)
 		validationString += `
 if len(value) < ` + value + ` {
-` + getArrayErrorMessage(fieldName, "the length should be more or equal than "+value, index) + `
+` + getArrayErrorMessage(fieldName, "the length should be more or equal than "+value) + `
 }
 `
 	} else if validation.Type == "regexp" {
@@ -102,7 +90,7 @@ if len(value) < ` + value + ` {
 {
 	match, _ := regexp.MatchString("` + value + `", value)
 	if !match {
-` + getArrayErrorMessage(fieldName, "should satisfy the pattern "+value, index) + `
+` + getArrayErrorMessage(fieldName, "should satisfy the pattern "+value) + `
 	}
 }
 `
@@ -128,7 +116,7 @@ if len(value) < ` + value + ` {
 		}
 	}
 	if !isIn {
-` + getArrayErrorMessage(fieldName, "should be one of "+strings.Join(valuesArr, ","), index) + `
+` + getArrayErrorMessage(fieldName, "should be one of "+strings.Join(valuesArr, ",")) + `
 	}
 }
 `
@@ -140,8 +128,8 @@ if len(value) < ` + value + ` {
 func generateSliceFieldValidation(description FieldDescription) string {
 	conditions := ""
 
-	for i, validation := range description.Validations {
-		conditions += generateFieldValidation1(description.Name, description.Type, description.TypeAlias, validation, i)
+	for _, validation := range description.Validations {
+		conditions += generateFieldValidation1(description.Name, description.Type, description.TypeAlias, validation)
 	}
 
 	validation := `
@@ -160,6 +148,7 @@ func getErrorMessage(fieldName string, errorMessage string) string {
 func generateFieldValidation(fieldName string, fieldType string, typeAlias string, validation FieldValidation) string {
 	validationString := ""
 
+	// TODO use switch
 	if validation.Type == "min" {
 		value := validation.Value.(string)
 		validationString += `
