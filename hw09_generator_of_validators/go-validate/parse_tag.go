@@ -1,6 +1,7 @@
 package main
 
 import (
+	"regexp"
 	"strings"
 )
 
@@ -14,7 +15,6 @@ func dropFirstAndLastValue(tag string) string {
 	return tag[1:tagLength-1]
 }
 
-// TODO: check regexp validity
 func parseTag(tag string) []FieldValidation {
 	tag = dropFirstAndLastValue(tag)
 
@@ -24,11 +24,11 @@ func parseTag(tag string) []FieldValidation {
 	for _, action := range strings.Split(tag, " ") {
 		if len(action) > 0 {
 			actionDefinition := strings.Split(action, ":\"")
-			actionName := actionDefinition[0]
+			actionType := actionDefinition[0]
 
-			// actionName validate
+			// actionType validate
 			// actionValue min:1|max:2
-			if actionName == "validate" {
+			if actionType == "validate" {
 				actionValue := actionDefinition[1]
 				actionValueLength := len(actionValue)
 				// remove double quote
@@ -47,6 +47,11 @@ func parseTag(tag string) []FieldValidation {
 							Value: strings.Split(ruleValue, ","),
 						})
 					} else {
+						if ruleType == "regexp" {
+							println(ruleValue)
+							_ = regexp.MustCompile(ruleValue)
+						}
+
 						fieldValidations = append(fieldValidations, FieldValidation{
 							Type: ruleType,
 							Value: ruleValue,
