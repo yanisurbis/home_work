@@ -26,7 +26,10 @@ errs = append(errs, ValidationError{Field: "Age", Err: "Should be less than 50"}
 }
 
 {
-	match, _ := regexp.MatchString("^\\w+@\\w+\\.\\w+$", x.Email)
+	match, err := regexp.MatchString("^\\w+@\\w+\\.\\w+$", x.Email)
+	if err != nil {
+		return errs, err
+	}
 	if !match {
 errs = append(errs, ValidationError{Field: "Email", Err: "Should satisfy the pattern ^\\w+@\\w+\\.\\w+$"})
 	}
@@ -47,7 +50,7 @@ errs = append(errs, ValidationError{Field: "Role", Err: "Element should be one o
 for i, value := range x.Phones{
 	
 if len(value) < 11 {
-errs = append(errs, ValidationError{Field: "Phones", Err: "Element on position "+ strconv.Itoa(i) + " should the length should be more or equal than 11"}) 
+errs = append(errs, ValidationError{Field: "Phones", Err: "Element on position "+ strconv.Itoa(i) + " the length should be more or equal than 11"}) 
 break
 }
 
