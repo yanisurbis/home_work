@@ -32,7 +32,7 @@ func TestGenerateValidation(t *testing.T) {
 	}
 
 	for _, example := range examples {
-		fmt.Println(generateFieldValidation("Age", example))
+		fmt.Println(generatePrimitiveValidation("Age", example))
 	}
 
 	require.Equal(t, true, true)
