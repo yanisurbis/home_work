@@ -26,21 +26,21 @@ func generateSliceElementValidation(fieldName string, fieldType string, typeAlia
 		value := validation.Value.(string)
 		validationString += `
 if value < ` + value + ` {
-` + getArrayErrorMessage(fieldName, "should be more than "+value) + `	
+` + generateErrorForSliceElement(fieldName, "should be more than "+value) + `	
 }
 `
 	} else if validation.Type == "max" {
 		value := validation.Value.(string)
 		validationString += `
 if value > ` + value + ` {
-` + getArrayErrorMessage(fieldName, "should be less than "+value) + `
+` + generateErrorForSliceElement(fieldName, "should be less than "+value) + `
 }
 `
 	} else if validation.Type == "len" {
 		value := validation.Value.(string)
 		validationString += `
 if len(value) < ` + value + ` {
-` + getArrayErrorMessage(fieldName, "the length should be more or equal than "+value) + `
+` + generateErrorForSliceElement(fieldName, "the length should be more or equal than "+value) + `
 }
 `
 	} else if validation.Type == "regexp" {
@@ -49,7 +49,7 @@ if len(value) < ` + value + ` {
 {
 	match, _ := regexp.MatchString("` + value + `", value)
 	if !match {
-` + getArrayErrorMessage(fieldName, "should satisfy the pattern "+value) + `
+` + generateErrorForSliceElement(fieldName, "should satisfy the pattern "+value) + `
 	}
 }
 `
@@ -75,7 +75,7 @@ if len(value) < ` + value + ` {
 		}
 	}
 	if !isIn {
-` + getArrayErrorMessage(fieldName, "should be one of "+strings.Join(valuesArr, ",")) + `
+` + generateErrorForSliceElement(fieldName, "should be one of "+strings.Join(valuesArr, ",")) + `
 	}
 }
 `
@@ -84,7 +84,7 @@ if len(value) < ` + value + ` {
 	return validationString
 }
 
-func getArrayErrorMessage(fieldName string, errorMessage string) string {
+func generateErrorForSliceElement(fieldName string, errorMessage string) string {
 	return `errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: "Element on position "+ strconv.Itoa(i) + " should ` + errorMessage + `"}) 
 break`
 }

@@ -2,28 +2,28 @@ package main
 
 import "strings"
 
-func generatePrimitiveValidation(fieldName string, fieldType string, typeAlias string, validation FieldValidation) string {
+func generatePrimitiveFieldValidation(fieldName string, fieldType string, typeAlias string, validation FieldValidation) string {
 	validationString := ""
 
 	if validation.Type == "min" {
 		value := validation.Value.(string)
 		validationString += `
 if x.` + fieldName + ` < ` + value + ` {
-` + getErrorMessage(fieldName, "Should be more than "+value) + `	
+` + generateErrorMessage(fieldName, "Should be more than "+value) + `	
 }
 `
 	} else if validation.Type == "max" {
 		value := validation.Value.(string)
 		validationString += `
 if x.` + fieldName + ` > ` + value + ` {
-` + getErrorMessage(fieldName, "Should be less than "+value) + `
+` + generateErrorMessage(fieldName, "Should be less than "+value) + `
 }
 `
 	} else if validation.Type == "len" {
 		value := validation.Value.(string)
 		validationString += `
 if len(x.` + fieldName + `) < ` + value + ` {
-` + getErrorMessage(fieldName, "The length should be more or equal than "+value) + `
+` + generateErrorMessage(fieldName, "The length should be more or equal than "+value) + `
 }
 `
 	} else if validation.Type == "regexp" {
@@ -32,7 +32,7 @@ if len(x.` + fieldName + `) < ` + value + ` {
 {
 	match, _ := regexp.MatchString("` + value + `", x.` + fieldName + `)
 	if !match {
-` + getErrorMessage(fieldName, "Should satisfy the pattern "+value) + `
+` + generateErrorMessage(fieldName, "Should satisfy the pattern "+value) + `
 	}
 }
 `
@@ -58,7 +58,7 @@ if len(x.` + fieldName + `) < ` + value + ` {
 		}
 	}
 	if !isIn {
-` + getErrorMessage(fieldName, "Element should be one of "+strings.Join(valuesArr, ",")) + `
+` + generateErrorMessage(fieldName, "Element should be one of "+strings.Join(valuesArr, ",")) + `
 	}
 }
 `
@@ -67,7 +67,7 @@ if len(x.` + fieldName + `) < ` + value + ` {
 	return validationString
 }
 
-func getErrorMessage(fieldName string, errorMessage string) string {
+func generateErrorMessage(fieldName string, errorMessage string) string {
 	return `errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: "` + errorMessage + `"})`
 }
 
