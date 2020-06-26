@@ -15,6 +15,6 @@ func writeToFile(str string, path string) {
 }
 
 func main() {
-	res := generateMultipleStructValidations(parseAST())
+	res := generateValidation(extractInterfaceDescriptions())
 	writeToFile(res, "models/models_validation_generated.go")
 }

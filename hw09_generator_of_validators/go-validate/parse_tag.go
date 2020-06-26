@@ -1,22 +1,23 @@
 package main
 
 import (
+	"go/ast"
 	"regexp"
 	"strings"
 )
 
 type FieldValidation struct {
-	Type string
+	Type  string
 	Value interface{}
 }
 
 func dropFirstAndLastValue(tag string) string {
 	tagLength := len(tag)
-	return tag[1:tagLength-1]
+	return tag[1 : tagLength-1]
 }
 
-func parseTag(tag string) []FieldValidation {
-	tag = dropFirstAndLastValue(tag)
+func parseTag(fieldTag *ast.BasicLit) []FieldValidation {
+	tag := dropFirstAndLastValue(fieldTag.Value)
 
 	fieldValidations := []FieldValidation{}
 
@@ -43,7 +44,7 @@ func parseTag(tag string) []FieldValidation {
 					// ruleValue 1
 					if ruleType == "in" {
 						fieldValidations = append(fieldValidations, FieldValidation{
-							Type: ruleType,
+							Type:  ruleType,
 							Value: strings.Split(ruleValue, ","),
 						})
 					} else {
@@ -53,7 +54,7 @@ func parseTag(tag string) []FieldValidation {
 						}
 
 						fieldValidations = append(fieldValidations, FieldValidation{
-							Type: ruleType,
+							Type:  ruleType,
 							Value: ruleValue,
 						})
 					}

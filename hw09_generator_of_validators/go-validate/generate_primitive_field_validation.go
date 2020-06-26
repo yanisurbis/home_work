@@ -2,7 +2,11 @@ package main
 
 import "strings"
 
-func generatePrimitiveFieldValidation(fieldName string, fieldType string, typeAlias string, validation FieldValidation) string {
+func generatePrimitiveFieldValidation(field FieldDescription, validation FieldValidation) string {
+    fieldName := field.Name
+    fieldType := field.Type
+    typeAlias := field.TypeAlias
+
 	validationString := ""
 
 	if validation.Type == "min" {
@@ -30,7 +34,10 @@ if len(x.` + fieldName + `) < ` + value + ` {
 		value := validation.Value.(string)
 		validationString += `
 {
-	match, _ := regexp.MatchString("` + value + `", x.` + fieldName + `)
+	match, err := regexp.MatchString("` + value + `", x.` + fieldName + `)
+	if err != nil {
+		return errs, err
+	}
 	if !match {
 ` + generateErrorMessage(fieldName, "Should satisfy the pattern "+value) + `
 	}

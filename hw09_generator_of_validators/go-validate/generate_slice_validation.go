@@ -2,15 +2,15 @@ package main
 
 import "strings"
 
-func generateSliceValidation(description FieldDescription) string {
+func generateSliceValidation(field FieldDescription) string {
 	conditions := ""
 
-	for _, validation := range description.Validations {
-		conditions += generateSliceElementValidation(description.Name, description.Type, description.TypeAlias, validation)
+	for _, validation := range field.Validations {
+		conditions += generateSliceElementValidation(field, validation)
 	}
 
 	validation := `
-for i, value := range x.` + description.Name + `{
+for i, value := range x.` + field.Name + `{
 	` + conditions + `
 }
 `
@@ -18,8 +18,11 @@ for i, value := range x.` + description.Name + `{
 	return validation
 }
 
-// TODO: Handler errors during validation
-func generateSliceElementValidation(fieldName string, fieldType string, typeAlias string, validation FieldValidation) string {
+func generateSliceElementValidation(field FieldDescription, validation FieldValidation) string {
+	fieldName := field.Name
+	fieldType := field.Type
+	typeAlias := field.TypeAlias
+
 	validationString := ""
 
 	if validation.Type == "min" {
@@ -40,14 +43,17 @@ if value > ` + value + ` {
 		value := validation.Value.(string)
 		validationString += `
 if len(value) < ` + value + ` {
-` + generateErrorForSliceElement(fieldName, "the length should be more or equal than "+value) + `
+` + generateErrorForSliceElement(fieldName, "should have length more or equal than "+value) + `
 }
 `
 	} else if validation.Type == "regexp" {
 		value := validation.Value.(string)
 		validationString += `
 {
-	match, _ := regexp.MatchString("` + value + `", value)
+	match, err := regexp.MatchString("` + value + `", value)
+	if err != nil {
+		return errs, err
+	}
 	if !match {
 ` + generateErrorForSliceElement(fieldName, "should satisfy the pattern "+value) + `
 	}
@@ -85,6 +91,6 @@ if len(value) < ` + value + ` {
 }
 
 func generateErrorForSliceElement(fieldName string, errorMessage string) string {
-	return `errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: "Element on position "+ strconv.Itoa(i) + " should ` + errorMessage + `"}) 
+	return `errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: "Element on position "+ strconv.Itoa(i) + " ` + errorMessage + `"}) 
 break`
 }

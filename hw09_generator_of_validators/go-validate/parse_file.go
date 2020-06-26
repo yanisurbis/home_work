@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -45,8 +46,23 @@ func extractCustomType(typeSpec *ast.TypeSpec) string {
 	return ""
 }
 
+func getUnaliasedType(fieldType string, customTypes map[string]string) (string, error) {
+	if correctType, ok := customTypes[fieldType]; ok {
+		return correctType, nil
+	}
+	if fieldType == "string" || fieldType == "int" || fieldType == "[]string" || fieldType == "[]int" {
+		return fieldType, nil
+	}
+
+	return "", fmt.Errorf("Incorrect type")
+}
+
+func isCorrectTag(tag *ast.BasicLit) bool {
+	return tag != nil && strings.Contains(tag.Value, "validate:")
+}
+
 // TODO: Refactor
-func parseAST() []InterfaceDescription {
+func extractInterfaceDescriptions() []InterfaceDescription {
 	fs := token.NewFileSet()
 	//os.Getenv("GOFILE")
 	astData, _ := parser.ParseFile(fs, "models/models.go", nil, 0)
@@ -58,16 +74,19 @@ func parseAST() []InterfaceDescription {
 	interfaceDescriptions := []InterfaceDescription{}
 
 	ast.Inspect(astData, func(x ast.Node) bool {
+		// checking that node is a type declaration
 		typeSpec, ok := x.(*ast.TypeSpec)
 
 		if !ok {
 			return true
 		}
 
+		// Create a dictionary of type aliases
 		if customType := extractCustomType(typeSpec); customType != "" {
 			customTypes[typeSpec.Name.Name] = customType
 		}
 
+		// checking that node is a struct
 		structSpec, ok := typeSpec.Type.(*ast.StructType)
 
 		if !ok {
@@ -79,26 +98,18 @@ func parseAST() []InterfaceDescription {
 		for _, field := range structSpec.Fields.List {
 			fieldType := getType(fileContent, int(field.Type.Pos())-1, int(field.Type.End())-1)
 
-			correctFieldType := func(fieldType string, customTypes map[string]string) string {
-				if correctType, ok := customTypes[fieldType]; ok {
-					return correctType
-				}
-				if fieldType == "string" || fieldType == "int" || fieldType == "[]string" || fieldType == "[]int" {
-					return fieldType
-				}
-				return ""
-			}(fieldType, customTypes)
+			unaliasedFieldType, err := getUnaliasedType(fieldType, customTypes)
 
-			isCorrectTag := field.Tag != nil && strings.Contains(field.Tag.Value, "validate:")
-
-			if isCorrectTag && correctFieldType != "" {
-				fieldDescriptions = append(fieldDescriptions, FieldDescription{
-					Name:        field.Names[0].Name,
-					Type:        correctFieldType,
-					TypeAlias:   fieldType,
-					Validations: parseTag(field.Tag.Value),
-				})
+			if err != nil || !isCorrectTag(field.Tag) {
+				break
 			}
+
+			fieldDescriptions = append(fieldDescriptions, FieldDescription{
+				Name:        field.Names[0].Name,
+				Type:        unaliasedFieldType,
+				TypeAlias:   fieldType,
+				Validations: parseTag(field.Tag),
+			})
 		}
 
 		if len(fieldDescriptions) != 0 {

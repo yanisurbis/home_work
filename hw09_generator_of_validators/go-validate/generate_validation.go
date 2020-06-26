@@ -1,6 +1,6 @@
 package main
 
-func generateMultipleStructValidations(structures []InterfaceDescription) string {
+func generateValidation(structures []InterfaceDescription) string {
 	validations := `
 package models
 import (
@@ -30,7 +30,7 @@ func generateStructValidation(structure InterfaceDescription) string {
 				if field.Type == "[]string" || field.Type == "[]int" {
 					validationContent += generateSliceValidation(field)
 				} else {
-					validationContent += generatePrimitiveFieldValidation(field.Name, field.Type, field.TypeAlias, fieldValidation)
+					validationContent += generatePrimitiveFieldValidation(field, fieldValidation)
 				}
 			}
 		}
