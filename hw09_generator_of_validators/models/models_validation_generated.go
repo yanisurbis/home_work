@@ -50,7 +50,7 @@ errs = append(errs, ValidationError{Field: "Role", Err: "Element should be one o
 for i, value := range x.Phones{
 	
 if len(value) < 11 {
-errs = append(errs, ValidationError{Field: "Phones", Err: "Element on position "+ strconv.Itoa(i) + " the length should be more or equal than 11"}) 
+errs = append(errs, ValidationError{Field: "Phones", Err: "Element on position "+ strconv.Itoa(i) + " should have length more or equal than 11"}) 
 break
 }
 

@@ -1,6 +1,6 @@
 package main
 
-func generateMultipleStructValidations(structures []InterfaceDescription) string {
+func generateValidation(structures []InterfaceDescription) string {
 	validations := `
 package models
 import (

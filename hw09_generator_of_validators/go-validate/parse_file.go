@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -46,7 +47,7 @@ func extractCustomType(typeSpec *ast.TypeSpec) string {
 }
 
 // TODO: Refactor
-func parseAST() []InterfaceDescription {
+func extractInterfaceDescriptions() []InterfaceDescription {
 	fs := token.NewFileSet()
 	//os.Getenv("GOFILE")
 	astData, _ := parser.ParseFile(fs, "models/models.go", nil, 0)
@@ -58,16 +59,19 @@ func parseAST() []InterfaceDescription {
 	interfaceDescriptions := []InterfaceDescription{}
 
 	ast.Inspect(astData, func(x ast.Node) bool {
+		// checking that node is a type definition
 		typeSpec, ok := x.(*ast.TypeSpec)
 
 		if !ok {
 			return true
 		}
 
+		// in case type is aliased inside an interface
 		if customType := extractCustomType(typeSpec); customType != "" {
 			customTypes[typeSpec.Name.Name] = customType
 		}
 
+		// checking that node is a struct
 		structSpec, ok := typeSpec.Type.(*ast.StructType)
 
 		if !ok {
@@ -100,6 +104,8 @@ func parseAST() []InterfaceDescription {
 				})
 			}
 		}
+
+		fmt.Println(customTypes)
 
 		if len(fieldDescriptions) != 0 {
 			interfaceDescriptions = append(interfaceDescriptions, InterfaceDescription{
