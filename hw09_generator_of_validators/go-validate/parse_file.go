@@ -46,6 +46,21 @@ func extractCustomType(typeSpec *ast.TypeSpec) string {
 	return ""
 }
 
+func getUnaliasedType(fieldType string, customTypes map[string]string) (string, error) {
+	if correctType, ok := customTypes[fieldType]; ok {
+		return correctType, nil
+	}
+	if fieldType == "string" || fieldType == "int" || fieldType == "[]string" || fieldType == "[]int" {
+		return fieldType, nil
+	}
+
+	return "", fmt.Errorf("Incorrect type")
+}
+
+func isCorrectTag(tag *ast.BasicLit) bool {
+	return tag != nil && strings.Contains(tag.Value, "validate:")
+}
+
 // TODO: Refactor
 func extractInterfaceDescriptions() []InterfaceDescription {
 	fs := token.NewFileSet()
@@ -59,14 +74,14 @@ func extractInterfaceDescriptions() []InterfaceDescription {
 	interfaceDescriptions := []InterfaceDescription{}
 
 	ast.Inspect(astData, func(x ast.Node) bool {
-		// checking that node is a type definition
+		// checking that node is a type declaration
 		typeSpec, ok := x.(*ast.TypeSpec)
 
 		if !ok {
 			return true
 		}
 
-		// in case type is aliased inside an interface
+		// Create a dictionary of type aliases
 		if customType := extractCustomType(typeSpec); customType != "" {
 			customTypes[typeSpec.Name.Name] = customType
 		}
@@ -83,29 +98,19 @@ func extractInterfaceDescriptions() []InterfaceDescription {
 		for _, field := range structSpec.Fields.List {
 			fieldType := getType(fileContent, int(field.Type.Pos())-1, int(field.Type.End())-1)
 
-			correctFieldType := func(fieldType string, customTypes map[string]string) string {
-				if correctType, ok := customTypes[fieldType]; ok {
-					return correctType
-				}
-				if fieldType == "string" || fieldType == "int" || fieldType == "[]string" || fieldType == "[]int" {
-					return fieldType
-				}
-				return ""
-			}(fieldType, customTypes)
+			unaliasedFieldType, err := getUnaliasedType(fieldType, customTypes)
 
-			isCorrectTag := field.Tag != nil && strings.Contains(field.Tag.Value, "validate:")
-
-			if isCorrectTag && correctFieldType != "" {
-				fieldDescriptions = append(fieldDescriptions, FieldDescription{
-					Name:        field.Names[0].Name,
-					Type:        correctFieldType,
-					TypeAlias:   fieldType,
-					Validations: parseTag(field.Tag.Value),
-				})
+			if err != nil || !isCorrectTag(field.Tag) {
+				break
 			}
-		}
 
-		fmt.Println(customTypes)
+			fieldDescriptions = append(fieldDescriptions, FieldDescription{
+				Name:        field.Names[0].Name,
+				Type:        unaliasedFieldType,
+				TypeAlias:   fieldType,
+				Validations: parseTag(field.Tag),
+			})
+		}
 
 		if len(fieldDescriptions) != 0 {
 			interfaceDescriptions = append(interfaceDescriptions, InterfaceDescription{
