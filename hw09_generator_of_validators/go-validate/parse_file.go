@@ -50,14 +50,12 @@ func getType(t ast.Expr) (string, error) {
 	return "", fmt.Errorf("not able to understand the type")
 }
 
-func extractInterfaceDescriptions() []InterfaceDescription {
+func extractInterfaceDescriptions(filename string) []InterfaceDescription {
 	fs := token.NewFileSet()
-	//os.Getenv("GOFILE")
-	astData, _ := parser.ParseFile(fs, "models/models.go", nil, 0)
-	customTypes := make(map[string]string)
+	astData, _ := parser.ParseFile(fs, filename, nil, 0)
 
-	//file, _ := ioutil.ReadFile("models/models.go")
-	//fileContent := string(file)
+	// store type aliases
+	customTypes := make(map[string]string)
 
 	interfaceDescriptions := []InterfaceDescription{}
 
