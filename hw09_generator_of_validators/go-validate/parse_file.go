@@ -99,7 +99,7 @@ func extractInterfaceDescriptions(filename string) []InterfaceDescription {
 				Name:        field.Names[0].Name,
 				Type:        unaliasedFieldType,
 				TypeAlias:   fieldType,
-				Validations: parseTag(field.Tag),
+				Validations: parseTag(field.Tag.Value),
 			})
 		}
 

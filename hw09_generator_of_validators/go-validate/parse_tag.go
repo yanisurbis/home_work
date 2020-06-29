@@ -1,7 +1,6 @@
 package main
 
 import (
-	"go/ast"
 	"regexp"
 	"strings"
 )
@@ -16,8 +15,8 @@ func dropFirstAndLastValue(tag string) string {
 	return tag[1 : tagLength-1]
 }
 
-func parseTag(fieldTag *ast.BasicLit) []FieldValidation {
-	tag := dropFirstAndLastValue(fieldTag.Value)
+func parseTag(fullTag string) []FieldValidation {
+	tag := dropFirstAndLastValue(fullTag)
 
 	fieldValidations := []FieldValidation{}
 
