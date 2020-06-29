@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -29,10 +28,6 @@ func TestGenerateValidation(t *testing.T) {
 			Type:  "in",
 			Value: []string{"1", "2"},
 		},
-	}
-
-	for _, example := range examples {
-		fmt.Println(generatePrimitiveFieldValidation("Age", example))
 	}
 
 	require.Equal(t, true, true)

@@ -49,7 +49,6 @@ func parseTag(fieldTag *ast.BasicLit) []FieldValidation {
 						})
 					} else {
 						if ruleType == "regexp" {
-							println(ruleValue)
 							_ = regexp.MustCompile(ruleValue)
 						}
 
