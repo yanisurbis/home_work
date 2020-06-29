@@ -17,6 +17,45 @@ if len(x.ID) < 36 {
 errs = append(errs, ValidationError{Field: "ID", Err: "The length should be more or equal than 36"})
 }
 
+if x.Age < 18 {
+errs = append(errs, ValidationError{Field: "Age", Err: "Should be more than 18"})	
+}
+
+if x.Age > 50 {
+errs = append(errs, ValidationError{Field: "Age", Err: "Should be less than 50"})
+}
+
+{
+	match, err := regexp.MatchString("^\\w+@\\w+\\.\\w+$", x.Email)
+	if err != nil {
+		return errs, err
+	}
+	if !match {
+errs = append(errs, ValidationError{Field: "Email", Err: "Should satisfy the pattern ^\\w+@\\w+\\.\\w+$"})
+	}
+}
+
+{
+	isIn := false
+	for _, v := range []UserRole{"admin","stuff"} {
+		if v == x.Role {
+			isIn = true
+		}
+	}
+	if !isIn {
+errs = append(errs, ValidationError{Field: "Role", Err: "Element should be one of admin,stuff"})
+	}
+}
+
+for i, value := range x.Phones{
+	
+if len(value) < 11 {
+errs = append(errs, ValidationError{Field: "Phones", Err: "Element on position "+ strconv.Itoa(i) + " should have length more or equal than 11"}) 
+break
+}
+
+}
+
 
 return errs, nil
 }

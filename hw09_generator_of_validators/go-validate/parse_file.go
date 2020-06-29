@@ -20,10 +20,6 @@ type InterfaceDescription struct {
 	Fields []FieldDescription
 }
 
-func getType(content string, start int, end int) string {
-	return content[start:end]
-}
-
 func getUnaliasedType(fieldType string, customTypes map[string]string) (string, error) {
 	if correctType, ok := customTypes[fieldType]; ok {
 		return correctType, nil
@@ -39,50 +35,21 @@ func isCorrectTag(tag *ast.BasicLit) bool {
 	return tag != nil && strings.Contains(tag.Value, "validate:")
 }
 
-func extractCustomType(typeSpec *ast.TypeSpec) string {
-	// simple type: string, int
-	identSpec, ok := typeSpec.Type.(*ast.Ident)
-
-	if ok && (identSpec.Name == "string" || identSpec.Name == "int") {
-		return identSpec.Name
-	}
-
-	// complex type: []string, []int
-	arraySpec, ok := typeSpec.Type.(*ast.ArrayType)
-
-	if ok {
-		arrayElmSpec, ok := arraySpec.Elt.(*ast.Ident)
-		if ok && (arrayElmSpec.Name == "string" || arrayElmSpec.Name == "int") {
-			return "[]" + arrayElmSpec.Name
-		}
-	}
-
-	return ""
-}
-
-func getType1(field *ast.Field) (string, error) {
-	{
-		identSpec, ok := field.Type.(*ast.Ident)
-
+func getType(t ast.Expr) (string, error) {
+	if identSpec, ok := t.(*ast.Ident); ok {
 		if ok {
 			return identSpec.Name, nil
 		}
-	}
-
-	{
-		arraySpec, ok := field.Type.(*ast.ArrayType)
+	} else if arraySpec, ok := t.(*ast.ArrayType); ok {
+		identSpec, ok := arraySpec.Elt.(*ast.Ident)
 		if ok {
-			identSpec, ok := arraySpec.Elt.(*ast.Ident)
-			if ok {
-				return "[]" + identSpec.Name, nil
-			}
+			return "[]" + identSpec.Name, nil
 		}
 	}
 
 	return "", fmt.Errorf("not able to understand the type")
 }
 
-// TODO: Refactor
 func extractInterfaceDescriptions() []InterfaceDescription {
 	fs := token.NewFileSet()
 	//os.Getenv("GOFILE")
@@ -102,8 +69,9 @@ func extractInterfaceDescriptions() []InterfaceDescription {
 			return true
 		}
 
+
 		// Create a dictionary of type aliases
-		if customType := extractCustomType(typeSpec); customType != "" {
+		if customType, err := getType(typeSpec.Type); err == nil {
 			customTypes[typeSpec.Name.Name] = customType
 		}
 
@@ -117,19 +85,16 @@ func extractInterfaceDescriptions() []InterfaceDescription {
 		fieldDescriptions := []FieldDescription{}
 
 		for _, field := range structSpec.Fields.List {
-			//func getF
-
-			fieldType, err := getType1(field)
-			fmt.Println(fieldType)
+			fieldType, err := getType(field.Type)
 
 			if err != nil {
-				break
+				continue
 			}
 
 			unaliasedFieldType, err := getUnaliasedType(fieldType, customTypes)
 
 			if err != nil || !isCorrectTag(field.Tag) {
-				break
+				continue
 			}
 
 			fieldDescriptions = append(fieldDescriptions, FieldDescription{
