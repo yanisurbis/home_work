@@ -16,5 +16,6 @@ func writeToFile(str string, path string) {
 func main() {
 	filename := os.Getenv("GOFILE")
 	res := generateValidation(extractInterfaceDescriptions(filename))
+	//res := generateValidation(extractInterfaceDescriptions("models/models.go"))
 	writeToFile(res, os.Getenv("PWD") + "/models/models_validation_generated.go")
 }

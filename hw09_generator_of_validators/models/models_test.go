@@ -60,7 +60,6 @@ func TestUserValidation(t *testing.T) {
 	})
 
 	t.Run("phones slice", func(t *testing.T) {
-		// Write me :)
 		u := goodUser
 
 		u.Phones = []string{"12345678910", "2"}
