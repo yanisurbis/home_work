@@ -5,7 +5,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"io/ioutil"
 	"strings"
 )
 
@@ -23,6 +22,21 @@ type InterfaceDescription struct {
 
 func getType(content string, start int, end int) string {
 	return content[start:end]
+}
+
+func getUnaliasedType(fieldType string, customTypes map[string]string) (string, error) {
+	if correctType, ok := customTypes[fieldType]; ok {
+		return correctType, nil
+	}
+	if fieldType == "string" || fieldType == "int" || fieldType == "[]string" || fieldType == "[]int" {
+		return fieldType, nil
+	}
+
+	return "", fmt.Errorf("Incorrect type")
+}
+
+func isCorrectTag(tag *ast.BasicLit) bool {
+	return tag != nil && strings.Contains(tag.Value, "validate:")
 }
 
 func extractCustomType(typeSpec *ast.TypeSpec) string {
@@ -46,19 +60,26 @@ func extractCustomType(typeSpec *ast.TypeSpec) string {
 	return ""
 }
 
-func getUnaliasedType(fieldType string, customTypes map[string]string) (string, error) {
-	if correctType, ok := customTypes[fieldType]; ok {
-		return correctType, nil
-	}
-	if fieldType == "string" || fieldType == "int" || fieldType == "[]string" || fieldType == "[]int" {
-		return fieldType, nil
+func getType1(field *ast.Field) (string, error) {
+	{
+		identSpec, ok := field.Type.(*ast.Ident)
+
+		if ok {
+			return identSpec.Name, nil
+		}
 	}
 
-	return "", fmt.Errorf("Incorrect type")
-}
+	{
+		arraySpec, ok := field.Type.(*ast.ArrayType)
+		if ok {
+			identSpec, ok := arraySpec.Elt.(*ast.Ident)
+			if ok {
+				return "[]" + identSpec.Name, nil
+			}
+		}
+	}
 
-func isCorrectTag(tag *ast.BasicLit) bool {
-	return tag != nil && strings.Contains(tag.Value, "validate:")
+	return "", fmt.Errorf("not able to understand the type")
 }
 
 // TODO: Refactor
@@ -68,8 +89,8 @@ func extractInterfaceDescriptions() []InterfaceDescription {
 	astData, _ := parser.ParseFile(fs, "models/models.go", nil, 0)
 	customTypes := make(map[string]string)
 
-	file, _ := ioutil.ReadFile("models/models.go")
-	fileContent := string(file)
+	//file, _ := ioutil.ReadFile("models/models.go")
+	//fileContent := string(file)
 
 	interfaceDescriptions := []InterfaceDescription{}
 
@@ -96,7 +117,14 @@ func extractInterfaceDescriptions() []InterfaceDescription {
 		fieldDescriptions := []FieldDescription{}
 
 		for _, field := range structSpec.Fields.List {
-			fieldType := getType(fileContent, int(field.Type.Pos())-1, int(field.Type.End())-1)
+			//func getF
+
+			fieldType, err := getType1(field)
+			fmt.Println(fieldType)
+
+			if err != nil {
+				break
+			}
 
 			unaliasedFieldType, err := getUnaliasedType(fieldType, customTypes)
 
