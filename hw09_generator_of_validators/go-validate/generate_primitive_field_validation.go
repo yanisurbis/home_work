@@ -8,28 +8,29 @@ func generatePrimitiveFieldValidation(field FieldDescription, validation FieldVa
 
 	validationString := ""
 
-	if validation.Type == Min {
+	switch validation.Type {
+	case Min:
 		value := validation.Value.(string)
 		validationString += `
 if x.` + fieldName + ` < ` + value + ` {
 ` + generateErrorMessage(fieldName, "Should be more than "+value) + `	
 }
 `
-	} else if validation.Type == Max {
+	case Max:
 		value := validation.Value.(string)
 		validationString += `
 if x.` + fieldName + ` > ` + value + ` {
 ` + generateErrorMessage(fieldName, "Should be less than "+value) + `
 }
 `
-	} else if validation.Type == Len {
+	case Len:
 		value := validation.Value.(string)
 		validationString += `
 if len(x.` + fieldName + `) < ` + value + ` {
 ` + generateErrorMessage(fieldName, "The length should be more or equal than "+value) + `
 }
 `
-	} else if validation.Type == Regexp {
+	case Regexp:
 		value := validation.Value.(string)
 		validationString += `
 {
@@ -42,7 +43,7 @@ if len(x.` + fieldName + `) < ` + value + ` {
 	}
 }
 `
-	} else if validation.Type == In {
+	case In:
 		formattedValues, initialValues := formatSliceValues(field, validation)
 		validationString += `
 {

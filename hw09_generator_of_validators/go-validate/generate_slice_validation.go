@@ -39,28 +39,29 @@ func generateSliceElementValidation(field FieldDescription, validation FieldVali
 
 	validationString := ""
 
-	if validation.Type == Min {
+	switch validation.Type {
+	case Min:
 		value := validation.Value.(string)
 		validationString += `
 if value < ` + value + ` {
 ` + generateErrorForSliceElement(fieldName, "should be more than "+value) + `	
 }
 `
-	} else if validation.Type == Max {
+	case Max:
 		value := validation.Value.(string)
 		validationString += `
 if value > ` + value + ` {
 ` + generateErrorForSliceElement(fieldName, "should be less than "+value) + `
 }
 `
-	} else if validation.Type == Len {
+	case Len:
 		value := validation.Value.(string)
 		validationString += `
 if len(value) < ` + value + ` {
 ` + generateErrorForSliceElement(fieldName, "should have length more or equal than "+value) + `
 }
 `
-	} else if validation.Type == Regexp {
+	case Regexp:
 		value := validation.Value.(string)
 		validationString += `
 {
@@ -73,7 +74,7 @@ if len(value) < ` + value + ` {
 	}
 }
 `
-	} else if validation.Type == In {
+	case In:
 		formattedValues, initialValues := formatSliceValues(field, validation)
 		validationString += `
 {
