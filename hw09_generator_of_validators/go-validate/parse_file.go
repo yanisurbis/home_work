@@ -8,6 +8,18 @@ import (
 	"strings"
 )
 
+const String = "string"
+const Int = "int"
+const StringArray = "[]string"
+const IntArray = "[]int"
+
+// validation types.
+const Regexp = "regexp"
+const In = "in"
+const Min = "min"
+const Max = "max"
+const Len = "len"
+
 type FieldDescription struct {
 	Name        string
 	Type        string
@@ -24,7 +36,7 @@ func getUnaliasedType(fieldType string, customTypes map[string]string) (string, 
 	if correctType, ok := customTypes[fieldType]; ok {
 		return correctType, nil
 	}
-	if fieldType == "string" || fieldType == "int" || fieldType == "[]string" || fieldType == "[]int" {
+	if fieldType == String || fieldType == Int || fieldType == StringArray || fieldType == IntArray {
 		return fieldType, nil
 	}
 

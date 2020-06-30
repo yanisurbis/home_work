@@ -18,35 +18,49 @@ for i, value := range x.` + field.Name + `{
 	return validation
 }
 
+func formatSliceValues(field FieldDescription, validation FieldValidation) ([]string, []string) {
+	initialValues := validation.Value.([]string)
+	var formattedValues []string
+
+	if field.Type == StringArray || field.Type == String {
+		for _, v := range initialValues {
+			formattedValues = append(formattedValues, "\""+v+"\"")
+		}
+	} else {
+		formattedValues = initialValues
+	}
+
+	return formattedValues, initialValues
+}
+
 func generateSliceElementValidation(field FieldDescription, validation FieldValidation) string {
 	fieldName := field.Name
-	fieldType := field.Type
 	typeAlias := field.TypeAlias
 
 	validationString := ""
 
-	if validation.Type == "min" {
+	if validation.Type == Min {
 		value := validation.Value.(string)
 		validationString += `
 if value < ` + value + ` {
 ` + generateErrorForSliceElement(fieldName, "should be more than "+value) + `	
 }
 `
-	} else if validation.Type == "max" {
+	} else if validation.Type == Max {
 		value := validation.Value.(string)
 		validationString += `
 if value > ` + value + ` {
 ` + generateErrorForSliceElement(fieldName, "should be less than "+value) + `
 }
 `
-	} else if validation.Type == "len" {
+	} else if validation.Type == Len {
 		value := validation.Value.(string)
 		validationString += `
 if len(value) < ` + value + ` {
 ` + generateErrorForSliceElement(fieldName, "should have length more or equal than "+value) + `
 }
 `
-	} else if validation.Type == "regexp" {
+	} else if validation.Type == Regexp {
 		value := validation.Value.(string)
 		validationString += `
 {
@@ -59,29 +73,18 @@ if len(value) < ` + value + ` {
 	}
 }
 `
-	} else if validation.Type == "in" {
-		valuesArr := validation.Value.([]string)
-		values := []string{}
-
-		if fieldType == "[]string" {
-
-			for _, v := range valuesArr {
-				values = append(values, "\""+v+"\"")
-			}
-		} else {
-			values = valuesArr
-		}
-
+	} else if validation.Type == In {
+		formattedValues, initialValues := formatSliceValues(field, validation)
 		validationString += `
 {
 	isIn := false
-	for _, v := range ` + typeAlias + `{` + strings.Join(values, ",") + `} {
+	for _, v := range ` + typeAlias + `{` + strings.Join(formattedValues, ",") + `} {
 		if v == value {
 			isIn = true
 		}
 	}
 	if !isIn {
-` + generateErrorForSliceElement(fieldName, "should be one of "+strings.Join(valuesArr, ",")) + `
+` + generateErrorForSliceElement(fieldName, "should be one of "+strings.Join(initialValues, ",")) + `
 	}
 }
 `

@@ -27,7 +27,7 @@ func generateStructValidation(structure InterfaceDescription) string {
 
 		for _, field := range fields {
 			for _, fieldValidation := range field.Validations {
-				if field.Type == "[]string" || field.Type == "[]int" {
+				if field.Type == StringArray || field.Type == IntArray {
 					validationContent += generateSliceValidation(field)
 				} else {
 					validationContent += generatePrimitiveFieldValidation(field, fieldValidation)
