@@ -62,16 +62,13 @@ func extractInterfaceDescriptions(filename string) []InterfaceDescription {
 	ast.Inspect(astData, func(x ast.Node) bool {
 		// checking that node is a type declaration
 		typeSpec, ok := x.(*ast.TypeSpec)
-
 		if !ok {
 			return true
 		}
-
 		// Create a dictionary of type aliases
 		if customType, err := getType(typeSpec.Type); err == nil {
 			customTypes[typeSpec.Name.Name] = customType
 		}
-
 		// checking that node is a struct
 		structSpec, ok := typeSpec.Type.(*ast.StructType)
 
