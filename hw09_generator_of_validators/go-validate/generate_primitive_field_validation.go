@@ -2,7 +2,10 @@ package main
 
 import "strings"
 
-func generatePrimitiveFieldValidation(field FieldDescription, validation FieldValidation) string {
+func generatePrimitiveValidation(fd FieldDescription, v FieldValidation) string {
+	field := fd
+	validation := v
+	
     fieldName := field.Name
     fieldType := field.Type
     typeAlias := field.TypeAlias

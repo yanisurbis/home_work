@@ -10,7 +10,7 @@ func writeToFile(str string, path string) {
 	if err != nil {
 		panic(err)
 	}
-	f.WriteString(str)
+	_, _ = f.WriteString(str)
 }
 
 func main() {

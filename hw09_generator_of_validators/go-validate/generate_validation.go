@@ -30,7 +30,7 @@ func generateStructValidation(structure InterfaceDescription) string {
 				if field.Type == "[]string" || field.Type == "[]int" {
 					validationContent += generateSliceValidation(field)
 				} else {
-					validationContent += generatePrimitiveFieldValidation(field, fieldValidation)
+					validationContent += generatePrimitiveValidation(field, fieldValidation)
 				}
 			}
 		}
