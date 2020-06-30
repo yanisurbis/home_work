@@ -2,13 +2,10 @@ package main
 
 import "strings"
 
-func generatePrimitiveValidation(fd FieldDescription, v FieldValidation) string {
-	field := fd
-	validation := v
-	
-    fieldName := field.Name
-    fieldType := field.Type
-    typeAlias := field.TypeAlias
+func generatePrimitiveFieldValidation(field FieldDescription, validation FieldValidation) string {
+	fieldName := field.Name
+	fieldType := field.Type
+	typeAlias := field.TypeAlias
 
 	validationString := ""
 
@@ -51,7 +48,6 @@ if len(x.` + fieldName + `) < ` + value + ` {
 		values := []string{}
 
 		if fieldType == "string" {
-
 			for _, v := range valuesArr {
 				values = append(values, "\""+v+"\"")
 			}
@@ -80,4 +76,3 @@ if len(x.` + fieldName + `) < ` + value + ` {
 func generateErrorMessage(fieldName string, errorMessage string) string {
 	return `errs = append(errs, ValidationError{Field: "` + fieldName + `", Err: "` + errorMessage + `"})`
 }
-

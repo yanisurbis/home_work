@@ -28,7 +28,7 @@ func getUnaliasedType(fieldType string, customTypes map[string]string) (string, 
 		return fieldType, nil
 	}
 
-	return "", fmt.Errorf("Incorrect type")
+	return "", fmt.Errorf("incorrect type")
 }
 
 func isCorrectTag(tag *ast.BasicLit) bool {
@@ -66,7 +66,6 @@ func extractInterfaceDescriptions(filename string) []InterfaceDescription {
 		if !ok {
 			return true
 		}
-
 
 		// Create a dictionary of type aliases
 		if customType, err := getType(typeSpec.Type); err == nil {
