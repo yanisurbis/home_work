@@ -38,8 +38,8 @@ func TestGenerateValidation(t *testing.T) {
 			Type: "len",
 			Value: "11",
 		}},
-		[]FieldValidation{},
-		[]FieldValidation{},
+		nil,
+		nil,
 	}
 
 	t.Run("test parseTag function", func(t *testing.T) {
