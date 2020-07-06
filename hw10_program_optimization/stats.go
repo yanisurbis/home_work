@@ -52,12 +52,15 @@ func getUsers(r io.Reader) (result users, err error) {
 func countDomains(u users, domain string) (DomainStat, error) {
 	result := make(DomainStat)
 
+	r, err := regexp.Compile("\\."+domain)
+
+	if err != nil {
+		return result, err
+	}
+
 	for _, user := range u {
 		// !
-		matched, err := regexp.Match("\\."+domain, []byte(user.Email))
-		if err != nil {
-			return nil, err
-		}
+		matched := r.MatchString(user.Email)
 
 		if matched {
 			// !
