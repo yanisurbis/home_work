@@ -25,9 +25,12 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 
 	reg, err := regexp.Compile("\\." + domain)
 
+	if err != nil {
+		return result, err
+	}
+
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
-
 		var user User
 		if err = user.UnmarshalJSON([]byte(scanner.Text())); err != nil {
 			return nil, err
