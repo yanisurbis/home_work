@@ -3,7 +3,6 @@ package hw10_program_optimization //nolint:golint,stylecheck
 import (
 	"bufio"
 	"io"
-	"log"
 	"regexp"
 	"strings"
 )
@@ -45,7 +44,7 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		return result, err
 	}
 
 	return result, nil
