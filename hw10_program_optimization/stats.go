@@ -27,16 +27,14 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 	if err != nil {
 		return result, err
 	}
-
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		var user User
 		if err = user.UnmarshalJSON([]byte(scanner.Text())); err != nil {
 			return nil, err
 		}
-		matched := reg.MatchString(user.Email)
 
-		if matched {
+		if reg.MatchString(user.Email) {
 			domain := strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])
 			num := result[domain]
 			result[domain] = num + 1
