@@ -31,7 +31,6 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 		log.Fatal(err)
 	}
 
-	// TODO: don't forget to close connection
 	// storage
 	err = a.repo.Connect(ctx, dsn)
 	if err != nil {
