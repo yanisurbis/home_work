@@ -12,10 +12,19 @@ type Repo struct {
 	db *sqlx.DB
 }
 
-func (r *Repo) Connect(ctx context.Context, dsn string) (err error) {
-	r.db, err = sqlx.Connect("pgx", dsn)
+func (r *Repo) Connect(ctx context.Context, dsn string) error {
+	db, err := sqlx.Connect("pgx", dsn)
 
-	return
+	if err != nil {
+		return err
+	}
+
+	if err = db.Ping(); err != nil {
+		return err
+	}
+
+	r.db = db
+	return nil
 }
 
 func (r *Repo) Close() error {
