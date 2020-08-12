@@ -11,6 +11,12 @@ import (
 	"time"
 )
 
+type Args struct {
+	host    string
+	port    string
+	timeout int
+}
+
 func main() {
 	args := getArgs()
 	ctx, cancel := context.WithCancel(context.Background())
@@ -65,12 +71,6 @@ func handleSignals(tc io.Closer, cancel context.CancelFunc) {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-type Args struct {
-	host    string
-	port    string
-	timeout int
 }
 
 func getArgs() *Args {
