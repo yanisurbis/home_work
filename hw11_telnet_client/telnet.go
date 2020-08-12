@@ -55,11 +55,7 @@ func (c client) Receive() error {
 		return err
 	}
 
-	_, err := c.out.Write(c.outScanner.Bytes())
-	if err != nil {
-		return err
-	}
-	_, err = c.out.Write([]byte("\n"))
+	_, err := c.out.Write([]byte(c.outScanner.Text() + "\n"))
 	return err
 }
 
