@@ -79,10 +79,6 @@ func (c *client) Connect() error {
 	return nil
 }
 
-func createTelnetClient(in io.ReadCloser, out io.Writer, address string, timeout time.Duration) TelnetClient {
-	return &client{in: in, out:out, address: address, timeout: timeout}
-}
-
 func NewTelnetClient(address string, timeout time.Duration, in io.ReadCloser, out io.Writer) TelnetClient {
-	return createTelnetClient(in, out, address, timeout)
+	return &client{in: in, out:out, address: address, timeout: timeout}
 }
