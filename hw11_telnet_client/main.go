@@ -21,7 +21,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	go func(tc TelnetClient, ctx context.Context, cancel context.CancelFunc) {
+	go func(ctx context.Context, tc TelnetClient, cancel context.CancelFunc) {
 		for {
 			select {
 			case <-ctx.Done():
@@ -34,9 +34,9 @@ func main() {
 				}
 			}
 		}
-	}(tc, ctx, cancel)
+	}(ctx, tc, cancel)
 
-	go func(tc TelnetClient, ctx context.Context, cancel context.CancelFunc) {
+	go func(ctx context.Context, tc TelnetClient, cancel context.CancelFunc) {
 		for {
 			select {
 			case <-ctx.Done():
@@ -49,7 +49,7 @@ func main() {
 				}
 			}
 		}
-	}(tc, ctx, cancel)
+	}(ctx, tc, cancel)
 
 	go handleSignals(tc, cancel)
 
