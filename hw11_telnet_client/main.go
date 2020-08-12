@@ -22,8 +22,8 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	tc := NewTelnetClient(args.host+":"+args.port, time.Duration(args.timeout)*time.Second, os.Stdin, os.Stdout)
-	err := tc.Connect()
-	if err != nil {
+
+	if err := tc.Connect(); err != nil {
 		log.Fatal(err)
 	}
 
