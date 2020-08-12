@@ -80,7 +80,7 @@ func (c *client) Connect() error {
 }
 
 func createTelnetClient(in io.ReadCloser, out io.Writer, address string, timeout time.Duration) TelnetClient {
-	return &client{nil, nil, nil, in, out, address, timeout}
+	return &client{in: in, out:out, address: address, timeout: timeout}
 }
 
 func NewTelnetClient(address string, timeout time.Duration, in io.ReadCloser, out io.Writer) TelnetClient {
