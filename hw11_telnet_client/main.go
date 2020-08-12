@@ -78,6 +78,10 @@ func getArgs() *Args {
 	flag.Parse()
 	otherArgs := flag.Args()
 
+	if len(otherArgs) != 2 {
+		log.Fatal("Please specify both host and port")
+	}
+
 	args := Args{
 		host: otherArgs[0],
 		port: otherArgs[1],
