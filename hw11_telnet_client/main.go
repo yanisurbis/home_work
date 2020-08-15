@@ -91,6 +91,7 @@ func getArgs() *Args {
 			if err != nil {
 				log.Fatal("Timeout format is not correct")
 			}
+
 			return timeoutInt
 		}(),
 	}
