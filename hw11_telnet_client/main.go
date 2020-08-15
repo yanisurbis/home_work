@@ -36,6 +36,7 @@ func main() {
 				err := tc.Receive()
 				if err != nil {
 					cancel()
+
 					return
 				}
 			}
