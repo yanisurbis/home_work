@@ -80,5 +80,5 @@ func (c *client) Connect() error {
 }
 
 func NewTelnetClient(address string, timeout time.Duration, in io.ReadCloser, out io.Writer) TelnetClient {
-	return &client{in: in, out:out, address: address, timeout: timeout}
+	return &client{in: in, out: out, address: address, timeout: timeout}
 }
