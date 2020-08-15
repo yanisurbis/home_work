@@ -51,6 +51,7 @@ func main() {
 				err := tc.Send()
 				if err != nil {
 					cancel()
+
 					return
 				}
 			}
