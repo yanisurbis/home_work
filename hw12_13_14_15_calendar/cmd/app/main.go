@@ -4,6 +4,7 @@ import (
 	"calendar/internal/app"
 	"calendar/internal/config"
 	"calendar/internal/logger"
+	"calendar/internal/protobufs"
 	"calendar/internal/repository/postgres"
 	"calendar/internal/server"
 	"context"
@@ -31,7 +32,7 @@ func getArgs() *Args {
 }
 
 func main() {
-	args := getArgs()
+	//args := getArgs()
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -40,6 +41,7 @@ func main() {
 
 	r := new(postgres.Repo)
 	s := new(server.Instance)
+	gs := new(protobufs.Server)
 	l := new(logger.Instance)
 
 	a, err := app.New(r, s, l)
