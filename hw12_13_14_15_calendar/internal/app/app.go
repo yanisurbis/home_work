@@ -41,7 +41,6 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 	//}
 	err = a.grpcServer.Start(a.repo)
 	if err != nil {
-		fmt.Println("Error")
 		log.Fatal(err)
 	}
 
