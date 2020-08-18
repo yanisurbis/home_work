@@ -4,6 +4,7 @@ import (
 	"calendar/internal/app"
 	"calendar/internal/config"
 	"calendar/internal/logger"
+	"calendar/internal/protobufs"
 	"calendar/internal/repository/postgres"
 	"calendar/internal/server"
 	"context"
@@ -29,19 +30,21 @@ func getArgs() *Args {
 }
 
 func main() {
-	args := getArgs()
+	//args := getArgs()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// ./configs/local.toml
-	c, _ := config.Read(args.configPath)
+	//c, _ := config.Read(args.configPath)
+	c, _ := config.Read("./configs/local.toml")
 
 	r := new(postgres.Repo)
 	s := new(server.Instance)
+	gs := new(protobufs.Server)
 	l := new(logger.Instance)
 
-	a, err := app.New(r, s, l)
+	// TODO why deref gs
+	a, err := app.New(r, s, l, *gs)
 	if err != nil {
 		log.Fatal(err)
 	}
