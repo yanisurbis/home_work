@@ -46,8 +46,6 @@ func createEventResponse(event repository.Event) *events_grpc.Event {
 }
 
 func (s *Server) GetEventsDay(ctx context.Context, query *events_grpc.EventsQuery) (*events_grpc.EventsResponse, error) {
-	fmt.Println("Hello from grpc server")
-
 	time, err := ptypes.Timestamp(query.From)
 
 	if err != nil {

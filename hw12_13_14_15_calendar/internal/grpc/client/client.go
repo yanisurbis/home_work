@@ -23,7 +23,6 @@ func main() {
 	from, err := ptypes.TimestampProto(time.Now().Add(time.Duration(20) * time.Hour * -1))
 
 	if err != nil {
-
 		log.Fatal(err)
 	}
 
@@ -35,7 +34,6 @@ func main() {
 	events, err := client.GetEventsDay(context.Background(), query)
 
 	if err != nil {
-		fmt.Println("Error")
 		log.Fatal(err)
 	}
 
