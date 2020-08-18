@@ -1,9 +1,10 @@
-package protobufs
+package server
 
 import (
-	"calendar/internal/protobufs/events_grpc"
+	"calendar/internal/grpc/events_grpc"
 	"calendar/internal/repository"
 	"context"
+	"fmt"
 	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/grpc"
 	"log"
@@ -45,6 +46,8 @@ func createEventResponse(event repository.Event) *events_grpc.Event {
 }
 
 func (s *Server) GetEventsDay(ctx context.Context, query *events_grpc.EventsQuery) (*events_grpc.EventsResponse, error) {
+	fmt.Println("Hello from grpc server")
+
 	time, err := ptypes.Timestamp(query.From)
 
 	if err != nil {
@@ -63,7 +66,7 @@ func (s *Server) GetEventsDay(ctx context.Context, query *events_grpc.EventsQuer
 }
 
 func (s *Server) Start(r repository.BaseRepo) error {
-	lsn, err := net.Listen("tcp", "localhost:50051")
+	lsn, err := net.Listen("tcp", "localhost:8080")
 
 	if err != nil {
 		log.Fatal(err)
@@ -74,6 +77,7 @@ func (s *Server) Start(r repository.BaseRepo) error {
 
 	events_grpc.RegisterEventsServer(server, service)
 
+	fmt.Println("Starting server on %s", lsn.Addr().String())
 	if err := server.Serve(lsn); err != nil {
 		log.Fatal(err)
 
