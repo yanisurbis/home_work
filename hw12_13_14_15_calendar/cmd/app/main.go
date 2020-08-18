@@ -3,12 +3,13 @@ package main
 import (
 	"calendar/internal/app"
 	"calendar/internal/config"
+	server2 "calendar/internal/grpc/server"
 	"calendar/internal/logger"
-	"calendar/internal/protobufs"
 	"calendar/internal/repository/postgres"
 	"calendar/internal/server"
 	"context"
 	"flag"
+	"fmt"
 	"log"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -40,10 +41,11 @@ func main() {
 
 	r := new(postgres.Repo)
 	s := new(server.Instance)
-	gs := new(protobufs.Server)
+	gs := new(server2.Server)
 	l := new(logger.Instance)
 
 	// TODO why deref gs
+	fmt.Println("Hello")
 	a, err := app.New(r, s, l, *gs)
 	if err != nil {
 		log.Fatal(err)
