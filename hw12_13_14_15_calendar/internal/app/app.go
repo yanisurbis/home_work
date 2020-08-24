@@ -5,6 +5,7 @@ import (
 	"calendar/internal/repository"
 	"calendar/internal/server"
 	"context"
+	"fmt"
 	"log"
 )
 
@@ -37,5 +38,10 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 		log.Fatal(err)
 	}
 
+	return nil
+}
+
+func (a *App) Stop() error {
+	fmt.Println("Stopped")
 	return nil
 }
