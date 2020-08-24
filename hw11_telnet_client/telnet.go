@@ -54,11 +54,12 @@ func (c client) Receive() error {
 	success := c.outScanner.Scan()
 	if !success {
 		err := c.Close()
+
 		return err
 	}
 
 	_, err := c.out.Write([]byte(c.outScanner.Text() + "\n"))
-	
+
 	return err
 }
 
@@ -66,6 +67,7 @@ func (c *client) Connect() error {
 	conn, err := net.DialTimeout("tcp", c.address, c.timeout)
 	if err != nil {
 		fmt.Println("No connection!")
+
 		return err
 	}
 	c.connection = conn
