@@ -26,14 +26,14 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 		log.Fatal(err)
 	}
 
-	// server
-	err = a.server.Start()
+	// storage
+	err = a.repo.Connect(ctx, dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// storage
-	err = a.repo.Connect(ctx, dsn)
+	// server
+	err = a.server.Start()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,6 +42,15 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 }
 
 func (a *App) Stop() error {
-	fmt.Println("Stopped")
+	fmt.Println("Shutting down...")
+
+	if err := a.server.Stop(); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := a.repo.Close(); err != nil {
+		log.Fatal(err)
+	}
+
 	return nil
 }
