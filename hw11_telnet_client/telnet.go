@@ -40,11 +40,13 @@ func (c client) Send() error {
 	success := c.inScanner.Scan()
 	if !success {
 		err := c.Close()
+
 		return err
 	}
 
 	message := c.inScanner.Text() + "\n"
 	_, err := c.connection.Write([]byte(message))
+
 	return err
 }
 
@@ -56,6 +58,7 @@ func (c client) Receive() error {
 	}
 
 	_, err := c.out.Write([]byte(c.outScanner.Text() + "\n"))
+	
 	return err
 }
 
