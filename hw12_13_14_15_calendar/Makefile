@@ -11,6 +11,7 @@ test:
 
 lint:
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0
+		go mod tidy
 	$(GOPATH)/bin/golangci-lint run ./...
 
 .PHONY: build
