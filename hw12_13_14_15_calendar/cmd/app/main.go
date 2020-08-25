@@ -31,12 +31,12 @@ func getArgs() *Args {
 }
 
 func main() {
-	//args := getArgs()
+	args := getArgs()
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	c, _ := config.Read("./configs/local.toml")
-	//c, _ := config.Read(args.configPath)
+	//c, _ := config.Read("./configs/local.toml")
+	c, _ := config.Read(args.configPath)
 
 	r := new(postgres.Repo)
 	s := new(server.Instance)
