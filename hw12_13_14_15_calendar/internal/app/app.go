@@ -41,10 +41,10 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 	return nil
 }
 
-func (a *App) Stop() error {
+func (a *App) Stop(ctx context.Context) error {
 	fmt.Println("Shutting down...")
 
-	if err := a.server.Stop(); err != nil {
+	if err := a.server.Stop(ctx); err != nil {
 		log.Fatal(err)
 	}
 

@@ -34,7 +34,6 @@ func main() {
 	//args := getArgs()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	c, _ := config.Read("./configs/local.toml")
 	//c, _ := config.Read(args.configPath)
@@ -49,19 +48,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	go handleSignals(a, cancel)
+	go handleSignals(ctx, cancel, a)
 
 	if err := a.Run(ctx, c.Logger.Path, c.PSQL.DSN); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func handleSignals(app *app.App, cancel context.CancelFunc) {
+func handleSignals(ctx context.Context, cancel context.CancelFunc, app *app.App) {
 	defer cancel()
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt)
 	<-sigCh
-	err := app.Stop()
+	err := app.Stop(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
