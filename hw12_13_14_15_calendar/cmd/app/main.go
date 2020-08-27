@@ -11,6 +11,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
@@ -34,24 +36,35 @@ func main() {
 	//args := getArgs()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
-	//c, _ := config.Read(args.configPath)
-	c, _ := config.Read("./configs/local.toml")
+	//c, _ := config.Read("./configs/local.toml")
+	c, _ := config.Read(args.configPath)
 
 	r := new(postgres.Repo)
 	s := new(server.Instance)
 	gs := new(server2.Server)
 	l := new(logger.Instance)
 
-	// TODO why deref gs
-	fmt.Println("Hello")
-	a, err := app.New(r, s, l, *gs)
+	a, err := app.New(r, s, l)
+
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	go handleSignals(ctx, cancel, a)
+
 	if err := a.Run(ctx, c.Logger.Path, c.PSQL.DSN); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func handleSignals(ctx context.Context, cancel context.CancelFunc, app *app.App) {
+	defer cancel()
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt)
+	<-sigCh
+	err := app.Stop(ctx)
+	if err != nil {
 		log.Fatal(err)
 	}
 }

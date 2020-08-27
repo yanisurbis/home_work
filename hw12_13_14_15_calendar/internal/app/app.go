@@ -28,24 +28,33 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 		log.Fatal(err)
 	}
 
-	// server
-	/*	err = a.server.Start()
-		if err != nil {
-			log.Fatal(err)
-		}*/
-
 	// storage
-	fmt.Println("Connecting to repo")
 	err = a.repo.Connect(ctx, dsn)
 	if err != nil {
-		fmt.Println("Error")
 		log.Fatal(err)
 	}
 
-	fmt.Println("Trying to start grpc server")
+	// server
+	//err = a.server.Start()
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 	err = a.grpcServer.Start(a.repo)
-
 	if err != nil {
+		log.Fatal(err)
+	}
+
+	return nil
+}
+
+func (a *App) Stop(ctx context.Context) error {
+	fmt.Println("Shutting down...")
+
+	if err := a.server.Stop(ctx); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := a.repo.Close(); err != nil {
 		log.Fatal(err)
 	}
 

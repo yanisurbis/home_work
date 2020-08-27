@@ -10,7 +10,7 @@ import (
 
 type Server interface {
 	Start() error
-	Stop() error
+	Stop(ctx context.Context) error
 }
 
 type Instance struct {
@@ -41,6 +41,6 @@ func (s *Instance) Start() error {
 	return s.instance.ListenAndServe()
 }
 
-func (s *Instance) Stop() error {
-	return s.instance.Shutdown(context.Background())
+func (s *Instance) Stop(ctx context.Context) error {
+	return s.instance.Shutdown(ctx)
 }
