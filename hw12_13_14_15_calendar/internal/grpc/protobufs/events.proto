@@ -2,8 +2,9 @@ syntax = "proto3";
 package events;
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
-option go_package="internal/protobufs/events_grpc";
+option go_package = "internal/protobufs/events_grpc";
 
 message Event {
   uint32 id = 1;
@@ -24,8 +25,17 @@ message EventsResponse {
   repeated Event events = 1;
 }
 
+message DeleteEventRequest {
+  uint32 userId = 1;
+  uint32  eventId = 2;
+}
+
 service Events {
   rpc GetEventsDay(EventsQuery) returns (EventsResponse);
   rpc GetEventsWeek(EventsQuery) returns (EventsResponse);
   rpc GetEventsMonth(EventsQuery) returns (EventsResponse);
+  rpc AddEvent(Event) returns (google.protobuf.Empty);
+  rpc UpdateEvent(Event) returns (google.protobuf.Empty);
+  rpc DeleteEvent(DeleteEventRequest) returns (google.protobuf.Empty);
 }
+

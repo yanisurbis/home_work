@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -62,6 +63,18 @@ func getEvents(query *events_grpc.EventsQuery, cb func(userID repository.ID, fro
 	}
 
 	return &events_grpc.EventsResponse{Events: eventsResponse}, nil
+}
+
+func (s *Server) AddEvent(ctx context.Context, query *events_grpc.Event) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (s *Server) UpdateEvent(ctx context.Context, query *events_grpc.Event) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (s *Server) DeleteEvent(ctx context.Context, query *events_grpc.DeleteEventRequest) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
 }
 
 func (s *Server) GetEventsDay(ctx context.Context, query *events_grpc.EventsQuery) (*events_grpc.EventsResponse, error) {
