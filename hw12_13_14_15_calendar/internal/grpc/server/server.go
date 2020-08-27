@@ -63,6 +63,42 @@ func (s *Server) GetEventsDay(ctx context.Context, query *events_grpc.EventsQuer
 	return &events_grpc.EventsResponse{Events: eventsResponse}, nil
 }
 
+func (s *Server) GetEventsWeek(ctx context.Context, query *events_grpc.EventsQuery) (*events_grpc.EventsResponse, error) {
+	time, err := ptypes.Timestamp(query.From)
+
+	if err != nil {
+		log.Fatal("Type conversion error")
+	}
+
+	events, err := s.db.GetEventsWeek(repository.ID(query.UserId), time)
+
+	var eventsResponse []*events_grpc.Event
+
+	for _, event := range events {
+		eventsResponse = append(eventsResponse, createEventResponse(event))
+	}
+
+	return &events_grpc.EventsResponse{Events: eventsResponse}, nil
+}
+
+func (s *Server) GetEventsMonth(ctx context.Context, query *events_grpc.EventsQuery) (*events_grpc.EventsResponse, error) {
+	time, err := ptypes.Timestamp(query.From)
+
+	if err != nil {
+		log.Fatal("Type conversion error")
+	}
+
+	events, err := s.db.GetEventsMonth(repository.ID(query.UserId), time)
+
+	var eventsResponse []*events_grpc.Event
+
+	for _, event := range events {
+		eventsResponse = append(eventsResponse, createEventResponse(event))
+	}
+
+	return &events_grpc.EventsResponse{Events: eventsResponse}, nil
+}
+
 func (s *Server) Start(r repository.BaseRepo) error {
 	lsn, err := net.Listen("tcp", "localhost:8080")
 

@@ -37,5 +37,21 @@ func main() {
 		log.Fatal(err)
 	}
 
+	fmt.Printf("%+v\n", events)
+
+	events, err = client.GetEventsWeek(context.Background(), query)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("%+v\n", events)
+
+	events, err = client.GetEventsMonth(context.Background(), query)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	fmt.Printf("%+v", events)
 }

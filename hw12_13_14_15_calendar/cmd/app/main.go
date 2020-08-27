@@ -9,7 +9,6 @@ import (
 	"calendar/internal/server"
 	"context"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -37,15 +36,15 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	//c, _ := config.Read("./configs/local.toml")
-	c, _ := config.Read(args.configPath)
+	c, _ := config.Read("./configs/local.toml")
+	//c, _ := config.Read(args.configPath)
 
 	r := new(postgres.Repo)
 	s := new(server.Instance)
 	gs := new(server2.Server)
 	l := new(logger.Instance)
 
-	a, err := app.New(r, s, l)
+	a, err := app.New(r, s, l, *gs)
 
 	if err != nil {
 		log.Fatal(err)
