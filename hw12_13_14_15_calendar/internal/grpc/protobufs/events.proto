@@ -26,4 +26,6 @@ message EventsResponse {
 
 service Events {
   rpc GetEventsDay(EventsQuery) returns (EventsResponse);
+  rpc GetEventsWeek(EventsQuery) returns (EventsResponse);
+  rpc GetEventsMonth(EventsQuery) returns (EventsResponse);
 }
