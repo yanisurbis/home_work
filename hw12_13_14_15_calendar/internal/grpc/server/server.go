@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"net"
+	"time"
 )
 
 type Server struct {
@@ -45,14 +46,14 @@ func createEventResponse(event repository.Event) *events_grpc.Event {
 	}
 }
 
-func (s *Server) GetEventsDay(ctx context.Context, query *events_grpc.EventsQuery) (*events_grpc.EventsResponse, error) {
+func getEvents(query *events_grpc.EventsQuery, cb func(userID repository.ID, from time.Time) ([]repository.Event, error)) (*events_grpc.EventsResponse, error) {
 	time, err := ptypes.Timestamp(query.From)
 
 	if err != nil {
 		log.Fatal("Type conversion error")
 	}
 
-	events, err := s.db.GetEventsDay(repository.ID(query.UserId), time)
+	events, err := cb(repository.ID(query.UserId), time)
 
 	var eventsResponse []*events_grpc.Event
 
@@ -61,42 +62,18 @@ func (s *Server) GetEventsDay(ctx context.Context, query *events_grpc.EventsQuer
 	}
 
 	return &events_grpc.EventsResponse{Events: eventsResponse}, nil
+}
+
+func (s *Server) GetEventsDay(ctx context.Context, query *events_grpc.EventsQuery) (*events_grpc.EventsResponse, error) {
+	return getEvents(query, s.db.GetEventsDay)
 }
 
 func (s *Server) GetEventsWeek(ctx context.Context, query *events_grpc.EventsQuery) (*events_grpc.EventsResponse, error) {
-	time, err := ptypes.Timestamp(query.From)
-
-	if err != nil {
-		log.Fatal("Type conversion error")
-	}
-
-	events, err := s.db.GetEventsWeek(repository.ID(query.UserId), time)
-
-	var eventsResponse []*events_grpc.Event
-
-	for _, event := range events {
-		eventsResponse = append(eventsResponse, createEventResponse(event))
-	}
-
-	return &events_grpc.EventsResponse{Events: eventsResponse}, nil
+	return getEvents(query, s.db.GetEventsWeek)
 }
 
 func (s *Server) GetEventsMonth(ctx context.Context, query *events_grpc.EventsQuery) (*events_grpc.EventsResponse, error) {
-	time, err := ptypes.Timestamp(query.From)
-
-	if err != nil {
-		log.Fatal("Type conversion error")
-	}
-
-	events, err := s.db.GetEventsMonth(repository.ID(query.UserId), time)
-
-	var eventsResponse []*events_grpc.Event
-
-	for _, event := range events {
-		eventsResponse = append(eventsResponse, createEventResponse(event))
-	}
-
-	return &events_grpc.EventsResponse{Events: eventsResponse}, nil
+	return getEvents(query, s.db.GetEventsMonth)
 }
 
 func (s *Server) Start(r repository.BaseRepo) error {
