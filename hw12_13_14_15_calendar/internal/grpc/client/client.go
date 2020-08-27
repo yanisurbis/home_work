@@ -3,7 +3,6 @@ package main
 import (
 	"calendar/internal/grpc/events_grpc"
 	"context"
-	"fmt"
 	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/grpc"
 	"log"
@@ -19,8 +18,9 @@ func main() {
 	defer conn.Close()
 
 	client := events_grpc.NewEventsClient(conn)
-
 	from, err := ptypes.TimestampProto(time.Now().Add(time.Duration(20) * time.Hour * -1))
+
+	/*from, err := ptypes.TimestampProto(time.Now().Add(time.Duration(20) * time.Hour * -1))
 
 	if err != nil {
 		log.Fatal(err)
@@ -53,5 +53,42 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("%+v", events)
+	fmt.Printf("%+v", events)*/
+
+	event := events_grpc.Event{
+		Id:          0,
+		Title:       "New event",
+		StartAt:     from,
+		EndAt:       from,
+		Description: "Descriasdasd",
+		UserId:      1,
+		NotifyAt:    from,
+	}
+
+	_, err = client.AddEvent(context.Background(), &event)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	newEvent := event
+
+	newEvent.Title = "Updated event"
+
+	_, err = client.UpdateEvent(context.Background(), &newEvent)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	deleteRequest := events_grpc.DeleteEventRequest{
+		UserId:  1,
+		EventId: 1,
+	}
+
+	_, err = client.DeleteEvent(context.Background(), &deleteRequest)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }
