@@ -152,6 +152,12 @@ func (s *Server) UpdateEvent(ctx context.Context, query *events_grpc.Event) (*em
 }
 
 func (s *Server) DeleteEvent(ctx context.Context, query *events_grpc.DeleteEventRequest) (*empty.Empty, error) {
+	err := s.db.DeleteEvent(repository.ID(query.UserId), repository.ID(query.EventId))
+
+	if err != nil {
+		log.Fatal("Problem while deleting event to the DB")
+	}
+
 	return &empty.Empty{}, nil
 }
 
