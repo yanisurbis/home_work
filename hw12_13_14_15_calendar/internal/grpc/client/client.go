@@ -56,20 +56,20 @@ func main() {
 	fmt.Printf("%+v", events)*/
 
 	event := events_grpc.Event{
-		Id:          0,
-		Title:       "New event, aug30, 17:23",
+		Id:          7,
+		Title:       "Updated event, aug30, 17:23",
 		StartAt:     from,
 		EndAt:       from,
-		Description: "New event, aug30, 17:23",
+		Description: "Updated event, aug30, 17:23",
 		UserId:      1,
 		NotifyAt:    from,
 	}
 
-	_, err = client.AddEvent(context.Background(), &event)
-
-	if err != nil {
-		log.Fatal(err)
-	}
+	//_, err = client.AddEvent(context.Background(), &event)
+	//
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
 	newEvent := event
 
