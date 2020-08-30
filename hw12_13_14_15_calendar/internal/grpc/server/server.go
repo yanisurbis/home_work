@@ -48,13 +48,13 @@ func createEventResponse(event repository.Event) *events_grpc.Event {
 }
 
 func getEvents(query *events_grpc.EventsQuery, cb func(userID repository.ID, from time.Time) ([]repository.Event, error)) (*events_grpc.EventsResponse, error) {
-	time, err := ptypes.Timestamp(query.From)
+	t, err := ptypes.Timestamp(query.From)
 
 	if err != nil {
 		log.Fatal("Type conversion error")
 	}
 
-	events, err := cb(repository.ID(query.UserId), time)
+	events, err := cb(repository.ID(query.UserId), t)
 
 	var eventsResponse []*events_grpc.Event
 
@@ -63,18 +63,6 @@ func getEvents(query *events_grpc.EventsQuery, cb func(userID repository.ID, fro
 	}
 
 	return &events_grpc.EventsResponse{Events: eventsResponse}, nil
-}
-
-func (s *Server) AddEvent(ctx context.Context, query *events_grpc.Event) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
-}
-
-func (s *Server) UpdateEvent(ctx context.Context, query *events_grpc.Event) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
-}
-
-func (s *Server) DeleteEvent(ctx context.Context, query *events_grpc.DeleteEventRequest) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
 }
 
 func (s *Server) GetEventsDay(ctx context.Context, query *events_grpc.EventsQuery) (*events_grpc.EventsResponse, error) {
@@ -87,6 +75,18 @@ func (s *Server) GetEventsWeek(ctx context.Context, query *events_grpc.EventsQue
 
 func (s *Server) GetEventsMonth(ctx context.Context, query *events_grpc.EventsQuery) (*events_grpc.EventsResponse, error) {
 	return getEvents(query, s.db.GetEventsMonth)
+}
+
+func (s *Server) AddEvent(ctx context.Context, query *events_grpc.Event) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (s *Server) UpdateEvent(ctx context.Context, query *events_grpc.Event) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+func (s *Server) DeleteEvent(ctx context.Context, query *events_grpc.DeleteEventRequest) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
 }
 
 func (s *Server) Start(r repository.BaseRepo) error {
