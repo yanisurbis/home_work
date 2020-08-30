@@ -4,6 +4,7 @@ import (
 	"calendar/internal/grpc/events_grpc"
 	"calendar/internal/repository"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -77,75 +78,67 @@ func (s *Server) GetEventsMonth(ctx context.Context, query *events_grpc.EventsQu
 	return getEvents(query, s.db.GetEventsMonth)
 }
 
-func (s *Server) AddEvent(ctx context.Context, query *events_grpc.Event) (*empty.Empty, error) {
-	startAt, err := ptypes.Timestamp(query.StartAt)
-
+func convertEvent(eventGrpc *events_grpc.Event) (*repository.Event, error) {
 	// TODO: check how to handle errors
 	// TODO: memory error if we stop the server
-	if err != nil {
-		log.Fatal("Type conversion error")
-	}
 
-	endAt, err := ptypes.Timestamp(query.EndAt)
+	startAt, err := ptypes.Timestamp(eventGrpc.StartAt)
 
 	if err != nil {
-		log.Fatal("Type conversion error")
+		return nil, errors.New("error converting event.startAt")
 	}
 
-	notifyAt, err := ptypes.Timestamp(query.NotifyAt)
+	endAt, err := ptypes.Timestamp(eventGrpc.EndAt)
 
 	if err != nil {
-		log.Fatal("Type conversion error")
+		return nil, errors.New("error converting event.endAt")
 	}
 
-	err = s.db.AddEvent(repository.Event{
-		ID:          repository.ID(query.Id),
-		Title:       query.Title,
+	notifyAt, err := ptypes.Timestamp(eventGrpc.NotifyAt)
+
+	if err != nil {
+		return nil, errors.New("error converting event.notifyAt")
+	}
+
+	return &repository.Event{
+		ID:          repository.ID(eventGrpc.Id),
+		Title:       eventGrpc.Title,
 		StartAt:     startAt,
 		EndAt:       endAt,
-		Description: query.Description,
-		UserID:      repository.ID(query.UserId),
+		Description: eventGrpc.Description,
+		UserID:      repository.ID(eventGrpc.UserId),
 		NotifyAt:    notifyAt,
-	})
+	}, nil
+}
+
+func (s *Server) AddEvent(ctx context.Context, query *events_grpc.Event) (*empty.Empty, error) {
+	event, err := convertEvent(query)
 
 	if err != nil {
-		log.Fatal("Problem while adding event to the DB")
+		// TODO: check nil handling
+		return nil, err
+	}
+
+	err = s.db.AddEvent(*event)
+
+	if err != nil {
+		return nil, errors.New("problem adding event to the DB")
 	}
 
 	return &empty.Empty{}, nil
 }
 
 func (s *Server) UpdateEvent(ctx context.Context, query *events_grpc.Event) (*empty.Empty, error) {
-	startAt, err := ptypes.Timestamp(query.StartAt)
+	event, err := convertEvent(query)
 
 	if err != nil {
-		log.Fatal("Type conversion error")
+		return nil, err
 	}
 
-	endAt, err := ptypes.Timestamp(query.EndAt)
+	err = s.db.UpdateEvent(*event)
 
 	if err != nil {
-		log.Fatal("Type conversion error")
-	}
-
-	notifyAt, err := ptypes.Timestamp(query.NotifyAt)
-
-	if err != nil {
-		log.Fatal("Type conversion error")
-	}
-
-	err = s.db.UpdateEvent(repository.Event{
-		ID:          repository.ID(query.Id),
-		Title:       query.Title,
-		StartAt:     startAt,
-		EndAt:       endAt,
-		Description: query.Description,
-		UserID:      repository.ID(query.UserId),
-		NotifyAt:    notifyAt,
-	})
-
-	if err != nil {
-		log.Fatal("Problem while updating event to the DB")
+		return nil, errors.New("problem updating event to the DB")
 	}
 
 	return &empty.Empty{}, nil
@@ -155,7 +148,7 @@ func (s *Server) DeleteEvent(ctx context.Context, query *events_grpc.DeleteEvent
 	err := s.db.DeleteEvent(repository.ID(query.UserId), repository.ID(query.EventId))
 
 	if err != nil {
-		log.Fatal("Problem while deleting event to the DB")
+		return nil, errors.New("problem deleting event to the DB")
 	}
 
 	return &empty.Empty{}, nil
@@ -173,7 +166,7 @@ func (s *Server) Start(r repository.BaseRepo) error {
 
 	events_grpc.RegisterEventsServer(server, service)
 
-	fmt.Println("Starting server on %s", lsn.Addr().String())
+	fmt.Printf("Starting server on %s\n", lsn.Addr().String())
 	if err := server.Serve(lsn); err != nil {
 		log.Fatal(err)
 
