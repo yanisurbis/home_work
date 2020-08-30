@@ -57,10 +57,10 @@ func main() {
 
 	event := events_grpc.Event{
 		Id:          0,
-		Title:       "New event",
+		Title:       "New event, aug30, 17:23",
 		StartAt:     from,
 		EndAt:       from,
-		Description: "Descriasdasd",
+		Description: "New event, aug30, 17:23",
 		UserId:      1,
 		NotifyAt:    from,
 	}

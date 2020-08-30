@@ -78,6 +78,40 @@ func (s *Server) GetEventsMonth(ctx context.Context, query *events_grpc.EventsQu
 }
 
 func (s *Server) AddEvent(ctx context.Context, query *events_grpc.Event) (*empty.Empty, error) {
+	startAt, err := ptypes.Timestamp(query.StartAt)
+
+	// TODO: check how to handle errors
+	// TODO: memory error if we stop the server
+	if err != nil {
+		log.Fatal("Type conversion error")
+	}
+
+	endAt, err := ptypes.Timestamp(query.EndAt)
+
+	if err != nil {
+		log.Fatal("Type conversion error")
+	}
+
+	notifyAt, err := ptypes.Timestamp(query.NotifyAt)
+
+	if err != nil {
+		log.Fatal("Type conversion error")
+	}
+
+	err = s.db.AddEvent(repository.Event{
+		ID:          repository.ID(query.Id),
+		Title:       query.Title,
+		StartAt:     startAt,
+		EndAt:       endAt,
+		Description: query.Description,
+		UserID:      repository.ID(query.UserId),
+		NotifyAt:    notifyAt,
+	})
+
+	if err != nil {
+		log.Fatal("Problem while adding event to the DB")
+	}
+
 	return &empty.Empty{}, nil
 }
 
