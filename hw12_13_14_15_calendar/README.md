@@ -8,5 +8,12 @@
 
 ### Helpers
 
-``` cd internal/grpc``` 
-```protoc protobufs/events.proto --go_out=plugins=grpc:.```
+```
+cd internal/grpc
+protoc protobufs/events.proto --go_out=plugins=grpc:.
+```
+
+### To start
+
+- start server, main.go
+- start client, client.go
