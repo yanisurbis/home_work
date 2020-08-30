@@ -3,8 +3,10 @@ package main
 import (
 	"calendar/internal/grpc/events_grpc"
 	"context"
+	"github.com/golang/protobuf/ptypes"
 	"google.golang.org/grpc"
 	"log"
+	"time"
 )
 
 func main() {
@@ -16,7 +18,10 @@ func main() {
 	defer conn.Close()
 
 	client := events_grpc.NewEventsClient(conn)
+
 	//from, err := ptypes.TimestampProto(time.Now().Add(time.Duration(20) * time.Hour * -1))
+
+
 
 	/*from, err := ptypes.TimestampProto(time.Now().Add(time.Duration(20) * time.Hour * -1))
 
@@ -52,41 +57,75 @@ func main() {
 	}
 
 	fmt.Printf("%+v", events)*/
+	userId := uint32(1)
 
-	//event := events_grpc.Event{
-	//	Id:          7,
-	//	Title:       "Updated event, aug30, 17:23",
-	//	StartAt:     from,
-	//	EndAt:       from,
-	//	Description: "Updated event, aug30, 17:23",
-	//	UserId:      1,
-	//	NotifyAt:    from,
-	//}
-
-	//_, err = client.AddEvent(context.Background(), &event)
-	//
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-
-	//newEvent := event
-	//
-	//newEvent.Title = "Updated event"
-	//
-	//_, err = client.UpdateEvent(context.Background(), &newEvent)
-	//
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-
-	deleteRequest := events_grpc.DeleteEventRequest{
-		UserId:  1,
-		EventId: 7,
+	t, _ := ptypes.TimestampProto(time.Now())
+	event := events_grpc.Event{
+		Title:       "Event" + t.String(),
+		StartAt:     t,
+		EndAt:       t,
+		Description: "Event" + t.String(),
+		UserId:      userId,
+		NotifyAt:    t,
 	}
 
-	_, err = client.DeleteEvent(context.Background(), &deleteRequest)
+	_, err = client.AddEvent(context.Background(), &event)
 
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	// -----------------------------------------------------
+
+	from, _ := ptypes.TimestampProto(time.Now().Add(time.Duration(20) * time.Hour * -1))
+	eventsResponse, err := client.GetEventsDay(context.Background(), &events_grpc.EventsQuery{
+		UserId: userId,
+		From:   from,
+	})
+
+	if eventsResponse == nil || len(eventsResponse.Events) != 1 {
+		log.Fatal("adding event was unsuccessful")
+	}
+
+	// -----------------------------------------------------
+
+	eventNew := event
+	eventNew.Id = eventsResponse.Events[0].Id
+	description := "new event"
+	eventNew.Description = description
+
+	_, err = client.UpdateEvent(context.Background(), &eventNew)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	eventsResponse, err = client.GetEventsDay(context.Background(), &events_grpc.EventsQuery{
+		UserId: userId,
+		From:   from,
+	})
+
+	if eventsResponse == nil || eventsResponse.Events[0].Description != description {
+		log.Fatal("updating event was unsuccessful")
+	}
+
+	// -----------------------------------------------------
+
+	_, err = client.DeleteEvent(context.Background(), &events_grpc.DeleteEventRequest{
+		UserId:  userId,
+		EventId: eventsResponse.Events[0].Id,
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	eventsResponse, err = client.GetEventsDay(context.Background(), &events_grpc.EventsQuery{
+		UserId: userId,
+		From:   from,
+	})
+
+	if eventsResponse == nil || len(eventsResponse.Events) != 0 {
+		log.Fatal("deleting event was unsuccessful")
 	}
 }

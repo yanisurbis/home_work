@@ -34,6 +34,7 @@ func createEventResponse(event repository.Event) *events_grpc.Event {
 	notify_at, err := ptypes.TimestampProto(event.NotifyAt)
 
 	if err != nil {
+		// TODO: fix error handling
 		log.Fatal("Type conversion error")
 	}
 
@@ -80,6 +81,7 @@ func (s *Server) GetEventsMonth(ctx context.Context, query *events_grpc.EventsQu
 
 func convertEvent(eventGrpc *events_grpc.Event) (*repository.Event, error) {
 	// TODO: check how to handle errors
+	// TODO: check error handling with real errors
 	// TODO: memory error if we stop the server
 
 	startAt, err := ptypes.Timestamp(eventGrpc.StartAt)
