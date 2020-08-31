@@ -34,7 +34,7 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 	}
 
 	//server
-	err = a.server.Start()
+	err = a.server.Start(a.repo)
 	if err != nil {
 		log.Fatal(err)
 		return err
