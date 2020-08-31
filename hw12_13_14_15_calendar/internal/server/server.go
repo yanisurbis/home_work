@@ -1,10 +1,11 @@
 package server
 
 import (
+	"calendar/internal/repository"
 	"context"
 )
 
 type Server interface {
-	Start() error
+	Start(repo repository.BaseRepo) error
 	Stop(ctx context.Context) error
 }
