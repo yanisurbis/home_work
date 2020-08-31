@@ -3,10 +3,9 @@ package main
 import (
 	"calendar/internal/app"
 	"calendar/internal/config"
-	server2 "calendar/internal/grpc/server"
 	"calendar/internal/logger"
 	"calendar/internal/repository/postgres"
-	"calendar/internal/server"
+	http_server "calendar/internal/server/http"
 	"context"
 	"flag"
 	"log"
@@ -40,11 +39,10 @@ func main() {
 	//c, _ := config.Read(args.configPath)
 
 	r := new(postgres.Repo)
-	s := new(server.Instance)
-	gs := new(server2.Server)
+	s := new(http_server.Instance)
 	l := new(logger.Instance)
 
-	a, err := app.New(r, s, l, *gs)
+	a, err := app.New(r, s, l)
 
 	if err != nil {
 		log.Fatal(err)
