@@ -1,7 +1,6 @@
 package app
 
 import (
-	server2 "calendar/internal/grpc/server"
 	"calendar/internal/logger"
 	"calendar/internal/repository"
 	"calendar/internal/server"
@@ -11,14 +10,13 @@ import (
 )
 
 type App struct {
-	repo       repository.BaseRepo
-	server     server.Server
-	grpcServer server2.Server
-	logger     logger.Logger
+	repo   repository.BaseRepo
+	server server.Server
+	logger logger.Logger
 }
 
-func New(r repository.BaseRepo, s server.Server, l logger.Logger, g server2.Server) (*App, error) {
-	return &App{repo: r, server: s, logger: l, grpcServer: g}, nil
+func New(r repository.BaseRepo, s server.Server, l logger.Logger) (*App, error) {
+	return &App{repo: r, server: s, logger: l}, nil
 }
 
 func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
@@ -30,18 +28,16 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 
 	// storage
 	err = a.repo.Connect(ctx, dsn)
+	log.Println(err)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// server
-	//err = a.server.Start()
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	err = a.grpcServer.Start(a.repo)
+	//server
+	err = a.server.Start()
 	if err != nil {
 		log.Fatal(err)
+		return err
 	}
 
 	return nil
