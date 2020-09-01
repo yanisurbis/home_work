@@ -4,9 +4,11 @@ import (
 	"calendar/internal/repository"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -15,6 +17,7 @@ type Instance struct {
 }
 
 const repositoryKey = "repository"
+const userIdKey = "userId"
 
 type BasicHandler func(http.ResponseWriter, *http.Request)
 
@@ -37,14 +40,44 @@ func dbMiddleware(h BasicHandler, repo repository.BaseRepo) BasicHandler {
 	}
 }
 
+func userIdMiddleware(h BasicHandler) BasicHandler {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		userId := r.Header.Get("userid")
+		ctx = context.WithValue(ctx, userIdKey, userId)
+
+		h(w, r.WithContext(ctx))
+	}
+}
+
 func applyMiddlewares(h BasicHandler, r repository.BaseRepo) BasicHandler {
 	h1 := dbMiddleware(h, r)
+	h2 := userIdMiddleware(h1)
 
-	return logMiddleware(h1)
+	return logMiddleware(h2)
 }
 
 func helloHandler(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "hello world\n")
+}
+
+func getUserId(w http.ResponseWriter, req *http.Request) (repository.ID, error) {
+	ctx := req.Context()
+
+	userId, ok := ctx.Value(userIdKey).(string)
+
+	// TODO: handle userId absence
+	if !ok {
+		return 0, errors.New("can't access userId")
+	}
+
+	userIdInt, err := strconv.Atoi(userId)
+
+	if err != nil {
+		return 0, errors.New("can't convert userId")
+	}
+
+	return userIdInt, nil
 }
 
 func getEvents(w http.ResponseWriter, req *http.Request) {
@@ -52,10 +85,18 @@ func getEvents(w http.ResponseWriter, req *http.Request) {
 	repo, ok := ctx.Value(repositoryKey).(repository.BaseRepo)
 
 	if !ok {
+		http.Error(w, "problem accessing DB", http.StatusInternalServerError)
 		return
 	}
 
-	events, err := repo.GetEventsDay(1, time.Now().Add(time.Duration(24)*time.Hour*-1))
+	userId, err := getUserId(w, req)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	events, err := repo.GetEventsDay(userId, time.Now().Add(time.Duration(24)*time.Hour*-1))
 
 	if err != nil {
 		log.Fatal(err)
