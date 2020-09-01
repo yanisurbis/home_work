@@ -63,6 +63,8 @@ func getEvents(w http.ResponseWriter, req *http.Request) {
 
 	fmt.Printf("%+v\n", events)
 
+	// TODO: handle empty array, right now return null
+	// TODO: add migration to make file
 	eventsJSON, err := json.Marshal(events)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
