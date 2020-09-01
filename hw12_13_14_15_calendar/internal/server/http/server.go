@@ -61,12 +61,9 @@ func helloHandler(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "hello world\n")
 }
 
-func getUserId(w http.ResponseWriter, req *http.Request) (repository.ID, error) {
-	ctx := req.Context()
-
+func getUserId(ctx context.Context) (repository.ID, error) {
 	userId, ok := ctx.Value(userIdKey).(string)
 
-	// TODO: handle userId absence
 	if !ok {
 		return 0, errors.New("can't access userId")
 	}
@@ -93,7 +90,7 @@ func getEvents(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	userId, err := getUserId(w, req)
+	userId, err := getUserId(ctx)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
