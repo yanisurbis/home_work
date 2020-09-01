@@ -71,6 +71,10 @@ func getUserId(w http.ResponseWriter, req *http.Request) (repository.ID, error) 
 		return 0, errors.New("can't access userId")
 	}
 
+	if userId == "" {
+		return 0, errors.New("specify userId in headers")
+	}
+
 	userIdInt, err := strconv.Atoi(userId)
 
 	if err != nil {
