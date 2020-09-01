@@ -81,6 +81,29 @@ func getUserId(ctx context.Context) (repository.ID, error) {
 	return userIdInt, nil
 }
 
+func getFromParam(req *http.Request) (time.Time, error) {
+	err := req.ParseForm()
+	if err != nil {
+		return time.Now(), err
+	}
+
+	fromStr := req.PostForm.Get("from")
+	if fromStr == "" {
+		return time.Now(), errors.New("specify from value")
+	}
+
+	fromInt, err := strconv.Atoi(fromStr)
+	fmt.Println("timestamp -> ", fromInt)
+	if err != nil {
+		return time.Now(), errors.New("can't convert from value")
+	}
+
+	from := time.Unix(int64(fromInt), 0)
+	fmt.Println("date -> " + from.String())
+
+	return from, nil
+}
+
 func getEvents(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	repo, ok := ctx.Value(repositoryKey).(repository.BaseRepo)
@@ -91,13 +114,18 @@ func getEvents(w http.ResponseWriter, req *http.Request) {
 	}
 
 	userId, err := getUserId(ctx)
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	events, err := repo.GetEventsDay(userId, time.Now().Add(time.Duration(24)*time.Hour*-1))
+	from, err := getFromParam(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	events, err := repo.GetEventsDay(userId, from.Add(time.Duration(24)*time.Hour*-1))
 
 	if err != nil {
 		log.Fatal(err)

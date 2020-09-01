@@ -17,3 +17,8 @@ protoc protobufs/events.proto --go_out=plugins=grpc:.
 
 - start server, main.go
 - start client, client.go
+
+### Sending request
+
+- add `userid = 1` to headers
+- add `from = Date.now()/1000` to body, form-url-encoded 
