@@ -98,15 +98,15 @@ func getFromParam(req *http.Request) (time.Time, error) {
 		return time.Now(), errors.New("can't convert from value")
 	}
 
-	from := time.Unix(int64(fromInt), 0)
+	from := time.Unix(int64(fromInt/1000), 0)
 	fmt.Println("date -> " + from.String())
 
 	return from, nil
 }
 
-func getEvents(w http.ResponseWriter, req *http.Request) {
+func getEvents(w http.ResponseWriter, req *http.Request, cb func(userID repository.ID, from time.Time, repo repository.BaseRepo) ([]repository.Event, error)) {
 	ctx := req.Context()
-	repo, ok := ctx.Value(repositoryKey).(repository.BaseRepo)
+	r, ok := ctx.Value(repositoryKey).(repository.BaseRepo)
 
 	if !ok {
 		http.Error(w, "problem accessing DB", http.StatusInternalServerError)
@@ -125,7 +125,7 @@ func getEvents(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	events, err := repo.GetEventsDay(userId, from.Add(time.Duration(24)*time.Hour*-1))
+	events, err := cb(userId, from.Add(time.Duration(24)*time.Hour*-1), r)
 
 	if err != nil {
 		log.Fatal(err)
@@ -145,12 +145,33 @@ func getEvents(w http.ResponseWriter, req *http.Request) {
 	w.Write(eventsJSON)
 }
 
+func getEventsDay(w http.ResponseWriter, req *http.Request) {
+	getEvents(w, req, func(userId repository.ID, from time.Time, repo repository.BaseRepo) ([]repository.Event, error) {
+		return repo.GetEventsDay(userId, from)
+	})
+}
+
+func getEventsWeek(w http.ResponseWriter, req *http.Request) {
+	getEvents(w, req, func(userId repository.ID, from time.Time, repo repository.BaseRepo) ([]repository.Event, error) {
+		return repo.GetEventsWeek(userId, from)
+	})
+}
+
+func getEventsMonth(w http.ResponseWriter, req *http.Request) {
+	getEvents(w, req, func(userId repository.ID, from time.Time, repo repository.BaseRepo) ([]repository.Event, error) {
+		return repo.GetEventsMonth(userId, from)
+	})
+}
+
 // TODO move grpc server in server folder
 func (s *Instance) Start(r repository.BaseRepo) error {
 	s.instance = &http.Server{Addr: ":8080"}
 
 	// TODO: wrap log middleware on every handler
-	http.HandleFunc("/get-events-day", applyMiddlewares(getEvents, r))
+	http.HandleFunc("/get-events-day", applyMiddlewares(getEventsDay, r))
+	http.HandleFunc("/get-events-week", applyMiddlewares(getEventsWeek, r))
+	http.HandleFunc("/get-events-month", applyMiddlewares(getEventsMonth, r))
+
 	fmt.Println("server starting at port :8080")
 
 	return s.instance.ListenAndServe()
