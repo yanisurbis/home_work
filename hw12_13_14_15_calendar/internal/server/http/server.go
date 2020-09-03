@@ -4,9 +4,11 @@ import (
 	"calendar/internal/repository"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -15,6 +17,7 @@ type Instance struct {
 }
 
 const repositoryKey = "repository"
+const userIdKey = "userId"
 
 type BasicHandler func(http.ResponseWriter, *http.Request)
 
@@ -37,14 +40,68 @@ func dbMiddleware(h BasicHandler, repo repository.BaseRepo) BasicHandler {
 	}
 }
 
+func userIdMiddleware(h BasicHandler) BasicHandler {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		userId := r.Header.Get("userid")
+		ctx = context.WithValue(ctx, userIdKey, userId)
+
+		h(w, r.WithContext(ctx))
+	}
+}
+
 func applyMiddlewares(h BasicHandler, r repository.BaseRepo) BasicHandler {
 	h1 := dbMiddleware(h, r)
+	h2 := userIdMiddleware(h1)
 
-	return logMiddleware(h1)
+	return logMiddleware(h2)
 }
 
 func helloHandler(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "hello world\n")
+}
+
+func getUserId(ctx context.Context) (repository.ID, error) {
+	userId, ok := ctx.Value(userIdKey).(string)
+
+	if !ok {
+		return 0, errors.New("can't access userId")
+	}
+
+	if userId == "" {
+		return 0, errors.New("specify userId in headers")
+	}
+
+	userIdInt, err := strconv.Atoi(userId)
+
+	if err != nil {
+		return 0, errors.New("can't convert userId")
+	}
+
+	return userIdInt, nil
+}
+
+func getFromParam(req *http.Request) (time.Time, error) {
+	err := req.ParseForm()
+	if err != nil {
+		return time.Now(), err
+	}
+
+	fromStr := req.PostForm.Get("from")
+	if fromStr == "" {
+		return time.Now(), errors.New("specify from value")
+	}
+
+	fromInt, err := strconv.Atoi(fromStr)
+	fmt.Println("timestamp -> ", fromInt)
+	if err != nil {
+		return time.Now(), errors.New("can't convert from value")
+	}
+
+	from := time.Unix(int64(fromInt), 0)
+	fmt.Println("date -> " + from.String())
+
+	return from, nil
 }
 
 func getEvents(w http.ResponseWriter, req *http.Request) {
@@ -52,10 +109,23 @@ func getEvents(w http.ResponseWriter, req *http.Request) {
 	repo, ok := ctx.Value(repositoryKey).(repository.BaseRepo)
 
 	if !ok {
+		http.Error(w, "problem accessing DB", http.StatusInternalServerError)
 		return
 	}
 
-	events, err := repo.GetEventsDay(1, time.Now().Add(time.Duration(24)*time.Hour*-1))
+	userId, err := getUserId(ctx)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	from, err := getFromParam(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	events, err := repo.GetEventsDay(userId, from.Add(time.Duration(24)*time.Hour*-1))
 
 	if err != nil {
 		log.Fatal(err)
@@ -63,6 +133,8 @@ func getEvents(w http.ResponseWriter, req *http.Request) {
 
 	fmt.Printf("%+v\n", events)
 
+	// TODO: handle empty array, right now return null
+	// TODO: add migration to make file
 	eventsJSON, err := json.Marshal(events)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
