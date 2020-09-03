@@ -81,6 +81,18 @@ func getUserId(ctx context.Context) (repository.ID, error) {
 	return userIdInt, nil
 }
 
+func getTimeFromTimestamp(timestamp string) (time.Time, error) {
+	fromInt, err := strconv.Atoi(timestamp)
+	if err != nil {
+		return time.Now(), errors.New("can't convert from value")
+	}
+
+	from := time.Unix(int64(fromInt/1000), 0)
+	fmt.Println("date -> " + from.String())
+
+	return from, nil
+}
+
 func getFromParam(req *http.Request) (time.Time, error) {
 	err := req.ParseForm()
 	if err != nil {
@@ -92,16 +104,7 @@ func getFromParam(req *http.Request) (time.Time, error) {
 		return time.Now(), errors.New("specify from value")
 	}
 
-	fromInt, err := strconv.Atoi(fromStr)
-	fmt.Println("timestamp -> ", fromInt)
-	if err != nil {
-		return time.Now(), errors.New("can't convert from value")
-	}
-
-	from := time.Unix(int64(fromInt/1000), 0)
-	fmt.Println("date -> " + from.String())
-
-	return from, nil
+	return getTimeFromTimestamp(fromStr)
 }
 
 func getEvents(w http.ResponseWriter, req *http.Request, cb func(userID repository.ID, from time.Time, repo repository.BaseRepo) ([]repository.Event, error)) {
@@ -163,6 +166,104 @@ func getEventsMonth(w http.ResponseWriter, req *http.Request) {
 	})
 }
 
+func getEventFromReq(req *http.Request, userId repository.ID) (*repository.Event, error) {
+	err := req.ParseForm()
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: add validation for each field
+	title := req.PostForm.Get("title")
+
+	fmt.Printf("%+v", req.PostForm)
+	if title == "" {
+		return nil, errors.New("specify title value")
+	}
+
+	startAtStr := req.PostForm.Get("start_at")
+	if startAtStr == "" {
+		return nil, errors.New("specify start_at value")
+	}
+
+	start_at, err := getTimeFromTimestamp(startAtStr)
+	if err != nil {
+		return nil, err
+	}
+
+	endAtStr := req.PostForm.Get("end_at")
+	if endAtStr == "" {
+		return nil, errors.New("specify end_at value")
+	}
+
+	end_at, err := getTimeFromTimestamp(endAtStr)
+	if err != nil {
+		return nil, err
+	}
+
+	description := req.PostForm.Get("description")
+	if description == "" {
+		return nil, errors.New("specify description value")
+	}
+
+	notifyAtStr := req.PostForm.Get("notify_at")
+	if notifyAtStr == "" {
+		return nil, errors.New("specify notify_at value")
+	}
+
+	notify_at, err := getTimeFromTimestamp(notifyAtStr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &repository.Event{
+		Title:       title,
+		StartAt:     start_at,
+		EndAt:       end_at,
+		Description: description,
+		UserID:      userId,
+		NotifyAt:    notify_at,
+	}, nil
+}
+
+func addEvent(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	r, ok := ctx.Value(repositoryKey).(repository.BaseRepo)
+
+	if !ok {
+		http.Error(w, "problem accessing DB", http.StatusInternalServerError)
+		return
+	}
+
+	userId, err := getUserId(ctx)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	event, err := getEventFromReq(req, userId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = r.AddEvent(*event)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	eventJSON, err := json.Marshal(event)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(eventJSON)
+
+}
+
 // TODO move grpc server in server folder
 func (s *Instance) Start(r repository.BaseRepo) error {
 	s.instance = &http.Server{Addr: ":8080"}
@@ -171,6 +272,8 @@ func (s *Instance) Start(r repository.BaseRepo) error {
 	http.HandleFunc("/get-events-day", applyMiddlewares(getEventsDay, r))
 	http.HandleFunc("/get-events-week", applyMiddlewares(getEventsWeek, r))
 	http.HandleFunc("/get-events-month", applyMiddlewares(getEventsMonth, r))
+
+	http.HandleFunc("/add-event", applyMiddlewares(addEvent, r))
 
 	fmt.Println("server starting at port :8080")
 
