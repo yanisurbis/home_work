@@ -264,6 +264,71 @@ func addEvent(w http.ResponseWriter, req *http.Request) {
 
 }
 
+func updateEvent(w http.ResponseWriter, req *http.Request) {
+	return
+}
+
+func getEventIdFromReq(req *http.Request) (repository.ID, error) {
+	err := req.ParseForm()
+	if err != nil {
+		// TODO: should wrap the error
+		return 0, err
+	}
+
+	eventIdStr := req.PostForm.Get("eventId")
+
+	if eventIdStr == "" {
+		return 0, errors.New("specify eventId value")
+	}
+
+	eventId, err := strconv.Atoi(eventIdStr)
+
+	if err != nil {
+		return 0, errors.New("failed to parse eventId")
+	}
+
+	return eventId, nil
+}
+
+func deleteEvent(w http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	r, ok := ctx.Value(repositoryKey).(repository.BaseRepo)
+
+	if !ok {
+		http.Error(w, "problem accessing DB", http.StatusInternalServerError)
+		return
+	}
+
+	userId, err := getUserId(ctx)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	eventId, err := getEventIdFromReq(req)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = r.DeleteEvent(userId, eventId)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write([]byte("Ok"))
+
+	if err != nil {
+		log.Println("Failed to send response")
+		return
+	}
+}
+
 // TODO move grpc server in server folder
 func (s *Instance) Start(r repository.BaseRepo) error {
 	s.instance = &http.Server{Addr: ":8080"}
@@ -274,6 +339,8 @@ func (s *Instance) Start(r repository.BaseRepo) error {
 	http.HandleFunc("/get-events-month", applyMiddlewares(getEventsMonth, r))
 
 	http.HandleFunc("/add-event", applyMiddlewares(addEvent, r))
+	http.HandleFunc("/update-event", applyMiddlewares(updateEvent, r))
+	http.HandleFunc("/delete-event", applyMiddlewares(deleteEvent, r))
 
 	fmt.Println("server starting at port :8080")
 
