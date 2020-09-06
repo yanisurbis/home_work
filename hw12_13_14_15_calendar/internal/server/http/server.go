@@ -234,10 +234,7 @@ func getEventFromReq(req *http.Request, userId repository.ID) (*repository.Event
 	}, nil
 }
 
-func getEventFromReqUpdate(req *http.Request, userId repository.ID) (*repository.Event, error) {
-	event := new(repository.Event)
-	event.UserID = userId
-
+func getEventFromReqUpdate(req *http.Request, userId repository.ID, r repository.BaseRepo) (*repository.Event, error) {
 	err := req.ParseForm()
 	if err != nil {
 		return nil, err
@@ -251,11 +248,19 @@ func getEventFromReqUpdate(req *http.Request, userId repository.ID) (*repository
 		return nil, errors.New("failed to parse eventId")
 	}
 
+	event, err := r.GetEvent(userId, id)
+
+	if err != nil {
+		return nil, err
+	}
+
 	event.ID = id
 
 	// TODO: add validation for each field
 	title := req.PostForm.Get("title")
-	event.Title = title
+	if title != "" {
+		event.Title = title
+	}
 
 	startAtStr := req.PostForm.Get("start_at")
 	if startAtStr != "" {
@@ -276,7 +281,9 @@ func getEventFromReqUpdate(req *http.Request, userId repository.ID) (*repository
 	}
 
 	description := req.PostForm.Get("description")
-	event.Description = description
+	if description != "" {
+		event.Description = description
+	}
 
 	notifyAtStr := req.PostForm.Get("notify_at")
 	if notifyAtStr != "" {
@@ -287,7 +294,7 @@ func getEventFromReqUpdate(req *http.Request, userId repository.ID) (*repository
 		event.NotifyAt = notifyAt
 	}
 
-	return event, nil
+	return &event, nil
 }
 
 func addEvent(w http.ResponseWriter, req *http.Request) {
@@ -345,7 +352,7 @@ func updateEvent(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	event, err := getEventFromReqUpdate(req, userId)
+	event, err := getEventFromReqUpdate(req, userId, r)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

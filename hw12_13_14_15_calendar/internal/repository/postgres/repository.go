@@ -3,6 +3,7 @@ package postgres
 import (
 	"calendar/internal/repository"
 	"context"
+	"errors"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -85,6 +86,32 @@ func (r *Repo) getEvents(userID repository.ID, from time.Time, to time.Time) ([]
 	err = nstmt.Select(&events, option)
 
 	return events, err
+}
+
+func (r *Repo) GetEvent(userId repository.ID, id repository.ID) (repository.Event, error) {
+	var events []repository.Event
+	option := make(map[string]interface{})
+	option["id"] = id
+
+	nstmt, err := r.db.PrepareNamed("SELECT * FROM events WHERE id = :id")
+
+	if err != nil {
+		return repository.Event{}, err
+	}
+
+	err = nstmt.Select(&events, option)
+
+	if err != nil {
+		return repository.Event{}, err
+	}
+
+	event := events[0]
+
+	if event.UserID != userId {
+		return repository.Event{}, errors.New("event not found")
+	}
+
+	return event, nil
 }
 
 func (r *Repo) GetEventsDay(userID repository.ID, from time.Time) ([]repository.Event, error) {
