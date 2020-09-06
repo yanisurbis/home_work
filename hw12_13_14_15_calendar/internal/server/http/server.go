@@ -172,18 +172,26 @@ func getEventFromReq(req *http.Request, userId repository.ID) (*repository.Event
 		return nil, err
 	}
 
+	idStr := req.PostForm.Get("id")
+
+	id, err := strconv.Atoi(idStr)
+
+	if err != nil {
+		return nil, errors.New("failed to parse eventId")
+	}
+
 	// TODO: add validation for each field
 	title := req.PostForm.Get("title")
 
 	fmt.Printf("%+v", req.PostForm)
-	if title == "" {
-		return nil, errors.New("specify title value")
-	}
+	//if title == "" {
+	//	return nil, errors.New("specify title value")
+	//}
 
 	startAtStr := req.PostForm.Get("start_at")
-	if startAtStr == "" {
-		return nil, errors.New("specify start_at value")
-	}
+	//if startAtStr == "" {
+	//	return nil, errors.New("specify start_at value")
+	//}
 
 	start_at, err := getTimeFromTimestamp(startAtStr)
 	if err != nil {
@@ -191,9 +199,9 @@ func getEventFromReq(req *http.Request, userId repository.ID) (*repository.Event
 	}
 
 	endAtStr := req.PostForm.Get("end_at")
-	if endAtStr == "" {
-		return nil, errors.New("specify end_at value")
-	}
+	//if endAtStr == "" {
+	//	return nil, errors.New("specify end_at value")
+	//}
 
 	end_at, err := getTimeFromTimestamp(endAtStr)
 	if err != nil {
@@ -201,14 +209,14 @@ func getEventFromReq(req *http.Request, userId repository.ID) (*repository.Event
 	}
 
 	description := req.PostForm.Get("description")
-	if description == "" {
-		return nil, errors.New("specify description value")
-	}
+	//if description == "" {
+	//	return nil, errors.New("specify description value")
+	//}
 
 	notifyAtStr := req.PostForm.Get("notify_at")
-	if notifyAtStr == "" {
-		return nil, errors.New("specify notify_at value")
-	}
+	//if notifyAtStr == "" {
+	//	return nil, errors.New("specify notify_at value")
+	//}
 
 	notify_at, err := getTimeFromTimestamp(notifyAtStr)
 	if err != nil {
@@ -216,6 +224,7 @@ func getEventFromReq(req *http.Request, userId repository.ID) (*repository.Event
 	}
 
 	return &repository.Event{
+		ID:          repository.ID(id),
 		Title:       title,
 		StartAt:     start_at,
 		EndAt:       end_at,
@@ -223,6 +232,62 @@ func getEventFromReq(req *http.Request, userId repository.ID) (*repository.Event
 		UserID:      userId,
 		NotifyAt:    notify_at,
 	}, nil
+}
+
+func getEventFromReqUpdate(req *http.Request, userId repository.ID) (*repository.Event, error) {
+	event := new(repository.Event)
+	event.UserID = userId
+
+	err := req.ParseForm()
+	if err != nil {
+		return nil, err
+	}
+
+	idStr := req.PostForm.Get("id")
+
+	id, err := strconv.Atoi(idStr)
+
+	if err != nil {
+		return nil, errors.New("failed to parse eventId")
+	}
+
+	event.ID = id
+
+	// TODO: add validation for each field
+	title := req.PostForm.Get("title")
+	event.Title = title
+
+	startAtStr := req.PostForm.Get("start_at")
+	if startAtStr != "" {
+		startAt, err := getTimeFromTimestamp(startAtStr)
+		if err != nil {
+			return nil, err
+		}
+		event.StartAt = startAt
+	}
+
+	endAtStr := req.PostForm.Get("end_at")
+	if endAtStr != "" {
+		endAt, err := getTimeFromTimestamp(endAtStr)
+		if err != nil {
+			return nil, err
+		}
+		event.EndAt = endAt
+	}
+
+	description := req.PostForm.Get("description")
+	event.Description = description
+
+	notifyAtStr := req.PostForm.Get("notify_at")
+	if notifyAtStr != "" {
+		notifyAt, err := getTimeFromTimestamp(notifyAtStr)
+		if err != nil {
+			return nil, err
+		}
+		event.NotifyAt = notifyAt
+	}
+
+	return event, nil
 }
 
 func addEvent(w http.ResponseWriter, req *http.Request) {
@@ -265,7 +330,37 @@ func addEvent(w http.ResponseWriter, req *http.Request) {
 }
 
 func updateEvent(w http.ResponseWriter, req *http.Request) {
-	return
+	ctx := req.Context()
+	r, ok := ctx.Value(repositoryKey).(repository.BaseRepo)
+
+	if !ok {
+		http.Error(w, "problem accessing DB", http.StatusInternalServerError)
+		return
+	}
+
+	userId, err := getUserId(ctx)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	event, err := getEventFromReqUpdate(req, userId)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = r.UpdateEvent(*event)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("Ok"))
 }
 
 func getEventIdFromReq(req *http.Request) (repository.ID, error) {
@@ -275,6 +370,7 @@ func getEventIdFromReq(req *http.Request) (repository.ID, error) {
 		return 0, err
 	}
 
+	// TODO: change to id instead of eventId
 	eventIdStr := req.PostForm.Get("eventId")
 
 	if eventIdStr == "" {
