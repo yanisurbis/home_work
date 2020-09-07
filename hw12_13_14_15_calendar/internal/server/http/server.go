@@ -29,26 +29,6 @@ func helloHandler(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "hello world\n")
 }
 
-func getUserId(ctx context.Context) repository.ID {
-	userId, ok := ctx.Value(userIdKey).(repository.ID)
-
-	if !ok {
-		log.Println("userId is missing: ", userId)
-	}
-
-	return userId
-}
-
-func getRepository(ctx context.Context) repository.BaseRepo {
-	repo, ok := ctx.Value(repositoryKey).(repository.BaseRepo)
-
-	if !ok {
-		log.Println("repository is missing: ", repo)
-	}
-
-	return repo
-}
-
 func getTimeFromTimestamp(timestamp string) (time.Time, error) {
 	fromInt, err := strconv.Atoi(timestamp)
 	if err != nil {
@@ -366,7 +346,7 @@ func deleteEvent(w http.ResponseWriter, req *http.Request) {
 func (s *Instance) Start(r repository.BaseRepo) error {
 	s.instance = &http.Server{Addr: ":8080"}
 
-	http.HandleFunc("/get-events-day", helloHandler)
+	http.HandleFunc("/hello", helloHandler)
 
 	http.HandleFunc("/get-events-day", applyMiddlewares(getEventsDay, r))
 	http.HandleFunc("/get-events-week", applyMiddlewares(getEventsWeek, r))

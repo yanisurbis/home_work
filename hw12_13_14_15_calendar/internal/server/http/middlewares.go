@@ -2,11 +2,11 @@ package http_server
 
 import (
 	"calendar/internal/repository"
+	"context"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
-	"context"
 )
 
 func logMiddleware(h BasicHandler) BasicHandler {
