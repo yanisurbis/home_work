@@ -366,6 +366,8 @@ func deleteEvent(w http.ResponseWriter, req *http.Request) {
 func (s *Instance) Start(r repository.BaseRepo) error {
 	s.instance = &http.Server{Addr: ":8080"}
 
+	http.HandleFunc("/get-events-day", helloHandler)
+
 	http.HandleFunc("/get-events-day", applyMiddlewares(getEventsDay, r))
 	http.HandleFunc("/get-events-week", applyMiddlewares(getEventsWeek, r))
 	http.HandleFunc("/get-events-month", applyMiddlewares(getEventsMonth, r))
