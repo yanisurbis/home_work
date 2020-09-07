@@ -363,7 +363,7 @@ func updateEvent(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = r.UpdateEvent(*event)
+	err = r.UpdateEvent(userId, *event)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
