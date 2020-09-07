@@ -38,6 +38,7 @@ func (r *Repo) AddEvent(event repository.Event) (err error) {
 	return err
 }
 
+// TODO: where is the error?
 func (r *Repo) UpdateEvent(event repository.Event) (err error) {
 	var events []repository.Event
 
@@ -53,6 +54,7 @@ func (r *Repo) UpdateEvent(event repository.Event) (err error) {
 	return
 }
 
+// TODO: where is the error?
 func (r *Repo) DeleteEvent(userID repository.ID, eventID repository.ID) (err error) {
 	var events []repository.Event
 	option := make(map[string]interface{})
@@ -69,6 +71,7 @@ func (r *Repo) DeleteEvent(userID repository.ID, eventID repository.ID) (err err
 
 	return
 }
+
 
 func (r *Repo) getEvents(userID repository.ID, from time.Time, to time.Time) ([]repository.Event, error) {
 	var events []repository.Event

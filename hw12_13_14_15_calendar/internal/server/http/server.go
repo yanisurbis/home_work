@@ -31,6 +31,10 @@ func logMiddleware(h BasicHandler) BasicHandler {
 	}
 }
 
+// check requered fields
+// compose event with coerce
+// check fields validity
+
 func dbMiddleware(h BasicHandler, repo repository.BaseRepo) BasicHandler {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -404,6 +408,7 @@ func deleteEvent(w http.ResponseWriter, req *http.Request) {
 
 	userId, err := getUserId(ctx)
 
+	// TODO: put inside middleware
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
