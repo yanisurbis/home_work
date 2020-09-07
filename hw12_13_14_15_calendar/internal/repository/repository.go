@@ -9,7 +9,7 @@ type BaseRepo interface {
 	Connect(ctx context.Context, dsn string) error
 	Close() error
 	AddEvent(event Event) error
-	UpdateEvent(event Event) error
+	UpdateEvent(userID ID, event Event) error
 	DeleteEvent(userID ID, eventID ID) error
 	GetEventsDay(userID ID, from time.Time) ([]Event, error)
 	GetEventsWeek(userID ID, from time.Time) ([]Event, error)

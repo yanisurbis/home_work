@@ -9,6 +9,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+var (
+	ErrForbidden = errors.New("access denied")
+)
+
 type Repo struct {
 	db *sqlx.DB
 }
@@ -38,8 +42,11 @@ func (r *Repo) AddEvent(event repository.Event) (err error) {
 	return err
 }
 
-// TODO: where is the error?
-func (r *Repo) UpdateEvent(event repository.Event) (err error) {
+func (r *Repo) UpdateEvent(userID repository.ID, event repository.Event) (err error) {
+	if userID != event.UserID {
+		return ErrForbidden
+	}
+
 	var events []repository.Event
 
 	nstmt, err := r.db.PrepareNamed(
@@ -52,43 +59,6 @@ func (r *Repo) UpdateEvent(event repository.Event) (err error) {
 	err = nstmt.Select(&events, event)
 
 	return
-}
-
-// TODO: where is the error?
-func (r *Repo) DeleteEvent(userID repository.ID, eventID repository.ID) (err error) {
-	var events []repository.Event
-	option := make(map[string]interface{})
-	option["event_id"] = eventID
-	option["user_id"] = userID
-
-	nstmt, err := r.db.PrepareNamed("DELETE FROM events WHERE  user_id = :user_id and id=:event_id")
-
-	if err != nil {
-		return
-	}
-
-	err = nstmt.Select(&events, option)
-
-	return
-}
-
-
-func (r *Repo) getEvents(userID repository.ID, from time.Time, to time.Time) ([]repository.Event, error) {
-	var events []repository.Event
-	option := make(map[string]interface{})
-	option["start"] = from
-	option["end"] = to
-	option["user_id"] = userID
-
-	nstmt, err := r.db.PrepareNamed("SELECT * FROM events WHERE  user_id = :user_id and start_at>=:start and start_at<:end")
-
-	if err != nil {
-		return nil, err
-	}
-
-	err = nstmt.Select(&events, option)
-
-	return events, err
 }
 
 func (r *Repo) GetEvent(userId repository.ID, id repository.ID) (repository.Event, error) {
@@ -111,10 +81,50 @@ func (r *Repo) GetEvent(userId repository.ID, id repository.ID) (repository.Even
 	event := events[0]
 
 	if event.UserID != userId {
-		return repository.Event{}, errors.New("event not found")
+		return repository.Event{}, ErrForbidden
 	}
 
 	return event, nil
+}
+
+func (r *Repo) DeleteEvent(userID repository.ID, eventID repository.ID) (err error) {
+	_, err = r.GetEvent(userID, eventID)
+
+	if err != nil {
+		return
+	}
+
+	var events []repository.Event
+	option := make(map[string]interface{})
+	option["event_id"] = eventID
+
+	nstmt, err := r.db.PrepareNamed("DELETE FROM events WHERE id=:event_id")
+
+	if err != nil {
+		return
+	}
+
+	err = nstmt.Select(&events, option)
+
+	return
+}
+
+func (r *Repo) getEvents(userID repository.ID, from time.Time, to time.Time) ([]repository.Event, error) {
+	var events []repository.Event
+	option := make(map[string]interface{})
+	option["start"] = from
+	option["end"] = to
+	option["user_id"] = userID
+
+	nstmt, err := r.db.PrepareNamed("SELECT * FROM events WHERE user_id = :user_id and start_at>=:start and start_at<:end")
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = nstmt.Select(&events, option)
+
+	return events, err
 }
 
 func (r *Repo) GetEventsDay(userID repository.ID, from time.Time) ([]repository.Event, error) {
