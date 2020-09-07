@@ -47,9 +47,21 @@ func dbMiddleware(h BasicHandler, repo repository.BaseRepo) BasicHandler {
 func userIdMiddleware(h BasicHandler) BasicHandler {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		userId := r.Header.Get("userid")
-		ctx = context.WithValue(ctx, userIdKey, userId)
+		userIdStr := r.Header.Get("userid")
 
+		if userIdStr == "" {
+			http.Error(w, "please specify userId in headers", http.StatusUnauthorized)
+			return
+		}
+
+		userId, err := strconv.Atoi(userIdStr)
+
+		if err != nil {
+			http.Error(w, "please check your userId", http.StatusUnauthorized)
+			return
+		}
+
+		ctx = context.WithValue(ctx, userIdKey, userId)
 		h(w, r.WithContext(ctx))
 	}
 }
@@ -65,24 +77,14 @@ func helloHandler(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "hello world\n")
 }
 
-func getUserId(ctx context.Context) (repository.ID, error) {
-	userId, ok := ctx.Value(userIdKey).(string)
+func getUserId(ctx context.Context) repository.ID {
+	userId, ok := ctx.Value(userIdKey).(repository.ID)
 
 	if !ok {
-		return 0, errors.New("can't access userId")
+		log.Println("userId is missing: ", userId)
 	}
 
-	if userId == "" {
-		return 0, errors.New("specify userId in headers")
-	}
-
-	userIdInt, err := strconv.Atoi(userId)
-
-	if err != nil {
-		return 0, errors.New("can't convert userId")
-	}
-
-	return userIdInt, nil
+	return userId
 }
 
 func getTimeFromTimestamp(timestamp string) (time.Time, error) {
@@ -120,11 +122,7 @@ func getEvents(w http.ResponseWriter, req *http.Request, cb func(userID reposito
 		return
 	}
 
-	userId, err := getUserId(ctx)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	userId := getUserId(ctx)
 
 	from, err := getFromParam(req)
 	if err != nil {
@@ -310,11 +308,7 @@ func addEvent(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	userId, err := getUserId(ctx)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	userId := getUserId(ctx)
 
 	event, err := getEventFromReq(req, userId)
 	if err != nil {
@@ -349,12 +343,7 @@ func updateEvent(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	userId, err := getUserId(ctx)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	userId := getUserId(ctx)
 
 	event, err := getEventFromReqUpdate(req, userId, r)
 
@@ -406,13 +395,7 @@ func deleteEvent(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	userId, err := getUserId(ctx)
-
-	// TODO: put inside middleware
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	userId := getUserId(ctx)
 
 	eventId, err := getEventIdFromReq(req)
 
@@ -441,7 +424,6 @@ func deleteEvent(w http.ResponseWriter, req *http.Request) {
 func (s *Instance) Start(r repository.BaseRepo) error {
 	s.instance = &http.Server{Addr: ":8080"}
 
-	// TODO: wrap log middleware on every handler
 	http.HandleFunc("/get-events-day", applyMiddlewares(getEventsDay, r))
 	http.HandleFunc("/get-events-week", applyMiddlewares(getEventsWeek, r))
 	http.HandleFunc("/get-events-month", applyMiddlewares(getEventsMonth, r))
