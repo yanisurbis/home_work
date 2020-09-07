@@ -87,6 +87,16 @@ func getUserId(ctx context.Context) repository.ID {
 	return userId
 }
 
+func getRepository(ctx context.Context) repository.BaseRepo {
+	repo, ok := ctx.Value(repositoryKey).(repository.BaseRepo)
+
+	if !ok {
+		log.Println("repository is missing: ", repo)
+	}
+
+	return repo
+}
+
 func getTimeFromTimestamp(timestamp string) (time.Time, error) {
 	fromInt, err := strconv.Atoi(timestamp)
 	if err != nil {
@@ -115,13 +125,8 @@ func getFromParam(req *http.Request) (time.Time, error) {
 
 func getEvents(w http.ResponseWriter, req *http.Request, cb func(userID repository.ID, from time.Time, repo repository.BaseRepo) ([]repository.Event, error)) {
 	ctx := req.Context()
-	r, ok := ctx.Value(repositoryKey).(repository.BaseRepo)
 
-	if !ok {
-		http.Error(w, "problem accessing DB", http.StatusInternalServerError)
-		return
-	}
-
+	r := getRepository(ctx)
 	userId := getUserId(ctx)
 
 	from, err := getFromParam(req)
@@ -301,13 +306,8 @@ func getEventFromReqUpdate(req *http.Request, userId repository.ID, r repository
 
 func addEvent(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	r, ok := ctx.Value(repositoryKey).(repository.BaseRepo)
 
-	if !ok {
-		http.Error(w, "problem accessing DB", http.StatusInternalServerError)
-		return
-	}
-
+	r := getRepository(ctx)
 	userId := getUserId(ctx)
 
 	event, err := getEventFromReq(req, userId)
@@ -336,13 +336,8 @@ func addEvent(w http.ResponseWriter, req *http.Request) {
 
 func updateEvent(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	r, ok := ctx.Value(repositoryKey).(repository.BaseRepo)
 
-	if !ok {
-		http.Error(w, "problem accessing DB", http.StatusInternalServerError)
-		return
-	}
-
+	r := getRepository(ctx)
 	userId := getUserId(ctx)
 
 	event, err := getEventFromReqUpdate(req, userId, r)
@@ -388,13 +383,8 @@ func getEventIdFromReq(req *http.Request) (repository.ID, error) {
 
 func deleteEvent(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	r, ok := ctx.Value(repositoryKey).(repository.BaseRepo)
 
-	if !ok {
-		http.Error(w, "problem accessing DB", http.StatusInternalServerError)
-		return
-	}
-
+	r := getRepository(ctx)
 	userId := getUserId(ctx)
 
 	eventId, err := getEventIdFromReq(req)
