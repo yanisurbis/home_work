@@ -138,7 +138,7 @@ func (s *Server) UpdateEvent(ctx context.Context, query *events_grpc.Event) (*em
 		return nil, err
 	}
 
-	err = s.db.UpdateEvent(*event)
+	err = s.db.UpdateEvent(repository.ID(query.UserId), *event)
 
 	if err != nil {
 		return nil, errors.New("problem updating event to the DB")
