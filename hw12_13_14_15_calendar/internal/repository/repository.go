@@ -24,7 +24,7 @@ type Event struct {
 	Title       string
 	StartAt     time.Time `db:"start_at"`
 	EndAt       time.Time `db:"end_at"`
-	Description string    
+	Description string
 	UserID      int       `db:"user_id"`
 	NotifyAt    time.Time `db:"notify_at"`
 }

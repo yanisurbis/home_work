@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"log"
 	"net/http"
 	"strconv"
@@ -112,13 +113,15 @@ func getEventToAdd(req *http.Request, userId repository.ID) (*repository.Event, 
 		return nil, err
 	}
 
+	event.UserID = userId
+
 	title := req.PostForm.Get("title")
 	event.Title = title
 
 	if startAtStr := req.PostForm.Get("start_at"); startAtStr != "" {
 		startAt, err := getTimeFromTimestamp(startAtStr)
 		if err != nil {
-			return nil, errors.New("start_at: wrong format")
+			return nil, validation.NewError("start_at", "wrong format")
 		}
 		event.StartAt = startAt
 	}
@@ -137,7 +140,7 @@ func getEventToAdd(req *http.Request, userId repository.ID) (*repository.Event, 
 	if notifyAtStr := req.PostForm.Get("notify_at"); notifyAtStr != "" {
 		notifyAt, err := getTimeFromTimestamp(notifyAtStr)
 		if err != nil {
-			return nil, errors.New("notify_at: wrong format")
+			return nil, validation.NewError("notify_at", "wrong format")
 		}
 		event.NotifyAt = notifyAt
 	}
@@ -220,9 +223,10 @@ func addEvent(w http.ResponseWriter, req *http.Request) {
 
 	event, err := getEventToAdd(req, userId)
 	if err != nil {
-		// TODO: use standard error with field specification
 		errs, _ := json.Marshal(err)
-		http.Error(w, string(errs), http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write(errs)
 		return
 	}
 
