@@ -20,13 +20,13 @@ type BaseRepo interface {
 type ID = int
 
 type Event struct {
-	ID          ID        `json:"id"`
-	Title       string    `json:"title"`
-	StartAt     time.Time `db:"start_at",json:"start_at"`
-	EndAt       time.Time `db:"end_at",json:"end_at"`
-	Description string    `json:"description"`
-	UserID      int       `db:"user_id",json:"user_id"`
-	NotifyAt    time.Time `db:"notify_at",json:"notify_at"`
+	ID          ID
+	Title       string
+	StartAt     time.Time `db:"start_at"`
+	EndAt       time.Time `db:"end_at"`
+	Description string    
+	UserID      int       `db:"user_id"`
+	NotifyAt    time.Time `db:"notify_at"`
 }
 
 type User struct {
