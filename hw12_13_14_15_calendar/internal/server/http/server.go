@@ -105,72 +105,44 @@ func getEventsMonth(w http.ResponseWriter, req *http.Request) {
 	})
 }
 
-func getEventFromReq(req *http.Request, userId repository.ID) (*repository.Event, error) {
+func getEventToAdd(req *http.Request, userId repository.ID) (*repository.Event, error) {
+	event := new(repository.Event)
 	err := req.ParseForm()
 	if err != nil {
 		return nil, err
 	}
 
-	idStr := req.PostForm.Get("id")
-
-	id, err := strconv.Atoi(idStr)
-
-	if err != nil {
-		return nil, errors.New("failed to parse eventId")
-	}
-
-	// TODO: add validation for each field
 	title := req.PostForm.Get("title")
+	event.Title = title
 
-	fmt.Printf("%+v", req.PostForm)
-	//if title == "" {
-	//	return nil, errors.New("specify title value")
-	//}
-
-	startAtStr := req.PostForm.Get("start_at")
-	//if startAtStr == "" {
-	//	return nil, errors.New("specify start_at value")
-	//}
-
-	start_at, err := getTimeFromTimestamp(startAtStr)
-	if err != nil {
-		return nil, err
+	if startAtStr := req.PostForm.Get("start_at"); startAtStr != "" {
+		startAt, err := getTimeFromTimestamp(startAtStr)
+		if err != nil {
+			return nil, err
+		}
+		event.StartAt = startAt
 	}
 
-	endAtStr := req.PostForm.Get("end_at")
-	//if endAtStr == "" {
-	//	return nil, errors.New("specify end_at value")
-	//}
-
-	end_at, err := getTimeFromTimestamp(endAtStr)
-	if err != nil {
-		return nil, err
+	if endAtStr := req.PostForm.Get("end_at"); endAtStr != "" {
+		endAt, err := getTimeFromTimestamp(endAtStr)
+		if err != nil {
+			return nil, err
+		}
+		event.EndAt = endAt
 	}
 
 	description := req.PostForm.Get("description")
-	//if description == "" {
-	//	return nil, errors.New("specify description value")
-	//}
+	event.Description = description
 
-	notifyAtStr := req.PostForm.Get("notify_at")
-	//if notifyAtStr == "" {
-	//	return nil, errors.New("specify notify_at value")
-	//}
-
-	notify_at, err := getTimeFromTimestamp(notifyAtStr)
-	if err != nil {
-		return nil, err
+	if notifyAtStr := req.PostForm.Get("notify_at"); notifyAtStr != "" {
+		notifyAt, err := getTimeFromTimestamp(notifyAtStr)
+		if err != nil {
+			return nil, err
+		}
+		event.NotifyAt = notifyAt
 	}
 
-	return &repository.Event{
-		ID:          repository.ID(id),
-		Title:       title,
-		StartAt:     start_at,
-		EndAt:       end_at,
-		Description: description,
-		UserID:      userId,
-		NotifyAt:    notify_at,
-	}, nil
+	return event, nil
 }
 
 func getEventFromReqUpdate(req *http.Request, userId repository.ID, r repository.BaseRepo) (*repository.Event, error) {
