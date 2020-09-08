@@ -36,7 +36,7 @@ func getTimeFromTimestamp(timestamp string) (time.Time, error) {
 		return time.Now(), errors.New("can't convert from value")
 	}
 
-	from := time.Unix(int64(fromInt/1000), 0)
+	from := time.Unix(int64(fromInt), 0)
 	fmt.Println("date -> " + from.String())
 
 	return from, nil
