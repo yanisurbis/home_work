@@ -239,16 +239,17 @@ func getEventFromReqUpdate(req *http.Request, userId repository.ID, r repository
 func addEvent(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
-	r := getRepository(ctx)
+	repo := getRepository(ctx)
 	userId := getUserId(ctx)
 
-	event, err := getEventFromReq(req, userId)
+	event, err := getEventToAdd(req, userId)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		// TODO: use standard error with field specification
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = r.AddEvent(*event)
+	err = repo.AddEvent(*event)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
