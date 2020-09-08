@@ -118,7 +118,7 @@ func getEventToAdd(req *http.Request, userId repository.ID) (*repository.Event, 
 	if startAtStr := req.PostForm.Get("start_at"); startAtStr != "" {
 		startAt, err := getTimeFromTimestamp(startAtStr)
 		if err != nil {
-			return nil, err
+			return nil, errors.New("start_at: wrong format")
 		}
 		event.StartAt = startAt
 	}
@@ -126,7 +126,7 @@ func getEventToAdd(req *http.Request, userId repository.ID) (*repository.Event, 
 	if endAtStr := req.PostForm.Get("end_at"); endAtStr != "" {
 		endAt, err := getTimeFromTimestamp(endAtStr)
 		if err != nil {
-			return nil, err
+			return nil, errors.New("end_at: wrong format")
 		}
 		event.EndAt = endAt
 	}
@@ -137,9 +137,13 @@ func getEventToAdd(req *http.Request, userId repository.ID) (*repository.Event, 
 	if notifyAtStr := req.PostForm.Get("notify_at"); notifyAtStr != "" {
 		notifyAt, err := getTimeFromTimestamp(notifyAtStr)
 		if err != nil {
-			return nil, err
+			return nil, errors.New("notify_at: wrong format")
 		}
 		event.NotifyAt = notifyAt
+	}
+
+	if err = validateEventToAdd(*event); err != nil {
+		return nil, err
 	}
 
 	return event, nil
@@ -217,7 +221,8 @@ func addEvent(w http.ResponseWriter, req *http.Request) {
 	event, err := getEventToAdd(req, userId)
 	if err != nil {
 		// TODO: use standard error with field specification
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		errs, _ := json.Marshal(err)
+		http.Error(w, string(errs), http.StatusBadRequest)
 		return
 	}
 
@@ -234,9 +239,9 @@ func addEvent(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// send status, not event
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(eventJSON)
-
 }
 
 func updateEvent(w http.ResponseWriter, req *http.Request) {
