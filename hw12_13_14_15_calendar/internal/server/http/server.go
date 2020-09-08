@@ -121,7 +121,9 @@ func parseEventToAdd(req *http.Request, userId repository.ID) (*repository.Event
 	if startAtStr := req.PostForm.Get("start_at"); startAtStr != "" {
 		startAt, err := getTimeFromTimestamp(startAtStr)
 		if err != nil {
-			return nil, validation.NewError("StartAt", "wrong format")
+			return nil, validation.Errors{
+				"StartAt": errors.New("wrong format"),
+			}
 		}
 		event.StartAt = startAt
 	}
@@ -129,7 +131,9 @@ func parseEventToAdd(req *http.Request, userId repository.ID) (*repository.Event
 	if endAtStr := req.PostForm.Get("end_at"); endAtStr != "" {
 		endAt, err := getTimeFromTimestamp(endAtStr)
 		if err != nil {
-			return nil, errors.New("EndAt: wrong format")
+			return nil, validation.Errors{
+				"EndAt": errors.New("wrong format"),
+			}
 		}
 		event.EndAt = endAt
 	}
@@ -140,7 +144,9 @@ func parseEventToAdd(req *http.Request, userId repository.ID) (*repository.Event
 	if notifyAtStr := req.PostForm.Get("notify_at"); notifyAtStr != "" {
 		notifyAt, err := getTimeFromTimestamp(notifyAtStr)
 		if err != nil {
-			return nil, validation.NewError("NotifyAt", "wrong format")
+			return nil, validation.Errors{
+				"NotifyAt": errors.New("wrong format"),
+			}
 		}
 		event.NotifyAt = notifyAt
 	}
@@ -223,6 +229,7 @@ func addEvent(w http.ResponseWriter, req *http.Request) {
 
 	event, err := parseEventToAdd(req, userId)
 	if err != nil {
+		fmt.Printf("%T", err)
 		errs, _ := json.Marshal(err)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
