@@ -14,6 +14,7 @@ type BaseRepo interface {
 	GetEventsDay(userID ID, from time.Time) ([]Event, error)
 	GetEventsWeek(userID ID, from time.Time) ([]Event, error)
 	GetEventsMonth(userID ID, from time.Time) ([]Event, error)
+	GetEvent(userID ID, id ID) (Event, error)
 }
 
 type ID = int
