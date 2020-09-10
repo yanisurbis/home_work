@@ -355,14 +355,10 @@ func (s *Instance) Start(r repository.BaseRepo) error {
 	// TODO: use middleware
 
 	router.HandleFunc("/hello", helloHandler)
-
-	router.HandleFunc("/get-events-day", applyMiddlewares(getEventsDay, r))
-	router.HandleFunc("/get-events-week", applyMiddlewares(getEventsWeek, r))
-	router.HandleFunc("/get-events-month", applyMiddlewares(getEventsMonth, r))
-
-	router.HandleFunc("/add-event", applyMiddlewares(addEvent, r))
-	router.HandleFunc("/update-event", applyMiddlewares(updateEvent, r))
-	router.HandleFunc("/delete-event", applyMiddlewares(deleteEvent, r))
+	router.HandleFunc("/events", applyMiddlewares(getEvents1, r)).Methods("GET")
+	router.HandleFunc("/event", applyMiddlewares(addEvent, r)).Methods("POST")
+	router.HandleFunc("/event", applyMiddlewares(updateEvent, r)).Methods("PUT")
+	router.HandleFunc("/event", applyMiddlewares(deleteEvent, r)).Methods("DELETE")
 
 	fmt.Println("server starting at port :8080")
 
