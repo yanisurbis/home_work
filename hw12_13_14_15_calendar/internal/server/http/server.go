@@ -44,17 +44,13 @@ func getTimeFromTimestamp(timestamp string) (time.Time, error) {
 }
 
 func getFromParam(req *http.Request) (time.Time, error) {
-	err := req.ParseForm()
-	if err != nil {
-		return time.Now(), err
-	}
+	fromValues, ok := req.URL.Query()["from"]
 
-	fromStr := req.PostForm.Get("from")
-	if fromStr == "" {
+	if !ok || len(fromValues) == 0 {
 		return time.Now(), errors.New("specify from value")
 	}
 
-	return getTimeFromTimestamp(fromStr)
+	return getTimeFromTimestamp(fromValues[0])
 }
 
 func getEvents(w http.ResponseWriter, req *http.Request, cb func(userID repository.ID, from time.Time, repo repository.BaseRepo) ([]repository.Event, error)) {
@@ -69,7 +65,8 @@ func getEvents(w http.ResponseWriter, req *http.Request, cb func(userID reposito
 		return
 	}
 
-	events, err := cb(userId, from.Add(time.Duration(24)*time.Hour*-1), r)
+	// TODO: remove ADD
+	events, err := cb(userId, from.Add(time.Duration(23)*time.Hour*-1), r)
 
 	if err != nil {
 		log.Fatal(err)
@@ -355,7 +352,9 @@ func (s *Instance) Start(r repository.BaseRepo) error {
 	// TODO: use middleware
 
 	router.HandleFunc("/hello", helloHandler)
-	router.HandleFunc("/events", applyMiddlewares(getEvents1, r)).Methods("GET")
+	router.HandleFunc("/events", applyMiddlewares(getEventsMonth, r)).Methods("GET").Queries("type", "month")
+	router.HandleFunc("/events", applyMiddlewares(getEventsWeek, r)).Methods("GET").Queries("type", "week")
+	router.HandleFunc("/events", applyMiddlewares(getEventsDay, r)).Methods("GET").Queries("type", "day")
 	router.HandleFunc("/event", applyMiddlewares(addEvent, r)).Methods("POST")
 	router.HandleFunc("/event", applyMiddlewares(updateEvent, r)).Methods("PUT")
 	router.HandleFunc("/event", applyMiddlewares(deleteEvent, r)).Methods("DELETE")
