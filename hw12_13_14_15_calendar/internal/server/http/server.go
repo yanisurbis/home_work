@@ -359,6 +359,9 @@ func (s *Instance) Start(r repository.BaseRepo) error {
 	router.HandleFunc("/event", applyMiddlewares(updateEvent, r)).Methods("PUT")
 	router.HandleFunc("/event", applyMiddlewares(deleteEvent, r)).Methods("DELETE")
 
+	apiRouter := router.PathPrefix("/api").Subrouter()
+	apiRouter.HandleFunc("/hello-world", helloHandler)
+
 	fmt.Println("server starting at port :8080")
 
 	http.Handle("/", router)
