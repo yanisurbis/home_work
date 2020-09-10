@@ -39,6 +39,7 @@ func validateEventToAdd(e repository.Event) error {
 
 func validateEventToUpdate(e repository.Event) error {
 	return validation.ValidateStruct(&e,
-		validation.Field(&e.ID, validation.Required),
+		validation.Field(&e.Title, validation.Length(1, 100)),
+		validation.Field(&e.Description, validation.Length(1, 1000)),
 	)
 }
