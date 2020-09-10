@@ -158,64 +158,75 @@ func parseEventToAdd(req *http.Request, userId repository.ID) (*repository.Event
 	return event, nil
 }
 
-func getEventFromReqUpdate(req *http.Request, userId repository.ID, r repository.BaseRepo) (*repository.Event, error) {
+func parseEventToUpdate(req *http.Request, userId repository.ID, r repository.BaseRepo) (*repository.Event, error) {
 	err := req.ParseForm()
 	if err != nil {
+		// TODO: consistent format for error?
 		return nil, err
 	}
 
 	idStr := req.PostForm.Get("id")
+	id := 0
+	if idStr == "" {
+		return nil, validation.Errors{
+			"Id": errors.New("event id is required"),
+		}
+	} else {
+		id, err = strconv.Atoi(idStr)
 
-	id, err := strconv.Atoi(idStr)
-
-	if err != nil {
-		return nil, errors.New("failed to parse eventId")
+		if err != nil {
+			return nil, validation.Errors{
+				"Id": errors.New("wrong format"),
+			}
+		}
 	}
 
 	event, err := r.GetEvent(userId, id)
-
 	if err != nil {
+		// TODO: consistent format for error?
 		return nil, err
 	}
 
-	event.ID = id
-
-	// TODO: add validation for each field
-	title := req.PostForm.Get("title")
-	if title != "" {
+	if title := req.PostForm.Get("title"); title != "" {
 		event.Title = title
 	}
 
-	startAtStr := req.PostForm.Get("start_at")
-	if startAtStr != "" {
+	if startAtStr := req.PostForm.Get("start_at"); startAtStr != "" {
 		startAt, err := getTimeFromTimestamp(startAtStr)
 		if err != nil {
-			return nil, err
+			return nil, validation.Errors{
+				"StartAt": errors.New("wrong format"),
+			}
 		}
 		event.StartAt = startAt
 	}
 
-	endAtStr := req.PostForm.Get("end_at")
-	if endAtStr != "" {
+	if endAtStr := req.PostForm.Get("end_at"); endAtStr != "" {
 		endAt, err := getTimeFromTimestamp(endAtStr)
 		if err != nil {
-			return nil, err
+			return nil, validation.Errors{
+				"EndAt": errors.New("wrong format"),
+			}
 		}
 		event.EndAt = endAt
 	}
 
-	description := req.PostForm.Get("description")
-	if description != "" {
+	if description := req.PostForm.Get("description"); description != "" {
 		event.Description = description
 	}
 
-	notifyAtStr := req.PostForm.Get("notify_at")
-	if notifyAtStr != "" {
+	if notifyAtStr := req.PostForm.Get("notify_at"); notifyAtStr != "" {
 		notifyAt, err := getTimeFromTimestamp(notifyAtStr)
 		if err != nil {
-			return nil, err
+			return nil, validation.Errors{
+				"NotifyAt": errors.New("wrong format"),
+			}
 		}
 		event.NotifyAt = notifyAt
+	}
+
+	if err = validateEventToUpdate(event); err != nil {
+		return nil, err
 	}
 
 	return &event, nil
@@ -258,17 +269,17 @@ func addEvent(w http.ResponseWriter, req *http.Request) {
 func updateEvent(w http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
-	r := getRepository(ctx)
+	repo := getRepository(ctx)
 	userId := getUserId(ctx)
 
-	event, err := getEventFromReqUpdate(req, userId, r)
+	event, err := parseEventToUpdate(req, userId, repo)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = r.UpdateEvent(userId, *event)
+	err = repo.UpdateEvent(userId, *event)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
