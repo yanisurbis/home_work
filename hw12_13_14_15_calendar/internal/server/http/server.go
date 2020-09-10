@@ -275,7 +275,10 @@ func updateEvent(w http.ResponseWriter, req *http.Request) {
 	event, err := parseEventToUpdate(req, userId, repo)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errs, _ := json.Marshal(err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write(errs)
 		return
 	}
 
