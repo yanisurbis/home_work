@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"strconv"
@@ -349,17 +350,23 @@ func deleteEvent(w http.ResponseWriter, req *http.Request) {
 func (s *Instance) Start(r repository.BaseRepo) error {
 	s.instance = &http.Server{Addr: ":8080"}
 
-	http.HandleFunc("/hello", helloHandler)
+	router := mux.NewRouter()
 
-	http.HandleFunc("/get-events-day", applyMiddlewares(getEventsDay, r))
-	http.HandleFunc("/get-events-week", applyMiddlewares(getEventsWeek, r))
-	http.HandleFunc("/get-events-month", applyMiddlewares(getEventsMonth, r))
+	// TODO: use middleware
 
-	http.HandleFunc("/add-event", applyMiddlewares(addEvent, r))
-	http.HandleFunc("/update-event", applyMiddlewares(updateEvent, r))
-	http.HandleFunc("/delete-event", applyMiddlewares(deleteEvent, r))
+	router.HandleFunc("/hello", helloHandler)
+
+	router.HandleFunc("/get-events-day", applyMiddlewares(getEventsDay, r))
+	router.HandleFunc("/get-events-week", applyMiddlewares(getEventsWeek, r))
+	router.HandleFunc("/get-events-month", applyMiddlewares(getEventsMonth, r))
+
+	router.HandleFunc("/add-event", applyMiddlewares(addEvent, r))
+	router.HandleFunc("/update-event", applyMiddlewares(updateEvent, r))
+	router.HandleFunc("/delete-event", applyMiddlewares(deleteEvent, r))
 
 	fmt.Println("server starting at port :8080")
+
+	http.Handle("/", router)
 
 	return s.instance.ListenAndServe()
 }
