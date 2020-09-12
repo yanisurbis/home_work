@@ -356,6 +356,7 @@ func (s *Instance) Start(r repository.BaseRepo) error {
 	s.instance = &http.Server{Addr: ":8080"}
 
 	router := mux.NewRouter()
+	router.Use(panicMiddleware)
 	router.Use(logMiddleware)
 	router.HandleFunc("/hello", helloHandler)
 
