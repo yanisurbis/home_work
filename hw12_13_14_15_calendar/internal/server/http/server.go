@@ -295,17 +295,20 @@ func getEventIdFromReq(req *http.Request) (repository.ID, error) {
 		return 0, err
 	}
 
-	// TODO: change to id instead of eventId
-	eventIdStr := req.PostForm.Get("eventId")
+	eventIdStr := req.PostForm.Get("id")
 
 	if eventIdStr == "" {
-		return 0, errors.New("specify eventId value")
+		return 0, validation.Errors{
+			"Id": errors.New("event id is required"),
+		}
 	}
 
 	eventId, err := strconv.Atoi(eventIdStr)
 
 	if err != nil {
-		return 0, errors.New("failed to parse eventId")
+		return 0, validation.Errors{
+			"Id": errors.New("wrong format"),
+		}
 	}
 
 	return eventId, nil
@@ -320,7 +323,10 @@ func deleteEvent(w http.ResponseWriter, req *http.Request) {
 	eventId, err := getEventIdFromReq(req)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errs, _ := json.Marshal(err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write(errs)
 		return
 	}
 
@@ -357,7 +363,7 @@ func (s *Instance) Start(r repository.BaseRepo) error {
 	apiRouter.HandleFunc("/events", getEventsDay).Methods("GET").Queries("type", "day")
 	apiRouter.HandleFunc("/event", addEvent).Methods("POST")
 	apiRouter.HandleFunc("/event", updateEvent).Methods("PUT")
-	apiRouter.HandleFunc("/event", deleteEvent).Methods("DELETE")
+	apiRouter.HandleFunc("/event", deleteEvent).Methods("PATCH")
 
 	fmt.Println("server starting at port :8080")
 
