@@ -21,6 +21,28 @@ type Instance struct {
 const repositoryKey = "repository"
 const userIdKey = "userId"
 
+func StatusOk(w http.ResponseWriter) {
+	data := struct {
+		Status 	string
+	}{
+		Status: "Ok",
+	}
+
+	dataJson, err := json.Marshal(data)
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(dataJson)
+
+	if err != nil {
+		log.Println(err)
+	}
+}
+
 func helloHandler(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "hello world\n")
 }
@@ -248,15 +270,7 @@ func addEvent(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	eventJSON, err := json.Marshal(event)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// send status, not event
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(eventJSON)
+	StatusOk(w)
 }
 
 func updateEvent(w http.ResponseWriter, req *http.Request) {
@@ -282,8 +296,7 @@ func updateEvent(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte("Ok"))
+	StatusOk(w)
 }
 
 func getEventIdFromReq(req *http.Request) (repository.ID, error) {
@@ -335,13 +348,7 @@ func deleteEvent(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte("Ok"))
-
-	if err != nil {
-		log.Println("Failed to send response")
-		return
-	}
+	StatusOk(w)
 }
 
 // TODO move grpc server in server folder
