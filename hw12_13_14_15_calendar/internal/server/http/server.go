@@ -182,6 +182,7 @@ func parseEventToUpdate(req *http.Request, userId repository.ID, r repository.Ba
 	event, err := r.GetEvent(userId, id)
 	if err != nil {
 		// TODO: consistent format for error?
+		// TODO: handle panic
 		return nil, err
 	}
 
@@ -349,15 +350,16 @@ func (s *Instance) Start(r repository.BaseRepo) error {
 
 	router := mux.NewRouter()
 
-	// TODO: use middleware
+	dbMiddleware := createDbMiddleware(r)
+	router.Use(logMiddleware, dbMiddleware, userIdMiddleware)
 
 	router.HandleFunc("/hello", helloHandler)
-	router.HandleFunc("/events", applyMiddlewares(getEventsMonth, r)).Methods("GET").Queries("type", "month")
-	router.HandleFunc("/events", applyMiddlewares(getEventsWeek, r)).Methods("GET").Queries("type", "week")
-	router.HandleFunc("/events", applyMiddlewares(getEventsDay, r)).Methods("GET").Queries("type", "day")
-	router.HandleFunc("/event", applyMiddlewares(addEvent, r)).Methods("POST")
-	router.HandleFunc("/event", applyMiddlewares(updateEvent, r)).Methods("PUT")
-	router.HandleFunc("/event", applyMiddlewares(deleteEvent, r)).Methods("DELETE")
+	router.HandleFunc("/events", getEventsMonth).Methods("GET").Queries("type", "month")
+	router.HandleFunc("/events", getEventsWeek).Methods("GET").Queries("type", "week")
+	router.HandleFunc("/events", getEventsDay).Methods("GET").Queries("type", "day")
+	router.HandleFunc("/event", addEvent).Methods("POST")
+	router.HandleFunc("/event", updateEvent).Methods("PUT")
+	router.HandleFunc("/event", deleteEvent).Methods("DELETE")
 
 	apiRouter := router.PathPrefix("/api").Subrouter()
 	apiRouter.HandleFunc("/hello-world", helloHandler)

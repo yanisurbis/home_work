@@ -9,27 +9,29 @@ import (
 	"time"
 )
 
-func logMiddleware(h BasicHandler) BasicHandler {
-	return func(w http.ResponseWriter, r *http.Request) {
+func logMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func(t time.Time) {
 			log.Println(r.RemoteAddr+" "+r.Method+" "+r.Host+" "+r.UserAgent(), " ", time.Since(t).Milliseconds(), "ms")
 		}(time.Now())
 
-		h(w, r)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func createDbMiddleware(repo repository.BaseRepo) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			ctx = context.WithValue(ctx, repositoryKey, repo)
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
 	}
 }
 
-func dbMiddleware(h BasicHandler, repo repository.BaseRepo) BasicHandler {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, repositoryKey, repo)
-
-		h(w, r.WithContext(ctx))
-	}
-}
-
-func userIdMiddleware(h BasicHandler) BasicHandler {
-	return func(w http.ResponseWriter, r *http.Request) {
+func userIdMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		userIdStr := r.Header.Get("userid")
 
@@ -46,13 +48,6 @@ func userIdMiddleware(h BasicHandler) BasicHandler {
 		}
 
 		ctx = context.WithValue(ctx, userIdKey, userId)
-		h(w, r.WithContext(ctx))
-	}
-}
-
-func applyMiddlewares(h BasicHandler, r repository.BaseRepo) BasicHandler {
-	h1 := dbMiddleware(h, r)
-	h2 := userIdMiddleware(h1)
-
-	return logMiddleware(h2)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
