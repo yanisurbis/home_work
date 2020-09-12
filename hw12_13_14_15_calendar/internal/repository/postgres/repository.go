@@ -78,6 +78,8 @@ func (r *Repo) GetEvent(userId repository.ID, id repository.ID) (repository.Even
 		return repository.Event{}, err
 	}
 
+
+
 	event := events[0]
 
 	if event.UserID != userId {
@@ -88,17 +90,12 @@ func (r *Repo) GetEvent(userId repository.ID, id repository.ID) (repository.Even
 }
 
 func (r *Repo) DeleteEvent(userID repository.ID, eventID repository.ID) (err error) {
-	_, err = r.GetEvent(userID, eventID)
-
-	if err != nil {
-		return
-	}
-
 	var events []repository.Event
 	option := make(map[string]interface{})
 	option["event_id"] = eventID
+	option["user_id"] = userID
 
-	nstmt, err := r.db.PrepareNamed("DELETE FROM events WHERE id=:event_id")
+	nstmt, err := r.db.PrepareNamed("DELETE FROM events WHERE id=:event_id and user_id = :user_id ")
 
 	if err != nil {
 		return
