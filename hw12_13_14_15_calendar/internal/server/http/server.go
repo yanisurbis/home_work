@@ -21,8 +21,6 @@ type Instance struct {
 const repositoryKey = "repository"
 const userIdKey = "userId"
 
-type BasicHandler func(http.ResponseWriter, *http.Request)
-
 func helloHandler(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "hello world\n")
 }
