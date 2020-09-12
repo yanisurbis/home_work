@@ -23,10 +23,6 @@ const userIdKey = "userId"
 
 type BasicHandler func(http.ResponseWriter, *http.Request)
 
-// check requered fields
-// compose event with coerce
-// check fields validity
-
 func helloHandler(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "hello world\n")
 }
@@ -349,20 +345,19 @@ func (s *Instance) Start(r repository.BaseRepo) error {
 	s.instance = &http.Server{Addr: ":8080"}
 
 	router := mux.NewRouter()
-
-	dbMiddleware := createDbMiddleware(r)
-	router.Use(logMiddleware, dbMiddleware, userIdMiddleware)
-
+	router.Use(logMiddleware)
 	router.HandleFunc("/hello", helloHandler)
-	router.HandleFunc("/events", getEventsMonth).Methods("GET").Queries("type", "month")
-	router.HandleFunc("/events", getEventsWeek).Methods("GET").Queries("type", "week")
-	router.HandleFunc("/events", getEventsDay).Methods("GET").Queries("type", "day")
-	router.HandleFunc("/event", addEvent).Methods("POST")
-	router.HandleFunc("/event", updateEvent).Methods("PUT")
-	router.HandleFunc("/event", deleteEvent).Methods("DELETE")
 
 	apiRouter := router.PathPrefix("/api").Subrouter()
-	apiRouter.HandleFunc("/hello-world", helloHandler)
+	dbMiddleware := createDbMiddleware(r)
+	apiRouter.Use(dbMiddleware, userIdMiddleware)
+
+	apiRouter.HandleFunc("/events", getEventsMonth).Methods("GET").Queries("type", "month")
+	apiRouter.HandleFunc("/events", getEventsWeek).Methods("GET").Queries("type", "week")
+	apiRouter.HandleFunc("/events", getEventsDay).Methods("GET").Queries("type", "day")
+	apiRouter.HandleFunc("/event", addEvent).Methods("POST")
+	apiRouter.HandleFunc("/event", updateEvent).Methods("PUT")
+	apiRouter.HandleFunc("/event", deleteEvent).Methods("DELETE")
 
 	fmt.Println("server starting at port :8080")
 
