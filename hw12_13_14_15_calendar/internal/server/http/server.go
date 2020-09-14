@@ -43,6 +43,28 @@ func StatusOk(w http.ResponseWriter) {
 	}
 }
 
+func StatusError(w http.ResponseWriter) {
+	data := struct {
+		Status 	string
+	}{
+		Status: "Ok",
+	}
+
+	dataJson, err := json.Marshal(data)
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(dataJson)
+
+	if err != nil {
+		log.Println(err)
+	}
+}
+
 func helloHandler(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "hello world\n")
 }
