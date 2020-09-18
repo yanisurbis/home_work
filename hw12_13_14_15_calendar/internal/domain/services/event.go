@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+const (
+	PERIOD_DAY = "day"
+	PERIOD_WEEK = "week"
+	PERIOD_MONTH = "month"
+)
+
 type EventService struct {
 	EventStorage domain.EventStorage
 }
@@ -76,5 +82,14 @@ func (es *EventService) DeleteEvent(ctx context.Context, userID entities.ID, eve
 }
 
 func (es *EventService) GetEvents(ctx context.Context, userID entities.ID, period string, from time.Time) ([]entities.Event, error) {
-	return es.EventStorage.GetEventsWeek(userID, from)
+	if period == PERIOD_MONTH {
+		return es.EventStorage.GetEventsMonth(userID, from)
+	} else if period == PERIOD_WEEK {
+		return es.EventStorage.GetEventsWeek(userID, from)
+	} else if period == PERIOD_DAY {
+		return es.EventStorage.GetEventsDay(userID, from)
+	}
+	// TODO: log problem
+	// TODO: make one storage function instead of 3
+	return es.EventStorage.GetEventsDay(userID, from)
 }
