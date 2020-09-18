@@ -8,10 +8,14 @@ import (
 )
 
 const (
-	PERIOD_DAY = "day"
-	PERIOD_WEEK = "week"
-	PERIOD_MONTH = "month"
+	PeriodDay   = "day"
+	PeriodWeek  = "week"
+	PeriodMonth = "month"
 )
+
+//if reflect.ValueOf(id).IsZero() {
+//
+//}
 
 type EventService struct {
 	EventStorage domain.EventStorage
@@ -82,11 +86,11 @@ func (es *EventService) DeleteEvent(ctx context.Context, userID entities.ID, eve
 }
 
 func (es *EventService) GetEvents(ctx context.Context, userID entities.ID, period string, from time.Time) ([]entities.Event, error) {
-	if period == PERIOD_MONTH {
+	if period == PeriodMonth {
 		return es.EventStorage.GetEventsMonth(userID, from)
-	} else if period == PERIOD_WEEK {
+	} else if period == PeriodWeek {
 		return es.EventStorage.GetEventsWeek(userID, from)
-	} else if period == PERIOD_DAY {
+	} else if period == PeriodDay {
 		return es.EventStorage.GetEventsDay(userID, from)
 	}
 	// TODO: log problem
