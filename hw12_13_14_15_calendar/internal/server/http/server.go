@@ -406,18 +406,28 @@ func (s *Instance) Start1(r repository.BaseRepo) error {
 // TODO: how to remove domain2?
 func (s *Instance) Start(storage domain2.EventStorage) error {
 	router := gin.Default()
+	// TODO: pass service, not storage
 	eventService := domain.EventService{
 		EventStorage: storage,
 	}
 
 	router.DELETE("/event/:id", func(c *gin.Context) {
 		idStr := c.Param("id")
-		//TODO: how to check that id is present?
-		//TODO: handle errors
-		id, _ := strconv.Atoi(idStr)
-		_, _ = eventService.DeleteEvent(c, 1, id)
+		id, err := strconv.Atoi(idStr)
 
-		c.String(http.StatusOK, "ok")
+		if err != nil {
+			c.String(http.StatusInternalServerError, "error")
+			return
+		}
+
+		deletedEvent, err := eventService.DeleteEvent(c, 1, id)
+
+		if err != nil {
+			c.String(http.StatusInternalServerError, "error")
+			return
+		}
+
+		c.JSON(http.StatusOK, deletedEvent)
 	})
 
 	fmt.Println("server starting at port :8080")
