@@ -403,24 +403,29 @@ func (s *Instance) Start1(r repository.BaseRepo) error {
 	return s.instance.ListenAndServe()
 }
 
+
+
 // TODO: how to remove domain2?
 func (s *Instance) Start(storage domain2.EventStorage) error {
+
 	router := gin.Default()
+	router.Use(UserIDMiddleware())
 	// TODO: pass service, not storage
 	eventService := domain.EventService{
 		EventStorage: storage,
 	}
 
 	router.DELETE("/event/:id", func(c *gin.Context) {
+		userId := GetUserID(c)
 		idStr := c.Param("id")
 		id, err := strconv.Atoi(idStr)
 
 		if err != nil {
-			c.String(http.StatusInternalServerError, "error")
+			c.JSON(http.StatusBadRequest, "check eventId")
 			return
 		}
 
-		deletedEvent, err := eventService.DeleteEvent(c, 1, id)
+		deletedEvent, err := eventService.DeleteEvent(c, userId, id)
 
 		if err != nil {
 			c.String(http.StatusInternalServerError, "error")

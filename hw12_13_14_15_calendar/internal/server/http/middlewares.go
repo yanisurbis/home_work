@@ -1,8 +1,10 @@
 package http_server
 
 import (
+	"calendar/internal/domain/entities"
 	"calendar/internal/repository"
 	"context"
+	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"strconv"
@@ -64,4 +66,28 @@ func userIdMiddleware(next http.Handler) http.Handler {
 		ctx = context.WithValue(ctx, userIdKey, userId)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func UserIDMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userIdStr := c.GetHeader("userId")
+		userId, err := strconv.Atoi(userIdStr)
+
+		if err != nil {
+			c.String(http.StatusBadRequest, "please validate userId in headers")
+			return
+		}
+
+		// Set example variable
+		c.Set("userId", userId)
+
+		// before request
+		// TODO: should we use c.Next?
+		c.Next()
+	}
+}
+
+func GetUserID(c *gin.Context) entities.ID {
+	userId, _ := c.Get("userId")
+	return userId.(entities.ID)
 }
