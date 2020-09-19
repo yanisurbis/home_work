@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"calendar/internal/domain"
 	"calendar/internal/domain/entities"
 	"calendar/internal/repository"
 	"context"
@@ -77,11 +78,12 @@ func (r *Repo) GetEvent(userId repository.ID, id repository.ID) (entities.Event,
 
 	if err != nil {
 		// TODO: should we have not found error?
-		return entities.Event{}, err
+		// TODO: use pointers
+		return entities.Event{}, nil
 	}
 
 	if len(events) == 0 {
-		return entities.Event{}, nil
+		return entities.Event{}, domain.ErrNotFound
 	}
 
 	event := events[0]
