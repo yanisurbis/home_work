@@ -76,10 +76,13 @@ func (r *Repo) GetEvent(userId repository.ID, id repository.ID) (entities.Event,
 	err = nstmt.Select(&events, option)
 
 	if err != nil {
+		// TODO: should we have not found error?
 		return entities.Event{}, err
 	}
 
-
+	if len(events) == 0 {
+		return entities.Event{}, nil
+	}
 
 	event := events[0]
 
