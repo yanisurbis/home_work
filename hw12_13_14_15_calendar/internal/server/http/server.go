@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/gorilla/mux"
 	"log"
@@ -374,7 +375,7 @@ func deleteEvent(w http.ResponseWriter, req *http.Request) {
 }
 
 // TODO move grpc server in server folder
-func (s *Instance) Start(r repository.BaseRepo) error {
+func (s *Instance) Start1(r repository.BaseRepo) error {
 	s.instance = &http.Server{Addr: ":8080"}
 
 	router := mux.NewRouter()
@@ -398,6 +399,21 @@ func (s *Instance) Start(r repository.BaseRepo) error {
 	http.Handle("/", router)
 
 	return s.instance.ListenAndServe()
+}
+
+func (s *Instance) Start(r repository.BaseRepo) error {
+	router := gin.Default()
+
+	router.GET("/user/:name/*action", func(c *gin.Context) {
+		name := c.Param("name")
+		action := c.Param("action")
+		message := name + " is " + action
+		c.String(http.StatusOK, message)
+	})
+
+	fmt.Println("server starting at port :8080")
+
+	return router.Run(":8080")
 }
 
 func (s *Instance) Stop(ctx context.Context) error {

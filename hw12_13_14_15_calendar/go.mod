@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/daixiang0/gci v0.2.1 // indirect
+	github.com/gin-gonic/gin v1.6.3
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible // indirect
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.2
 	github.com/golang/protobuf v1.4.2
