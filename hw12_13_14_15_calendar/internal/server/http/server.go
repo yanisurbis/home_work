@@ -1,6 +1,8 @@
 package http_server
 
 import (
+	domain2 "calendar/internal/domain/interfaces"
+	domain "calendar/internal/domain/services"
 	"calendar/internal/repository"
 	"context"
 	"encoding/json"
@@ -401,14 +403,21 @@ func (s *Instance) Start1(r repository.BaseRepo) error {
 	return s.instance.ListenAndServe()
 }
 
-func (s *Instance) Start(r repository.BaseRepo) error {
+// TODO: how to remove domain2?
+func (s *Instance) Start(storage domain2.EventStorage) error {
 	router := gin.Default()
+	eventService := domain.EventService{
+		EventStorage: storage,
+	}
 
-	router.GET("/user/:name/*action", func(c *gin.Context) {
-		name := c.Param("name")
-		action := c.Param("action")
-		message := name + " is " + action
-		c.String(http.StatusOK, message)
+	router.DELETE("/event/:id", func(c *gin.Context) {
+		idStr := c.Param("id")
+		//TODO: how to check that id is present?
+		//TODO: handle errors
+		id, _ := strconv.Atoi(idStr)
+		_, _ = eventService.DeleteEvent(c, 1, id)
+
+		c.String(http.StatusOK, "ok")
 	})
 
 	fmt.Println("server starting at port :8080")
