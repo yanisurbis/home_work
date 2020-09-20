@@ -152,7 +152,7 @@ func (es *EventService) DeleteEvent(ctx context.Context, userID entities.ID, eve
 		return nil, err
 	}
 
-	err = es.EventStorage.DeleteEvent(userID, eventID)
+	err = es.EventStorage.DeleteEvent(eventID)
 
 	if err != nil {
 		return nil, err

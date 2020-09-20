@@ -86,21 +86,18 @@ func (r *Repo) GetEvent(id repository.ID) (*entities.Event, error) {
 	return &events[0], nil
 }
 
-func (r *Repo) DeleteEvent(userID repository.ID, eventID repository.ID) (err error) {
+func (r *Repo) DeleteEvent(eventID repository.ID) error {
 	var events []entities.Event
 	option := make(map[string]interface{})
 	option["event_id"] = eventID
-	option["user_id"] = userID
 
-	nstmt, err := r.db.PrepareNamed("DELETE FROM events WHERE id=:event_id and user_id = :user_id ")
+	nstmt, err := r.db.PrepareNamed("DELETE FROM events WHERE id=:event_id")
 
 	if err != nil {
-		return
+		return err
 	}
 
-	err = nstmt.Select(&events, option)
-
-	return
+	return nstmt.Select(&events, option)
 }
 
 func (r *Repo) getEvents(userID repository.ID, from time.Time, to time.Time) ([]entities.Event, error) {

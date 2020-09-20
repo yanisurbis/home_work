@@ -11,7 +11,7 @@ type EventStorage interface {
 	Close() error
 	AddEvent(event entities.Event) error
 	UpdateEvent(userID entities.ID, event entities.Event) error
-	DeleteEvent(userID entities.ID, eventID entities.ID) error
+	DeleteEvent(eventID entities.ID) error
 	GetEventsDay(userID entities.ID, from time.Time) ([]entities.Event, error)
 	GetEventsWeek(userID entities.ID, from time.Time) ([]entities.Event, error)
 	GetEventsMonth(userID entities.ID, from time.Time) ([]entities.Event, error)
