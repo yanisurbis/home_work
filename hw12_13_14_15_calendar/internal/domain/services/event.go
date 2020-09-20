@@ -1,8 +1,8 @@
 package domain
 
 import (
-	domain2 "calendar/internal/domain"
 	"calendar/internal/domain/entities"
+	"calendar/internal/domain/errors"
 	"calendar/internal/domain/interfaces"
 	"context"
 	"github.com/go-ozzo/ozzo-validation/v4"
@@ -135,11 +135,11 @@ func (es *EventService) GetEvent(ctx context.Context, userID entities.ID, eventI
 	}
 
 	if event == nil {
-		return nil, domain2.ErrNotFound
+		return nil, errors.ErrNotFound
 	}
 
 	if event.UserID != userID {
-		return nil, domain2.ErrForbidden
+		return nil, errors.ErrForbidden
 	}
 
 	return event, nil

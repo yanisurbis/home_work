@@ -1,6 +1,7 @@
 package http_server
 
 import (
+	domain3 "calendar/internal/domain/errors"
 	domain2 "calendar/internal/domain/interfaces"
 	domain "calendar/internal/domain/services"
 	"calendar/internal/repository"
@@ -428,8 +429,16 @@ func (s *Instance) Start(storage domain2.EventStorage) error {
 		deletedEvent, err := eventService.DeleteEvent(c, userId, id)
 
 		if err != nil {
-			c.String(http.StatusInternalServerError, "error")
-			return
+			if err == domain3.ErrForbidden {
+				c.String(http.StatusForbidden, "don't have access")
+				return
+			} else if err == domain3.ErrNotFound {
+				c.String(http.StatusNotFound, "event is not found")
+				return
+			} else {
+				c.String(http.StatusInternalServerError, "error")
+				return
+			}
 		}
 
 		c.JSON(http.StatusOK, deletedEvent)
