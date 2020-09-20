@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"calendar/internal/domain"
 	"calendar/internal/domain/entities"
 	"calendar/internal/repository"
 	"context"
@@ -63,7 +62,7 @@ func (r *Repo) UpdateEvent(userID repository.ID, event entities.Event) (err erro
 	return
 }
 
-func (r *Repo) GetEvent(userId repository.ID, id repository.ID) (entities.Event, error) {
+func (r *Repo) GetEvent(id repository.ID) (*entities.Event, error) {
 	var events []entities.Event
 	option := make(map[string]interface{})
 	option["id"] = id
@@ -71,28 +70,20 @@ func (r *Repo) GetEvent(userId repository.ID, id repository.ID) (entities.Event,
 	nstmt, err := r.db.PrepareNamed("SELECT * FROM events WHERE id = :id")
 
 	if err != nil {
-		return entities.Event{}, err
+		return nil, err
 	}
 
 	err = nstmt.Select(&events, option)
 
 	if err != nil {
-		// TODO: should we have not found error?
-		// TODO: use pointers
-		return entities.Event{}, nil
+		return nil, err
 	}
 
 	if len(events) == 0 {
-		return entities.Event{}, domain.ErrNotFound
+		return nil, nil
 	}
 
-	event := events[0]
-
-	if event.UserID != userId {
-		return entities.Event{}, ErrForbidden
-	}
-
-	return event, nil
+	return &events[0], nil
 }
 
 func (r *Repo) DeleteEvent(userID repository.ID, eventID repository.ID) (err error) {

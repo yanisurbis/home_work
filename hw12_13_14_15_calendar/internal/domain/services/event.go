@@ -1,6 +1,7 @@
 package domain
 
 import (
+	domain2 "calendar/internal/domain"
 	"calendar/internal/domain/entities"
 	"calendar/internal/domain/interfaces"
 	"context"
@@ -93,41 +94,59 @@ func mergeEvents(currEvent entities.Event, newEvent entities.Event) (*entities.E
 	return &currEvent, nil
 }
 
-func (es *EventService) UpdateEvent(ctx context.Context, eventID entities.ID, title string, startAt time.Time, endAt time.Time,
-	description string, notifyAt time.Time, userID entities.ID) (*entities.Event, error) {
-	newEvent := entities.Event{
-		ID: 	     eventID,
-		Title:       title,
-		StartAt:     startAt,
-		EndAt:       endAt,
-		Description: description,
-		NotifyAt:    notifyAt,
-		UserID:      userID,
-	}
+//func (es *EventService) UpdateEvent(ctx context.Context, eventID entities.ID, title string, startAt time.Time, endAt time.Time,
+//	description string, notifyAt time.Time, userID entities.ID) (*entities.Event, error) {
+//	newEvent := entities.Event{
+//		ID: 	     eventID,
+//		Title:       title,
+//		StartAt:     startAt,
+//		EndAt:       endAt,
+//		Description: description,
+//		NotifyAt:    notifyAt,
+//		UserID:      userID,
+//	}
+//
+//	currEvent, err := es.EventStorage.GetEvent(userID, eventID)
+//
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	updatedEvent, err := mergeEvents(currEvent, newEvent)
+//
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	err = es.EventStorage.UpdateEvent(userID, *updatedEvent)
+//
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return updatedEvent, nil
+//}
 
-	currEvent, err := es.EventStorage.GetEvent(userID, eventID)
+func (es *EventService) GetEvent(ctx context.Context, userID entities.ID, eventID entities.ID) (*entities.Event, error) {
+	event, err := es.EventStorage.GetEvent(eventID)
 
 	if err != nil {
 		return nil, err
 	}
 
-	updatedEvent, err := mergeEvents(currEvent, newEvent)
-
-	if err != nil {
-		return nil, err
+	if event == nil {
+		return nil, domain2.ErrNotFound
 	}
 
-	err = es.EventStorage.UpdateEvent(userID, *updatedEvent)
-
-	if err != nil {
-		return nil, err
+	if event.UserID != userID {
+		return nil, domain2.ErrForbidden
 	}
 
-	return updatedEvent, nil
+	return event, nil
 }
 
 func (es *EventService) DeleteEvent(ctx context.Context, userID entities.ID, eventID entities.ID) (*entities.Event, error) {
-	event, err := es.EventStorage.GetEvent(userID, eventID)
+	event, err := es.GetEvent(ctx, userID, eventID)
 
 	if err != nil {
 		return nil, err
@@ -139,7 +158,7 @@ func (es *EventService) DeleteEvent(ctx context.Context, userID entities.ID, eve
 		return nil, err
 	}
 
-	return &event, nil
+	return event, nil
 }
 
 func (es *EventService) GetEvents(ctx context.Context, userID entities.ID, period string, from time.Time) ([]entities.Event, error) {

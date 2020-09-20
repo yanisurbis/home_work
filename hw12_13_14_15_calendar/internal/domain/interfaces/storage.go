@@ -15,5 +15,5 @@ type EventStorage interface {
 	GetEventsDay(userID entities.ID, from time.Time) ([]entities.Event, error)
 	GetEventsWeek(userID entities.ID, from time.Time) ([]entities.Event, error)
 	GetEventsMonth(userID entities.ID, from time.Time) ([]entities.Event, error)
-	GetEvent(userID entities.ID, id entities.ID) (entities.Event, error)
+	GetEvent(id entities.ID) (*entities.Event, error)
 }
