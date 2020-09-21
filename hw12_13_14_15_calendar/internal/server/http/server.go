@@ -27,7 +27,7 @@ const userIdKey = "userId"
 
 func StatusOk(w http.ResponseWriter) {
 	data := struct {
-		Status 	string
+		Status string
 	}{
 		Status: "Ok",
 	}
@@ -49,7 +49,7 @@ func StatusOk(w http.ResponseWriter) {
 
 func StatusError(w http.ResponseWriter) {
 	data := struct {
-		Status 	string
+		Status string
 	}{
 		Status: "Ok",
 	}
@@ -404,8 +404,6 @@ func (s *Instance) Start1(r repository.BaseRepo) error {
 	return s.instance.ListenAndServe()
 }
 
-
-
 // TODO: how to remove domain2?
 func (s *Instance) Start(storage domain2.EventStorage) error {
 
@@ -442,6 +440,28 @@ func (s *Instance) Start(storage domain2.EventStorage) error {
 		}
 
 		c.JSON(http.StatusOK, deletedEvent)
+	})
+
+	router.GET("/events", func(c *gin.Context) {
+		userId := GetUserID(c)
+		period := c.DefaultQuery("period", domain.PeriodDay)
+		fromStr := c.Query("from")
+
+		from, err := getTimeFromTimestamp(fromStr)
+
+		if err != nil {
+			c.String(http.StatusBadRequest, "check from parameter")
+			return
+		}
+
+		events, err := eventService.GetEvents(c, userId, period, from)
+
+		if err != nil {
+			c.String(http.StatusInternalServerError, "error")
+			return
+		}
+
+		c.JSON(http.StatusOK, events)
 	})
 
 	fmt.Println("server starting at port :8080")
