@@ -115,6 +115,10 @@ func (r *Repo) getEvents(userID repository.ID, from time.Time, to time.Time) ([]
 
 	err = nstmt.Select(&events, option)
 
+	if events == nil {
+		return []entities.Event{}, nil
+	}
+
 	return events, err
 }
 
