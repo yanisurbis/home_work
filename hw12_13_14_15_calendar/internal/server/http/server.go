@@ -422,7 +422,7 @@ func (s *Instance) Start(storage domain2.EventStorage) error {
 		id, err := strconv.Atoi(idStr)
 
 		if err != nil {
-			c.JSON(http.StatusBadRequest, "check eventId")
+			c.String(http.StatusBadRequest, "check eventId")
 			return
 		}
 
