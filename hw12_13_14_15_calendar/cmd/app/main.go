@@ -38,11 +38,11 @@ func main() {
 	c, _ := config.Read("./configs/local.toml")
 	//c, _ := config.Read(args.configPath)
 
-	r := new(postgres.Repo)
 	s := new(http_server.Instance)
 	l := new(logger.Instance)
+	storage := new(postgres.Repo)
 
-	a, err := app.New(r, s, l)
+	a, err := app.New(s, l, storage)
 
 	if err != nil {
 		log.Fatal(err)

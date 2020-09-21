@@ -1,8 +1,8 @@
 package app
 
 import (
+	domain "calendar/internal/domain/interfaces"
 	"calendar/internal/logger"
-	"calendar/internal/repository"
 	"calendar/internal/server"
 	"context"
 	"fmt"
@@ -10,13 +10,13 @@ import (
 )
 
 type App struct {
-	repo   repository.BaseRepo
 	server server.Server
 	logger logger.Logger
+	storage domain.EventStorage
 }
 
-func New(r repository.BaseRepo, s server.Server, l logger.Logger) (*App, error) {
-	return &App{repo: r, server: s, logger: l}, nil
+func New(s server.Server, l logger.Logger, storage domain.EventStorage) (*App, error) {
+	return &App{server: s, logger: l, storage: storage}, nil
 }
 
 func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
@@ -27,14 +27,15 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 	}
 
 	// storage
-	err = a.repo.Connect(ctx, dsn)
+	err = a.storage.Connect(ctx, dsn)
 	log.Println(err)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	//server
-	err = a.server.Start(a.repo)
+	// TODO: remove passing repo
+	err = a.server.Start(a.storage)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -50,7 +51,7 @@ func (a *App) Stop(ctx context.Context) error {
 		log.Fatal(err)
 	}
 
-	if err := a.repo.Close(); err != nil {
+	if err := a.storage.Close(); err != nil {
 		log.Fatal(err)
 	}
 

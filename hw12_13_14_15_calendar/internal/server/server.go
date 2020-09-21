@@ -1,11 +1,11 @@
 package server
 
 import (
-	"calendar/internal/repository"
+	domain "calendar/internal/domain/interfaces"
 	"context"
 )
 
 type Server interface {
-	Start(repo repository.BaseRepo) error
+	Start(storage domain.EventStorage) error
 	Stop(ctx context.Context) error
 }
