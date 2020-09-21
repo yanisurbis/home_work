@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+// TODO: move somewhere?
 const (
 	PeriodDay   = "day"
 	PeriodWeek  = "week"
@@ -170,6 +171,5 @@ func (es *EventService) GetEvents(ctx context.Context, userID entities.ID, perio
 		return es.EventStorage.GetEventsDay(userID, from)
 	}
 	// TODO: log problem in case there is no match
-	// TODO: make one storage function instead of 3
 	return es.EventStorage.GetEventsDay(userID, from)
 }
