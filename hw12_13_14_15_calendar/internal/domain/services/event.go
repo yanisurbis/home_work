@@ -12,9 +12,10 @@ import (
 
 // TODO: move somewhere?
 const (
-	PeriodDay   = "day"
-	PeriodWeek  = "week"
-	PeriodMonth = "month"
+	PeriodDay         = "day"
+	PeriodWeek        = "week"
+	PeriodMonth       = "month"
+	DefaultEmptyValue = "_~_~_"
 )
 
 type EventService struct {
@@ -32,7 +33,7 @@ func validateEventToAdd(e entities.Event) error {
 }
 
 func (es *EventService) AddEvent(ctx context.Context, title string, startAt time.Time, endAt time.Time,
-									description string, notifyAt time.Time, userID entities.ID) (*entities.Event, error) {
+	description string, notifyAt time.Time, userID entities.ID) (*entities.Event, error) {
 	event := entities.Event{
 		Title:       title,
 		StartAt:     startAt,
@@ -95,38 +96,38 @@ func mergeEvents(currEvent entities.Event, newEvent entities.Event) (*entities.E
 	return &currEvent, nil
 }
 
-//func (es *EventService) UpdateEvent(ctx context.Context, eventID entities.ID, title string, startAt time.Time, endAt time.Time,
-//	description string, notifyAt time.Time, userID entities.ID) (*entities.Event, error) {
-//	newEvent := entities.Event{
-//		ID: 	     eventID,
-//		Title:       title,
-//		StartAt:     startAt,
-//		EndAt:       endAt,
-//		Description: description,
-//		NotifyAt:    notifyAt,
-//		UserID:      userID,
-//	}
-//
-//	currEvent, err := es.EventStorage.GetEvent(userID, eventID)
-//
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	updatedEvent, err := mergeEvents(currEvent, newEvent)
-//
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	err = es.EventStorage.UpdateEvent(userID, *updatedEvent)
-//
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return updatedEvent, nil
-//}
+/*func (es *EventService) UpdateEvent(ctx context.Context, eventID entities.ID, title string, startAt time.Time, endAt time.Time,
+	description string, notifyAt time.Time, userID entities.ID) (*entities.Event, error) {
+	newEvent := entities.Event{
+		ID:          eventID,
+		Title:       title,
+		StartAt:     startAt,
+		EndAt:       endAt,
+		Description: description,
+		NotifyAt:    notifyAt,
+		UserID:      userID,
+	}
+
+	currEvent, err := es.EventStorage.GetEvent(userID, eventID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	updatedEvent, err := mergeEvents(currEvent, newEvent)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = es.EventStorage.UpdateEvent(userID, *updatedEvent)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedEvent, nil
+}*/
 
 func (es *EventService) GetEvent(ctx context.Context, userID entities.ID, eventID entities.ID) (*entities.Event, error) {
 	event, err := es.EventStorage.GetEvent(eventID)
