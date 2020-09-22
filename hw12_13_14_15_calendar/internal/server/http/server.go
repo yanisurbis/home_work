@@ -475,7 +475,7 @@ func (s *Instance) Start(storage domain2.EventStorage) error {
 			return
 		}
 
-		endAt, err := getTimeFromTimestamp(c.PostForm("start_at"))
+		endAt, err := getTimeFromTimestamp(c.PostForm("end_at"))
 		if err != nil {
 			c.String(http.StatusBadRequest, "EndAt wrong format")
 			return
@@ -483,7 +483,7 @@ func (s *Instance) Start(storage domain2.EventStorage) error {
 
 		description := c.PostForm("description")
 
-		notifyAt, err := getTimeFromTimestamp(c.PostForm("start_at"))
+		notifyAt, err := getTimeFromTimestamp(c.PostForm("notify_at"))
 		if err != nil {
 			c.String(http.StatusBadRequest, "NotifyAt wrong format")
 			return
@@ -498,6 +498,49 @@ func (s *Instance) Start(storage domain2.EventStorage) error {
 		}
 
 		c.JSON(http.StatusOK, addedEvent)
+	})
+
+	router.PUT("/event/:id", func(c *gin.Context) {
+		/*	userId := GetUserID(c)
+
+			event := entities.Event{}
+
+			event.Title = c.DefaultPostForm("title", domain.DefaultEmptyValue)
+
+			startAtStr := c.DefaultPostForm("start_at", domain.DefaultEmptyValue)
+			if startAtStr != domain.DefaultEmptyValue {
+				startAt, err := getTimeFromTimestamp(c.PostForm("start_at"))
+
+				if err != nil {
+					c.String(http.StatusBadRequest, "StartAt wrong format")
+					return
+				}
+			}
+
+			endAt, err := getTimeFromTimestamp(c.PostForm("end_at"))
+			if err != nil {
+				c.String(http.StatusBadRequest, "EndAt wrong format")
+				return
+			}
+
+			description := c.PostForm("description")
+
+			notifyAt, err := getTimeFromTimestamp(c.PostForm("notify_at"))
+			if err != nil {
+				c.String(http.StatusBadRequest, "NotifyAt wrong format")
+				return
+			}
+
+			addedEvent, err := eventService.AddEvent(c, title, startAt, endAt,
+				description, notifyAt, userId)
+
+			if err != nil {
+				c.String(http.StatusInternalServerError, "error")
+				return
+			}
+
+			c.JSON(http.StatusOK, addedEvent)*/
+
 	})
 
 	fmt.Println("server starting at port :8080")
