@@ -1,6 +1,7 @@
 package http_server
 
 import (
+	"calendar/internal/domain/entities"
 	domain3 "calendar/internal/domain/errors"
 	domain2 "calendar/internal/domain/interfaces"
 	domain "calendar/internal/domain/services"
@@ -501,45 +502,67 @@ func (s *Instance) Start(storage domain2.EventStorage) error {
 	})
 
 	router.PUT("/event/:id", func(c *gin.Context) {
-		/*	userId := GetUserID(c)
+		userId := GetUserID(c)
 
-			event := entities.Event{}
+		idStr := c.Param("id")
+		id, err := strconv.Atoi(idStr)
 
-			event.Title = c.DefaultPostForm("title", domain.DefaultEmptyValue)
+		if err != nil {
+			c.String(http.StatusBadRequest, "check eventId")
+			return
+		}
 
-			startAtStr := c.DefaultPostForm("start_at", domain.DefaultEmptyValue)
-			if startAtStr != domain.DefaultEmptyValue {
-				startAt, err := getTimeFromTimestamp(c.PostForm("start_at"))
+		eventUpdate := entities.UpdateEventRequest{}
+		eventUpdate.ID = id
+		eventUpdate.UserID = userId
+		eventUpdate.Title = c.DefaultPostForm("title", domain.DefaultEmptyString)
 
-				if err != nil {
-					c.String(http.StatusBadRequest, "StartAt wrong format")
-					return
-				}
-			}
+		startAtStr := c.DefaultPostForm("start_at", domain.DefaultEmptyString)
+		if startAtStr != domain.DefaultEmptyString {
+			startAt, err := getTimeFromTimestamp(startAtStr)
 
-			endAt, err := getTimeFromTimestamp(c.PostForm("end_at"))
 			if err != nil {
-				c.String(http.StatusBadRequest, "EndAt wrong format")
+				c.String(http.StatusBadRequest, "start_at wrong format")
 				return
 			}
 
-			description := c.PostForm("description")
+			eventUpdate.StartAt = startAt
+		}
 
-			notifyAt, err := getTimeFromTimestamp(c.PostForm("notify_at"))
+		endAtStr := c.DefaultPostForm("end_at", domain.DefaultEmptyString)
+		if endAtStr != domain.DefaultEmptyString {
+			endAt, err := getTimeFromTimestamp(endAtStr)
+
 			if err != nil {
-				c.String(http.StatusBadRequest, "NotifyAt wrong format")
+				c.String(http.StatusBadRequest, "end_at wrong format")
 				return
 			}
 
-			addedEvent, err := eventService.AddEvent(c, title, startAt, endAt,
-				description, notifyAt, userId)
+			eventUpdate.EndAt = endAt
+		}
+
+		eventUpdate.Description = c.DefaultPostForm("description", domain.DefaultEmptyString)
+
+		notifyAtStr := c.DefaultPostForm("notify_at", domain.DefaultEmptyString)
+		if notifyAtStr != domain.DefaultEmptyString {
+			notifyAt, err := getTimeFromTimestamp(notifyAtStr)
 
 			if err != nil {
-				c.String(http.StatusInternalServerError, "error")
+				c.String(http.StatusBadRequest, "notify_at wrong format")
 				return
 			}
 
-			c.JSON(http.StatusOK, addedEvent)*/
+			eventUpdate.NotifyAt = notifyAt
+		}
+
+		addedEvent, err := eventService.UpdateEvent(c, &eventUpdate)
+
+		if err != nil {
+			c.String(http.StatusInternalServerError, "error")
+			return
+		}
+
+		c.JSON(http.StatusOK, addedEvent)
 
 	})
 
