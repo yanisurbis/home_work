@@ -545,14 +545,18 @@ func (s *Instance) Start(storage domain2.EventStorage) error {
 
 		notifyAtStr := c.DefaultPostForm("notify_at", domain.DefaultEmptyString)
 		if notifyAtStr != domain.DefaultEmptyString {
-			notifyAt, err := getTimeFromTimestamp(notifyAtStr)
+			if notifyAtStr == "" {
+				eventUpdate.NotifyAt = domain.DefaultEmptyTime
+			} else {
+				notifyAt, err := getTimeFromTimestamp(notifyAtStr)
 
-			if err != nil {
-				c.String(http.StatusBadRequest, "notify_at wrong format")
-				return
+				if err != nil {
+					c.String(http.StatusBadRequest, "notify_at wrong format")
+					return
+				}
+
+				eventUpdate.NotifyAt = notifyAt
 			}
-
-			eventUpdate.NotifyAt = notifyAt
 		}
 
 		addedEvent, err := eventService.UpdateEvent(c, &eventUpdate)
