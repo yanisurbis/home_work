@@ -36,15 +36,14 @@ func validateEvent(e entities.Event) error {
 	)
 }
 
-func (es *EventService) AddEvent(ctx context.Context, title string, startAt time.Time, endAt time.Time,
-	description string, notifyAt time.Time, userID entities.ID) (*entities.Event, error) {
+func (es *EventService) AddEvent(ctx context.Context, addEventRequest *entities.AddEventRequest) (*entities.Event, error) {
 	event := entities.Event{
-		Title:       title,
-		StartAt:     startAt,
-		EndAt:       endAt,
-		Description: description,
-		NotifyAt:    notifyAt,
-		UserID:      userID,
+		Title:       addEventRequest.Title,
+		StartAt:     addEventRequest.StartAt,
+		EndAt:       addEventRequest.EndAt,
+		Description: addEventRequest.Description,
+		NotifyAt:    addEventRequest.NotifyAt,
+		UserID:      addEventRequest.UserID,
 	}
 
 	err := validateEvent(event)
@@ -135,14 +134,14 @@ func (es *EventService) GetEvent(ctx context.Context, userID entities.ID, eventI
 	return event, nil
 }
 
-func (es *EventService) DeleteEvent(ctx context.Context, userID entities.ID, eventID entities.ID) (*entities.Event, error) {
-	event, err := es.GetEvent(ctx, userID, eventID)
+func (es *EventService) DeleteEvent(ctx context.Context, deleteEventRequest *entities.DeleteEventRequest) (*entities.Event, error) {
+	event, err := es.GetEvent(ctx, deleteEventRequest.UserID, deleteEventRequest.ID)
 
 	if err != nil {
 		return nil, err
 	}
 
-	err = es.EventStorage.DeleteEvent(eventID)
+	err = es.EventStorage.DeleteEvent(deleteEventRequest.ID)
 
 	if err != nil {
 		return nil, err
@@ -151,7 +150,11 @@ func (es *EventService) DeleteEvent(ctx context.Context, userID entities.ID, eve
 	return event, nil
 }
 
-func (es *EventService) GetEvents(ctx context.Context, userID entities.ID, period string, from time.Time) ([]entities.Event, error) {
+func (es *EventService) GetEvents(ctx context.Context, getEventsRequest *entities.GetEventsRequest) ([]entities.Event, error) {
+	period := getEventsRequest.Type
+	userID := getEventsRequest.UserID
+	from := getEventsRequest.From
+
 	if period == PeriodMonth {
 		return es.EventStorage.GetEventsMonth(userID, from)
 	} else if period == PeriodWeek {
