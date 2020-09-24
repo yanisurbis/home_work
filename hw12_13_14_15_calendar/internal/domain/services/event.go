@@ -6,22 +6,26 @@ import (
 	"calendar/internal/domain/interfaces"
 	"context"
 	"github.com/go-ozzo/ozzo-validation/v4"
-	"reflect"
 	"time"
 )
 
 // TODO: move somewhere?
 const (
-	PeriodDay   = "day"
-	PeriodWeek  = "week"
-	PeriodMonth = "month"
+	PeriodDay         = "day"
+	PeriodWeek        = "week"
+	PeriodMonth       = "month"
+)
+
+var (
+	// TODO: put random string here
+	DefaultEmptyString = "_~_~_"
 )
 
 type EventService struct {
 	EventStorage domain.EventStorage
 }
 
-func validateEventToAdd(e entities.Event) error {
+func validateEvent(e entities.Event) error {
 	return validation.ValidateStruct(&e,
 		validation.Field(&e.Title, validation.Required, validation.Length(1, 100)),
 		validation.Field(&e.StartAt, validation.Required),
@@ -32,7 +36,7 @@ func validateEventToAdd(e entities.Event) error {
 }
 
 func (es *EventService) AddEvent(ctx context.Context, title string, startAt time.Time, endAt time.Time,
-									description string, notifyAt time.Time, userID entities.ID) (*entities.Event, error) {
+	description string, notifyAt time.Time, userID entities.ID) (*entities.Event, error) {
 	event := entities.Event{
 		Title:       title,
 		StartAt:     startAt,
@@ -42,7 +46,7 @@ func (es *EventService) AddEvent(ctx context.Context, title string, startAt time
 		UserID:      userID,
 	}
 
-	err := validateEventToAdd(event)
+	err := validateEvent(event)
 
 	if err != nil {
 		return nil, err
@@ -58,75 +62,57 @@ func (es *EventService) AddEvent(ctx context.Context, title string, startAt time
 	return &event, nil
 }
 
-func validateEventToUpdate(e entities.Event) error {
-	return validation.ValidateStruct(&e,
-		validation.Field(&e.Title, validation.Length(1, 100)),
-		validation.Field(&e.Description, validation.Length(1, 1000)),
-	)
-}
+func mergeEvents(currEvent *entities.Event, e *entities.UpdateEventRequest) (*entities.Event, error) {
 
-func mergeEvents(currEvent entities.Event, newEvent entities.Event) (*entities.Event, error) {
-	err := validateEventToUpdate(newEvent)
+	// TODO: we should check that startAt > endAt
+	// TODO: we should check that startAt > curr
+
+	if e.Title != DefaultEmptyString {
+		currEvent.Title = e.Title
+	}
+	if !e.StartAt.IsZero() {
+		currEvent.StartAt = e.StartAt
+	}
+	if !e.EndAt.IsZero() {
+		currEvent.EndAt = e.EndAt
+	}
+	if e.Description != DefaultEmptyString {
+		currEvent.Description = e.Description
+	}
+	if !e.NotifyAt.IsZero() {
+		currEvent.NotifyAt = e.NotifyAt
+	}
+
+	err := validateEvent(*currEvent)
 
 	if err != nil {
 		return nil, err
 	}
-	// TODO: we should check that startAt > endAt
-	// TODO: we should check that startAt > curr
 
-	if !reflect.ValueOf(newEvent.Title).IsZero() {
-		currEvent.Title = newEvent.Title
-	}
-	if !reflect.ValueOf(newEvent.StartAt).IsZero() {
-		currEvent.StartAt = newEvent.StartAt
-	}
-	if !reflect.ValueOf(newEvent.EndAt).IsZero() {
-		currEvent.EndAt = newEvent.EndAt
-	}
-	// TODO: what should happen if user want to delete description?
-	if !reflect.ValueOf(newEvent.Description).IsZero() {
-		currEvent.Description = newEvent.Description
-	}
-	// TODO: what should happen if user want to delete notification
-	if !reflect.ValueOf(newEvent.NotifyAt).IsZero() {
-		currEvent.NotifyAt = newEvent.NotifyAt
-	}
-
-	return &currEvent, nil
+	return currEvent, nil
 }
 
-//func (es *EventService) UpdateEvent(ctx context.Context, eventID entities.ID, title string, startAt time.Time, endAt time.Time,
-//	description string, notifyAt time.Time, userID entities.ID) (*entities.Event, error) {
-//	newEvent := entities.Event{
-//		ID: 	     eventID,
-//		Title:       title,
-//		StartAt:     startAt,
-//		EndAt:       endAt,
-//		Description: description,
-//		NotifyAt:    notifyAt,
-//		UserID:      userID,
-//	}
-//
-//	currEvent, err := es.EventStorage.GetEvent(userID, eventID)
-//
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	updatedEvent, err := mergeEvents(currEvent, newEvent)
-//
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	err = es.EventStorage.UpdateEvent(userID, *updatedEvent)
-//
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return updatedEvent, nil
-//}
+func (es *EventService) UpdateEvent(ctx context.Context, eventUpdate *entities.UpdateEventRequest) (*entities.Event, error) {
+	currEvent, err := es.GetEvent(ctx, eventUpdate.UserID, eventUpdate.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	updatedEvent, err := mergeEvents(currEvent, eventUpdate)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = es.EventStorage.UpdateEvent(eventUpdate.UserID, *updatedEvent)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedEvent, nil
+}
 
 func (es *EventService) GetEvent(ctx context.Context, userID entities.ID, eventID entities.ID) (*entities.Event, error) {
 	event, err := es.EventStorage.GetEvent(eventID)

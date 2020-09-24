@@ -14,6 +14,16 @@ type Event struct {
 	UserID       int       `db:"user_id"`
 }
 
+type UpdateEventRequest struct {
+	ID          ID
+	Title       string
+	StartAt     time.Time
+	EndAt       time.Time
+	Description string
+	NotifyAt    time.Time
+	UserID      int
+}
+
 type User struct {
 	ID
 }
