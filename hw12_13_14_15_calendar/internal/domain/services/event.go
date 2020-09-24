@@ -11,14 +11,15 @@ import (
 
 // TODO: move somewhere?
 const (
-	PeriodDay         = "day"
-	PeriodWeek        = "week"
-	PeriodMonth       = "month"
+	PeriodDay   = "day"
+	PeriodWeek  = "week"
+	PeriodMonth = "month"
 )
 
 var (
 	// TODO: put random string here
 	DefaultEmptyString = "_~_~_"
+	DefaultEmptyTime   = time.Now().Add(-10)
 )
 
 type EventService struct {
@@ -79,7 +80,9 @@ func mergeEvents(currEvent *entities.Event, e *entities.UpdateEventRequest) (*en
 	if e.Description != DefaultEmptyString {
 		currEvent.Description = e.Description
 	}
-	if !e.NotifyAt.IsZero() {
+	if e.NotifyAt == DefaultEmptyTime {
+		currEvent.NotifyAt = *new(time.Time)
+	} else if !e.NotifyAt.IsZero() {
 		currEvent.NotifyAt = e.NotifyAt
 	}
 
