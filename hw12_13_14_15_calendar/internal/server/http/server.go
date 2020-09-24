@@ -378,6 +378,67 @@ func deleteEvent(w http.ResponseWriter, req *http.Request) {
 	StatusOk(w)
 }
 
+func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, error) {
+	userId := GetUserID(c)
+
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+
+	if err != nil {
+		c.String(http.StatusBadRequest, "check eventId")
+		return nil, err
+	}
+
+	eventUpdate := entities.UpdateEventRequest{}
+	eventUpdate.ID = id
+	eventUpdate.UserID = userId
+	eventUpdate.Title = c.DefaultPostForm("title", domain.DefaultEmptyString)
+
+	startAtStr := c.DefaultPostForm("start_at", domain.DefaultEmptyString)
+	if startAtStr != domain.DefaultEmptyString {
+		startAt, err := getTimeFromTimestamp(startAtStr)
+
+		if err != nil {
+			c.String(http.StatusBadRequest, "start_at wrong format")
+			return nil, err
+		}
+
+		eventUpdate.StartAt = startAt
+	}
+
+	endAtStr := c.DefaultPostForm("end_at", domain.DefaultEmptyString)
+	if endAtStr != domain.DefaultEmptyString {
+		endAt, err := getTimeFromTimestamp(endAtStr)
+
+		if err != nil {
+			c.String(http.StatusBadRequest, "end_at wrong format")
+			return nil, err
+		}
+
+		eventUpdate.EndAt = endAt
+	}
+
+	eventUpdate.Description = c.DefaultPostForm("description", domain.DefaultEmptyString)
+
+	notifyAtStr := c.DefaultPostForm("notify_at", domain.DefaultEmptyString)
+	if notifyAtStr != domain.DefaultEmptyString {
+		if notifyAtStr == "" {
+			eventUpdate.NotifyAt = domain.DefaultEmptyTime
+		} else {
+			notifyAt, err := getTimeFromTimestamp(notifyAtStr)
+
+			if err != nil {
+				c.String(http.StatusBadRequest, "notify_at wrong format")
+				return nil, err
+			}
+
+			eventUpdate.NotifyAt = notifyAt
+		}
+	}
+
+	return &eventUpdate, nil
+}
+
 // TODO move grpc server in server folder
 func (s *Instance) Start1(r repository.BaseRepo) error {
 	s.instance = &http.Server{Addr: ":8080"}
@@ -502,64 +563,13 @@ func (s *Instance) Start(storage domain2.EventStorage) error {
 	})
 
 	router.PUT("/event/:id", func(c *gin.Context) {
-		userId := GetUserID(c)
-
-		idStr := c.Param("id")
-		id, err := strconv.Atoi(idStr)
+		updateEventRequest, err := prepareUpdateEventRequest(c)
 
 		if err != nil {
-			c.String(http.StatusBadRequest, "check eventId")
 			return
 		}
 
-		eventUpdate := entities.UpdateEventRequest{}
-		eventUpdate.ID = id
-		eventUpdate.UserID = userId
-		eventUpdate.Title = c.DefaultPostForm("title", domain.DefaultEmptyString)
-
-		startAtStr := c.DefaultPostForm("start_at", domain.DefaultEmptyString)
-		if startAtStr != domain.DefaultEmptyString {
-			startAt, err := getTimeFromTimestamp(startAtStr)
-
-			if err != nil {
-				c.String(http.StatusBadRequest, "start_at wrong format")
-				return
-			}
-
-			eventUpdate.StartAt = startAt
-		}
-
-		endAtStr := c.DefaultPostForm("end_at", domain.DefaultEmptyString)
-		if endAtStr != domain.DefaultEmptyString {
-			endAt, err := getTimeFromTimestamp(endAtStr)
-
-			if err != nil {
-				c.String(http.StatusBadRequest, "end_at wrong format")
-				return
-			}
-
-			eventUpdate.EndAt = endAt
-		}
-
-		eventUpdate.Description = c.DefaultPostForm("description", domain.DefaultEmptyString)
-
-		notifyAtStr := c.DefaultPostForm("notify_at", domain.DefaultEmptyString)
-		if notifyAtStr != domain.DefaultEmptyString {
-			if notifyAtStr == "" {
-				eventUpdate.NotifyAt = domain.DefaultEmptyTime
-			} else {
-				notifyAt, err := getTimeFromTimestamp(notifyAtStr)
-
-				if err != nil {
-					c.String(http.StatusBadRequest, "notify_at wrong format")
-					return
-				}
-
-				eventUpdate.NotifyAt = notifyAt
-			}
-		}
-
-		addedEvent, err := eventService.UpdateEvent(c, &eventUpdate)
+		addedEvent, err := eventService.UpdateEvent(c, updateEventRequest)
 
 		if err != nil {
 			c.String(http.StatusInternalServerError, "error")
@@ -567,7 +577,6 @@ func (s *Instance) Start(storage domain2.EventStorage) error {
 		}
 
 		c.JSON(http.StatusOK, addedEvent)
-
 	})
 
 	fmt.Println("server starting at port :8080")
