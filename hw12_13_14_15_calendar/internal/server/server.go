@@ -1,11 +1,11 @@
 package server
 
 import (
-	domain "calendar/internal/domain/interfaces"
+	domain2 "calendar/internal/domain/services"
 	"context"
 )
 
 type Server interface {
-	Start(storage domain.EventStorage) error
+	Start(eventService domain2.EventService) error
 	Stop(ctx context.Context) error
 }

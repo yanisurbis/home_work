@@ -3,7 +3,6 @@ package http_server
 import (
 	"calendar/internal/domain/entities"
 	domain3 "calendar/internal/domain/errors"
-	domain2 "calendar/internal/domain/interfaces"
 	domain "calendar/internal/domain/services"
 	"context"
 	"errors"
@@ -99,6 +98,7 @@ func prepareAddEventRequest(c *gin.Context) (*entities.AddEventRequest, error) {
 
 	return &addEventRequest, nil
 }
+
 func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, error) {
 	userId := GetUserID(c)
 
@@ -160,15 +160,10 @@ func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, er
 	return &eventUpdate, nil
 }
 
-// TODO: how to remove domain2?
-func (s *Instance) Start(storage domain2.EventStorage) error {
+func (s *Instance) Start(eventService domain.EventService) error {
 
 	router := gin.Default()
 	router.Use(UserIDMiddleware())
-	// TODO: pass service, not storage
-	eventService := domain.EventService{
-		EventStorage: storage,
-	}
 
 	router.DELETE("/event/:id", func(c *gin.Context) {
 		deleteEventRequest, err := prepareDeleteEventRequest(c)

@@ -2,6 +2,7 @@ package app
 
 import (
 	domain "calendar/internal/domain/interfaces"
+	domain2 "calendar/internal/domain/services"
 	"calendar/internal/logger"
 	"calendar/internal/server"
 	"context"
@@ -33,9 +34,12 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 		log.Fatal(err)
 	}
 
-	//server
-	// TODO: remove passing repo
-	err = a.server.Start(a.storage)
+	// service
+	eventService := domain2.EventService{
+		EventStorage: a.storage,
+	}
+
+	err = a.server.Start(eventService)
 	if err != nil {
 		log.Fatal(err)
 		return err
