@@ -26,7 +26,6 @@ func (s *Instance) Start(eventService domain.EventService) error {
 	router.Use(UserIDMiddleware())
 
 	router.DELETE("/event/:id", func(c *gin.Context) {
-		// TODO: err -> isErrHandled
 		deleteEventRequest, err := prepareDeleteEventRequest(c)
 
 		if err != nil {

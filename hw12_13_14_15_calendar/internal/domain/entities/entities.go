@@ -43,7 +43,3 @@ type GetEventsRequest struct {
 	Type   string
 	From   time.Time
 }
-
-type User struct {
-	ID
-}
