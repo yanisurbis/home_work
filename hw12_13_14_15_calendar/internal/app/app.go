@@ -12,12 +12,13 @@ import (
 
 type App struct {
 	server server.Server
+	grpcServer server.Server
 	logger logger.Logger
 	storage domain.EventStorage
 }
 
-func New(s server.Server, l logger.Logger, storage domain.EventStorage) (*App, error) {
-	return &App{server: s, logger: l, storage: storage}, nil
+func New(s server.Server, grpcServer server.Server, l logger.Logger, storage domain.EventStorage) (*App, error) {
+	return &App{server: s, logger: l, storage: storage, grpcServer: grpcServer}, nil
 }
 
 func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
@@ -39,8 +40,18 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 		EventStorage: a.storage,
 	}
 
-	err = a.server.Start(eventService)
+	// http server
+	//err = a.server.Start(eventService)
+	//if err != nil {
+	//	log.Println("Failed to start http server")
+	//	log.Fatal(err)
+	//	return err
+	//}
+
+	// grpc server
+	err = a.grpcServer.Start(eventService)
 	if err != nil {
+		log.Println("Failed to start grpc server")
 		log.Fatal(err)
 		return err
 	}

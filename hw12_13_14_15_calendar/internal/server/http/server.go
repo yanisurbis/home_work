@@ -14,6 +14,7 @@ import (
 )
 
 type Instance struct {
+	// TODO: fix, it's wrong, should store somthing for graceful shutdown
 	instance *http.Server
 }
 
