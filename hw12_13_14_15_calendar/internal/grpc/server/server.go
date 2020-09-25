@@ -20,19 +20,19 @@ type Server struct {
 }
 
 func createEventResponse(event repository.Event) *events_grpc.Event {
-	start_at, err := ptypes.TimestampProto(event.StartAt)
+	startAt, err := ptypes.TimestampProto(event.StartAt)
 
 	if err != nil {
 		log.Fatal("Type conversion error")
 	}
 
-	end_at, err := ptypes.TimestampProto(event.EndAt)
+	endAt, err := ptypes.TimestampProto(event.EndAt)
 
 	if err != nil {
 		log.Fatal("Type conversion error")
 	}
 
-	notify_at, err := ptypes.TimestampProto(event.NotifyAt)
+	notifyAt, err := ptypes.TimestampProto(event.NotifyAt)
 
 	if err != nil {
 		// TODO: fix error handling
@@ -42,11 +42,11 @@ func createEventResponse(event repository.Event) *events_grpc.Event {
 	return &events_grpc.Event{
 		Id:          uint32(event.ID),
 		Title:       event.Title,
-		StartAt:     start_at,
-		EndAt:       end_at,
+		StartAt:     startAt,
+		EndAt:       endAt,
 		Description: event.Description,
 		UserId:      uint32(event.UserID),
-		NotifyAt:    notify_at,
+		NotifyAt:    notifyAt,
 	}
 }
 
