@@ -88,7 +88,7 @@ func (s *Server) GetEventsMonth(ctx context.Context, query *events_grpc.EventsQu
 	return s.GetEvents(ctx, query, domain.PeriodMonth)
 }
 
-func convertEvent(eventGrpc *events_grpc.Event) (*repository.Event, error) {
+func prepareAddEventRequest(eventGrpc *events_grpc.Event) (*entities.AddEventRequest, error) {
 	// TODO: check how to handle errors
 	// TODO: check error handling with real errors
 	// TODO: memory error if we stop the server
@@ -111,30 +111,28 @@ func convertEvent(eventGrpc *events_grpc.Event) (*repository.Event, error) {
 		return nil, errors.New("error converting event.notifyAt")
 	}
 
-	return &repository.Event{
-		ID:          repository.ID(eventGrpc.Id),
+	return &entities.AddEventRequest{
 		Title:       eventGrpc.Title,
 		StartAt:     startAt,
 		EndAt:       endAt,
 		Description: eventGrpc.Description,
-		UserID:      repository.ID(eventGrpc.UserId),
 		NotifyAt:    notifyAt,
+		UserID:      repository.ID(eventGrpc.UserId),
 	}, nil
 }
 
 func (s *Server) AddEvent(ctx context.Context, query *events_grpc.Event) (*empty.Empty, error) {
-	//event, err := convertEvent(query)
-	//
-	//if err != nil {
-	//	// TODO: check nil handling
-	//	return nil, err
-	//}
-	//
-	//err = s.db.AddEvent(*event)
-	//
-	//if err != nil {
-	//	return nil, errors.New("problem adding event to the DB")
-	//}
+	addEventRequest, err := prepareAddEventRequest(query)
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.eventService.AddEvent(ctx, addEventRequest)
+
+	if err != nil {
+		return nil, errors.New("problem adding event to the DB")
+	}
 
 	return &empty.Empty{}, nil
 }
