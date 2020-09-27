@@ -137,18 +137,48 @@ func (s *Server) AddEvent(ctx context.Context, query *events_grpc.Event) (*empty
 	return &empty.Empty{}, nil
 }
 
+func prepareUpdateEventRequest(eventGrpc *events_grpc.Event) (*entities.UpdateEventRequest, error) {
+	startAt, err := ptypes.Timestamp(eventGrpc.StartAt)
+
+	if err != nil {
+		return nil, errors.New("error converting event.startAt")
+	}
+
+	endAt, err := ptypes.Timestamp(eventGrpc.EndAt)
+
+	if err != nil {
+		return nil, errors.New("error converting event.endAt")
+	}
+
+	notifyAt, err := ptypes.Timestamp(eventGrpc.NotifyAt)
+
+	if err != nil {
+		return nil, errors.New("error converting event.notifyAt")
+	}
+
+	return &entities.UpdateEventRequest{
+		ID:          repository.ID(eventGrpc.Id),
+		Title:       eventGrpc.Title,
+		StartAt:     startAt,
+		EndAt:       endAt,
+		Description: eventGrpc.Description,
+		NotifyAt:    notifyAt,
+		UserID:      repository.ID(eventGrpc.UserId),
+	}, nil
+}
+
 func (s *Server) UpdateEvent(ctx context.Context, query *events_grpc.Event) (*empty.Empty, error) {
-	//event, err := convertEvent(query)
-	//
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//err = s.db.UpdateEvent(*event)
-	//
-	//if err != nil {
-	//	return nil, errors.New("problem updating event to the DB")
-	//}
+	updateEventRequest, err := prepareUpdateEventRequest(query)
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.eventService.UpdateEvent(ctx, updateEventRequest)
+
+	if err != nil {
+		return nil, errors.New("problem adding event to the DB")
+	}
 
 	return &empty.Empty{}, nil
 }
