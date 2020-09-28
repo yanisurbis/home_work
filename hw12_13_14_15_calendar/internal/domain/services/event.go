@@ -31,7 +31,7 @@ func validateEvent(e entities.Event) error {
 		validation.Field(&e.Title, validation.Required, validation.Length(1, 100)),
 		validation.Field(&e.StartAt, validation.Required),
 		validation.Field(&e.EndAt, validation.Required),
-		validation.Field(&e.Description, validation.Required, validation.Length(1, 1000)),
+		validation.Field(&e.Description, validation.Length(0, 1000)),
 		validation.Field(&e.UserID, validation.Required),
 	)
 }
