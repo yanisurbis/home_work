@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -46,7 +47,7 @@ func createEventResponse(event entities.Event) *events_grpc.Event {
 		Title:       event.Title,
 		StartAt:     startAt,
 		EndAt:       endAt,
-		Description: event.Description,
+		Description: &wrappers.StringValue{Value: event.Description},
 		UserId:      uint32(event.UserID),
 		NotifyAt:    notifyAt,
 	}
@@ -111,11 +112,18 @@ func prepareAddEventRequest(eventGrpc *events_grpc.Event) (*entities.AddEventReq
 		return nil, errors.New("error converting event.notifyAt")
 	}
 
+	description := ""
+	if eventGrpc.Description == nil {
+		description = domain.DefaultEmptyString
+	} else {
+		description = eventGrpc.Description.Value
+	}
+
 	return &entities.AddEventRequest{
 		Title:       eventGrpc.Title,
 		StartAt:     startAt,
 		EndAt:       endAt,
-		Description: eventGrpc.Description,
+		Description: description,
 		NotifyAt:    notifyAt,
 		UserID:      repository.ID(eventGrpc.UserId),
 	}, nil
@@ -158,12 +166,19 @@ func prepareUpdateEventRequest(eventGrpc *events_grpc.Event) (*entities.UpdateEv
 		return nil, errors.New("error converting event.notifyAt")
 	}
 
+	description := ""
+	if eventGrpc.Description == nil {
+		description = domain.DefaultEmptyString
+	} else {
+		description = eventGrpc.Description.Value
+	}
+
 	return &entities.UpdateEventRequest{
 		ID:          repository.ID(eventGrpc.Id),
 		Title:       eventGrpc.Title,
 		StartAt:     startAt,
 		EndAt:       endAt,
-		Description: eventGrpc.Description,
+		Description: description,
 		NotifyAt:    notifyAt,
 		UserID:      repository.ID(eventGrpc.UserId),
 	}, nil
