@@ -138,6 +138,8 @@ func (s *Server) AddEvent(ctx context.Context, query *events_grpc.Event) (*empty
 }
 
 func prepareUpdateEventRequest(eventGrpc *events_grpc.Event) (*entities.UpdateEventRequest, error) {
+	fmt.Printf("%+v\n", eventGrpc)
+
 	startAt, err := ptypes.Timestamp(eventGrpc.StartAt)
 
 	if err != nil {

@@ -3,6 +3,7 @@ package events;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
 
 option go_package = "internal/protobufs/events_grpc";
 
@@ -11,7 +12,7 @@ message Event {
   string title = 2;
   google.protobuf.Timestamp start_at = 3;
   google.protobuf.Timestamp end_at = 4;
-  string description = 5;
+  google.protobuf.StringValue description = 5;
   uint32 user_id = 6;
   google.protobuf.Timestamp notify_at = 7;
 }

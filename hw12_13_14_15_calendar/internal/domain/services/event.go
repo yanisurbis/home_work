@@ -66,7 +66,7 @@ func mergeEvents(currEvent *entities.Event, e *entities.UpdateEventRequest) (*en
 
 	// TODO: we should check that startAt > endAt
 	// TODO: we should check that startAt > curr
-
+	// TODO: title shouldn't be empty
 	if e.Title != DefaultEmptyString {
 		currEvent.Title = e.Title
 	}
