@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/grpc"
 	"log"
@@ -35,11 +36,13 @@ func createEventResponse(event entities.Event) *events_grpc.Event {
 		log.Fatal("Type conversion error")
 	}
 
-	notifyAt, err := ptypes.TimestampProto(event.NotifyAt)
-
-	if err != nil {
-		// TODO: fix error handling
-		log.Fatal("Type conversion error")
+	var notifyAt *timestamp.Timestamp = nil
+	if !event.NotifyAt.IsZero() {
+		notifyAt, err = ptypes.TimestampProto(event.NotifyAt)
+		if err != nil {
+			// TODO: fix error handling
+			log.Fatal("Type conversion error")
+		}
 	}
 
 	return &events_grpc.Event{
