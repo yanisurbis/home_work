@@ -149,28 +149,26 @@ func prepareUpdateEventRequest(eventGrpc *events_grpc.Event) (*entities.UpdateEv
 	fmt.Printf("%+v\n", eventGrpc)
 
 	startAt, err := ptypes.Timestamp(eventGrpc.StartAt)
-
 	if err != nil {
 		return nil, errors.New("error converting event.startAt")
 	}
 
 	endAt, err := ptypes.Timestamp(eventGrpc.EndAt)
-
 	if err != nil {
 		return nil, errors.New("error converting event.endAt")
 	}
 
-	notifyAt, err := ptypes.Timestamp(eventGrpc.NotifyAt)
-
-	if err != nil {
-		return nil, errors.New("error converting event.notifyAt")
+	description := domain.DefaultEmptyString
+	if eventGrpc.Description != nil {
+		description = eventGrpc.Description.Value
 	}
 
-	description := ""
-	if eventGrpc.Description == nil {
-		description = domain.DefaultEmptyString
-	} else {
-		description = eventGrpc.Description.Value
+	notifyAt := domain.DefaultEmptyTime
+	if eventGrpc.NotifyAt != nil {
+		notifyAt, err = ptypes.Timestamp(eventGrpc.NotifyAt)
+		if err != nil {
+			return nil, errors.New("error converting event.notifyAt")
+		}
 	}
 
 	return &entities.UpdateEventRequest{
