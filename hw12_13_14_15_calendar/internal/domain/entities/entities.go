@@ -4,6 +4,17 @@ import "time"
 
 type ID = int
 
+/*
+db event
+id uuid
+title string, length > 0
+start_at date
+end_at date
+description string, length >= 0
+notify_at date, NULL if we don't have anything
+user_id uuid
+*/
+
 type Event struct {
 	ID          ID
 	Title       string
