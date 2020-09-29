@@ -11,14 +11,15 @@ import (
 
 // TODO: move somewhere?
 const (
-	PeriodDay         = "day"
-	PeriodWeek        = "week"
-	PeriodMonth       = "month"
+	PeriodDay   = "day"
+	PeriodWeek  = "week"
+	PeriodMonth = "month"
 )
 
 var (
 	// TODO: put random string here
 	DefaultEmptyString = "_~_~_"
+	DefaultEmptyTime   = time.Now().Add(-10)
 )
 
 type EventService struct {
@@ -30,20 +31,19 @@ func validateEvent(e entities.Event) error {
 		validation.Field(&e.Title, validation.Required, validation.Length(1, 100)),
 		validation.Field(&e.StartAt, validation.Required),
 		validation.Field(&e.EndAt, validation.Required),
-		validation.Field(&e.Description, validation.Required, validation.Length(1, 1000)),
+		validation.Field(&e.Description, validation.Length(0, 1000)),
 		validation.Field(&e.UserID, validation.Required),
 	)
 }
 
-func (es *EventService) AddEvent(ctx context.Context, title string, startAt time.Time, endAt time.Time,
-	description string, notifyAt time.Time, userID entities.ID) (*entities.Event, error) {
+func (es *EventService) AddEvent(ctx context.Context, addEventRequest *entities.AddEventRequest) (*entities.Event, error) {
 	event := entities.Event{
-		Title:       title,
-		StartAt:     startAt,
-		EndAt:       endAt,
-		Description: description,
-		NotifyAt:    notifyAt,
-		UserID:      userID,
+		Title:       addEventRequest.Title,
+		StartAt:     addEventRequest.StartAt,
+		EndAt:       addEventRequest.EndAt,
+		Description: addEventRequest.Description,
+		NotifyAt:    addEventRequest.NotifyAt,
+		UserID:      addEventRequest.UserID,
 	}
 
 	err := validateEvent(event)
@@ -66,7 +66,7 @@ func mergeEvents(currEvent *entities.Event, e *entities.UpdateEventRequest) (*en
 
 	// TODO: we should check that startAt > endAt
 	// TODO: we should check that startAt > curr
-
+	// TODO: title shouldn't be empty
 	if e.Title != DefaultEmptyString {
 		currEvent.Title = e.Title
 	}
@@ -79,7 +79,9 @@ func mergeEvents(currEvent *entities.Event, e *entities.UpdateEventRequest) (*en
 	if e.Description != DefaultEmptyString {
 		currEvent.Description = e.Description
 	}
-	if !e.NotifyAt.IsZero() {
+	if e.NotifyAt == DefaultEmptyTime {
+		currEvent.NotifyAt = *new(time.Time)
+	} else if !e.NotifyAt.IsZero() {
 		currEvent.NotifyAt = e.NotifyAt
 	}
 
@@ -132,14 +134,14 @@ func (es *EventService) GetEvent(ctx context.Context, userID entities.ID, eventI
 	return event, nil
 }
 
-func (es *EventService) DeleteEvent(ctx context.Context, userID entities.ID, eventID entities.ID) (*entities.Event, error) {
-	event, err := es.GetEvent(ctx, userID, eventID)
+func (es *EventService) DeleteEvent(ctx context.Context, deleteEventRequest *entities.DeleteEventRequest) (*entities.Event, error) {
+	event, err := es.GetEvent(ctx, deleteEventRequest.UserID, deleteEventRequest.ID)
 
 	if err != nil {
 		return nil, err
 	}
 
-	err = es.EventStorage.DeleteEvent(eventID)
+	err = es.EventStorage.DeleteEvent(deleteEventRequest.ID)
 
 	if err != nil {
 		return nil, err
@@ -148,7 +150,11 @@ func (es *EventService) DeleteEvent(ctx context.Context, userID entities.ID, eve
 	return event, nil
 }
 
-func (es *EventService) GetEvents(ctx context.Context, userID entities.ID, period string, from time.Time) ([]entities.Event, error) {
+func (es *EventService) GetEvents(ctx context.Context, getEventsRequest *entities.GetEventsRequest) ([]entities.Event, error) {
+	period := getEventsRequest.Type
+	userID := getEventsRequest.UserID
+	from := getEventsRequest.From
+
 	if period == PeriodMonth {
 		return es.EventStorage.GetEventsMonth(userID, from)
 	} else if period == PeriodWeek {

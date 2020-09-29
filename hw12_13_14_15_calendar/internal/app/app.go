@@ -2,6 +2,7 @@ package app
 
 import (
 	domain "calendar/internal/domain/interfaces"
+	domain2 "calendar/internal/domain/services"
 	"calendar/internal/logger"
 	"calendar/internal/server"
 	"context"
@@ -11,12 +12,13 @@ import (
 
 type App struct {
 	server server.Server
+	grpcServer server.Server
 	logger logger.Logger
 	storage domain.EventStorage
 }
 
-func New(s server.Server, l logger.Logger, storage domain.EventStorage) (*App, error) {
-	return &App{server: s, logger: l, storage: storage}, nil
+func New(s server.Server, grpcServer server.Server, l logger.Logger, storage domain.EventStorage) (*App, error) {
+	return &App{server: s, logger: l, storage: storage, grpcServer: grpcServer}, nil
 }
 
 func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
@@ -33,10 +35,23 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 		log.Fatal(err)
 	}
 
-	//server
-	// TODO: remove passing repo
-	err = a.server.Start(a.storage)
+	// service
+	eventService := domain2.EventService{
+		EventStorage: a.storage,
+	}
+
+	// http server
+	//err = a.server.Start(eventService)
+	//if err != nil {
+	//	log.Println("Failed to start http server")
+	//	log.Fatal(err)
+	//	return err
+	//}
+
+	// grpc server
+	err = a.grpcServer.Start(eventService)
 	if err != nil {
+		log.Println("Failed to start grpc server")
 		log.Fatal(err)
 		return err
 	}

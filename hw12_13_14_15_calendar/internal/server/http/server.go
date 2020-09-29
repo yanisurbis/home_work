@@ -3,429 +3,37 @@ package http_server
 import (
 	"calendar/internal/domain/entities"
 	domain3 "calendar/internal/domain/errors"
-	domain2 "calendar/internal/domain/interfaces"
 	domain "calendar/internal/domain/services"
-	"calendar/internal/repository"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/gorilla/mux"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
 )
 
 type Instance struct {
+	// TODO: fix, it's wrong, should store somthing for graceful shutdown
 	instance *http.Server
 }
 
 const repositoryKey = "repository"
 const userIdKey = "userId"
 
-func StatusOk(w http.ResponseWriter) {
-	data := struct {
-		Status string
-	}{
-		Status: "Ok",
-	}
-
-	dataJson, err := json.Marshal(data)
-
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_, err = w.Write(dataJson)
-
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-func StatusError(w http.ResponseWriter) {
-	data := struct {
-		Status string
-	}{
-		Status: "Ok",
-	}
-
-	dataJson, err := json.Marshal(data)
-
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_, err = w.Write(dataJson)
-
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-func helloHandler(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "hello world\n")
-}
-
-func getTimeFromTimestamp(timestamp string) (time.Time, error) {
-	fromInt, err := strconv.Atoi(timestamp)
-	if err != nil {
-		return time.Now(), errors.New("can't convert from value")
-	}
-
-	from := time.Unix(int64(fromInt), 0)
-	fmt.Println("date -> " + from.String())
-
-	return from, nil
-}
-
-func getFromParam(req *http.Request) (time.Time, error) {
-	fromValues, ok := req.URL.Query()["from"]
-
-	if !ok || len(fromValues) == 0 {
-		return time.Now(), errors.New("specify from value")
-	}
-
-	return getTimeFromTimestamp(fromValues[0])
-}
-
-func getEvents(w http.ResponseWriter, req *http.Request, cb func(userID repository.ID, from time.Time, repo repository.BaseRepo) ([]repository.Event, error)) {
-	ctx := req.Context()
-
-	r := getRepository(ctx)
-	userId := getUserId(ctx)
-
-	from, err := getFromParam(req)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// TODO: remove ADD
-	events, err := cb(userId, from.Add(time.Duration(23)*time.Hour*-1), r)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("%+v\n", events)
-
-	// TODO: handle empty array, right now return null
-	// TODO: add migration to make file
-	eventsJSON, err := json.Marshal(events)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(eventsJSON)
-}
-
-func getEventsDay(w http.ResponseWriter, req *http.Request) {
-	getEvents(w, req, func(userId repository.ID, from time.Time, repo repository.BaseRepo) ([]repository.Event, error) {
-		return repo.GetEventsDay(userId, from)
-	})
-}
-
-func getEventsWeek(w http.ResponseWriter, req *http.Request) {
-	getEvents(w, req, func(userId repository.ID, from time.Time, repo repository.BaseRepo) ([]repository.Event, error) {
-		return repo.GetEventsWeek(userId, from)
-	})
-}
-
-func getEventsMonth(w http.ResponseWriter, req *http.Request) {
-	getEvents(w, req, func(userId repository.ID, from time.Time, repo repository.BaseRepo) ([]repository.Event, error) {
-		return repo.GetEventsMonth(userId, from)
-	})
-}
-
-func parseEventToAdd(req *http.Request, userId repository.ID) (*repository.Event, error) {
-	event := new(repository.Event)
-	err := req.ParseForm()
-	if err != nil {
-		return nil, err
-	}
-
-	event.UserID = userId
-
-	title := req.PostForm.Get("title")
-	event.Title = title
-
-	if startAtStr := req.PostForm.Get("start_at"); startAtStr != "" {
-		startAt, err := getTimeFromTimestamp(startAtStr)
-		if err != nil {
-			return nil, validation.Errors{
-				"StartAt": errors.New("wrong format"),
-			}
-		}
-		event.StartAt = startAt
-	}
-
-	if endAtStr := req.PostForm.Get("end_at"); endAtStr != "" {
-		endAt, err := getTimeFromTimestamp(endAtStr)
-		if err != nil {
-			return nil, validation.Errors{
-				"EndAt": errors.New("wrong format"),
-			}
-		}
-		event.EndAt = endAt
-	}
-
-	description := req.PostForm.Get("description")
-	event.Description = description
-
-	if notifyAtStr := req.PostForm.Get("notify_at"); notifyAtStr != "" {
-		notifyAt, err := getTimeFromTimestamp(notifyAtStr)
-		if err != nil {
-			return nil, validation.Errors{
-				"NotifyAt": errors.New("wrong format"),
-			}
-		}
-		event.NotifyAt = notifyAt
-	}
-
-	if err = validateEventToAdd(*event); err != nil {
-		return nil, err
-	}
-
-	return event, nil
-}
-
-func parseEventToUpdate(req *http.Request, userId repository.ID, r repository.BaseRepo) (*repository.Event, error) {
-	err := req.ParseForm()
-	if err != nil {
-		// TODO: consistent format for error?
-		return nil, err
-	}
-
-	idStr := req.PostForm.Get("id")
-	id := 0
-	if idStr == "" {
-		return nil, validation.Errors{
-			"Id": errors.New("event id is required"),
-		}
-	} else {
-		id, err = strconv.Atoi(idStr)
-
-		if err != nil {
-			return nil, validation.Errors{
-				"Id": errors.New("wrong format"),
-			}
-		}
-	}
-
-	event, err := r.GetEvent(userId, id)
-	if err != nil {
-		// TODO: consistent format for error?
-		// TODO: handle panic
-		return nil, err
-	}
-
-	if title := req.PostForm.Get("title"); title != "" {
-		event.Title = title
-	}
-
-	if startAtStr := req.PostForm.Get("start_at"); startAtStr != "" {
-		startAt, err := getTimeFromTimestamp(startAtStr)
-		if err != nil {
-			return nil, validation.Errors{
-				"StartAt": errors.New("wrong format"),
-			}
-		}
-		event.StartAt = startAt
-	}
-
-	if endAtStr := req.PostForm.Get("end_at"); endAtStr != "" {
-		endAt, err := getTimeFromTimestamp(endAtStr)
-		if err != nil {
-			return nil, validation.Errors{
-				"EndAt": errors.New("wrong format"),
-			}
-		}
-		event.EndAt = endAt
-	}
-
-	if description := req.PostForm.Get("description"); description != "" {
-		event.Description = description
-	}
-
-	if notifyAtStr := req.PostForm.Get("notify_at"); notifyAtStr != "" {
-		notifyAt, err := getTimeFromTimestamp(notifyAtStr)
-		if err != nil {
-			return nil, validation.Errors{
-				"NotifyAt": errors.New("wrong format"),
-			}
-		}
-		event.NotifyAt = notifyAt
-	}
-
-	if err = validateEventToUpdate(event); err != nil {
-		return nil, err
-	}
-
-	return &event, nil
-}
-
-func addEvent(w http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
-
-	repo := getRepository(ctx)
-	userId := getUserId(ctx)
-
-	event, err := parseEventToAdd(req, userId)
-	if err != nil {
-		fmt.Printf("%T", err)
-		errs, _ := json.Marshal(err)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write(errs)
-		return
-	}
-
-	err = repo.AddEvent(*event)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	StatusOk(w)
-}
-
-func updateEvent(w http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
-
-	repo := getRepository(ctx)
-	userId := getUserId(ctx)
-
-	event, err := parseEventToUpdate(req, userId, repo)
-
-	if err != nil {
-		errs, _ := json.Marshal(err)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write(errs)
-		return
-	}
-
-	err = repo.UpdateEvent(userId, *event)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	StatusOk(w)
-}
-
-func getEventIdFromReq(req *http.Request) (repository.ID, error) {
-	err := req.ParseForm()
-	if err != nil {
-		// TODO: should wrap the error
-		return 0, err
-	}
-
-	eventIdStr := req.PostForm.Get("id")
-
-	if eventIdStr == "" {
-		return 0, validation.Errors{
-			"Id": errors.New("event id is required"),
-		}
-	}
-
-	eventId, err := strconv.Atoi(eventIdStr)
-
-	if err != nil {
-		return 0, validation.Errors{
-			"Id": errors.New("wrong format"),
-		}
-	}
-
-	return eventId, nil
-}
-
-func deleteEvent(w http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
-
-	r := getRepository(ctx)
-	userId := getUserId(ctx)
-
-	eventId, err := getEventIdFromReq(req)
-
-	if err != nil {
-		errs, _ := json.Marshal(err)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write(errs)
-		return
-	}
-
-	err = r.DeleteEvent(userId, eventId)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	StatusOk(w)
-}
-
-// TODO move grpc server in server folder
-func (s *Instance) Start1(r repository.BaseRepo) error {
-	s.instance = &http.Server{Addr: ":8080"}
-
-	router := mux.NewRouter()
-	router.Use(panicMiddleware)
-	router.Use(logMiddleware)
-	router.HandleFunc("/hello", helloHandler)
-
-	apiRouter := router.PathPrefix("/api").Subrouter()
-	dbMiddleware := createDbMiddleware(r)
-	apiRouter.Use(dbMiddleware, userIdMiddleware)
-
-	apiRouter.HandleFunc("/events", getEventsMonth).Methods("GET").Queries("type", "month")
-	apiRouter.HandleFunc("/events", getEventsWeek).Methods("GET").Queries("type", "week")
-	apiRouter.HandleFunc("/events", getEventsDay).Methods("GET").Queries("type", "day")
-	apiRouter.HandleFunc("/event", addEvent).Methods("POST")
-	apiRouter.HandleFunc("/event", updateEvent).Methods("PUT")
-	apiRouter.HandleFunc("/event", deleteEvent).Methods("PATCH")
-
-	fmt.Println("server starting at port :8080")
-
-	http.Handle("/", router)
-
-	return s.instance.ListenAndServe()
-}
-
-// TODO: how to remove domain2?
-func (s *Instance) Start(storage domain2.EventStorage) error {
+func (s *Instance) Start(eventService domain.EventService) error {
 
 	router := gin.Default()
 	router.Use(UserIDMiddleware())
-	// TODO: pass service, not storage
-	eventService := domain.EventService{
-		EventStorage: storage,
-	}
 
 	router.DELETE("/event/:id", func(c *gin.Context) {
-		userId := GetUserID(c)
-		idStr := c.Param("id")
-		id, err := strconv.Atoi(idStr)
+		deleteEventRequest, err := prepareDeleteEventRequest(c)
 
 		if err != nil {
-			c.String(http.StatusBadRequest, "check eventId")
 			return
 		}
 
-		deletedEvent, err := eventService.DeleteEvent(c, userId, id)
+		deletedEvent, err := eventService.DeleteEvent(c, deleteEventRequest)
 
 		if err != nil {
 			if err == domain3.ErrForbidden {
@@ -444,18 +52,13 @@ func (s *Instance) Start(storage domain2.EventStorage) error {
 	})
 
 	router.GET("/events", func(c *gin.Context) {
-		userId := GetUserID(c)
-		period := c.DefaultQuery("period", domain.PeriodDay)
-		fromStr := c.Query("from")
-
-		from, err := getTimeFromTimestamp(fromStr)
+		getEventsRequest, err := prepareGetEventsRequest(c)
 
 		if err != nil {
-			c.String(http.StatusBadRequest, "check from parameter")
 			return
 		}
 
-		events, err := eventService.GetEvents(c, userId, period, from)
+		events, err := eventService.GetEvents(c, getEventsRequest)
 
 		if err != nil {
 			c.String(http.StatusInternalServerError, "error")
@@ -466,32 +69,13 @@ func (s *Instance) Start(storage domain2.EventStorage) error {
 	})
 
 	router.POST("/event", func(c *gin.Context) {
-		userId := GetUserID(c)
+		addEventRequest, err := prepareAddEventRequest(c)
 
-		title := c.PostForm("title")
-
-		startAt, err := getTimeFromTimestamp(c.PostForm("start_at"))
 		if err != nil {
-			c.String(http.StatusBadRequest, "StartAt wrong format")
 			return
 		}
 
-		endAt, err := getTimeFromTimestamp(c.PostForm("end_at"))
-		if err != nil {
-			c.String(http.StatusBadRequest, "EndAt wrong format")
-			return
-		}
-
-		description := c.PostForm("description")
-
-		notifyAt, err := getTimeFromTimestamp(c.PostForm("notify_at"))
-		if err != nil {
-			c.String(http.StatusBadRequest, "NotifyAt wrong format")
-			return
-		}
-
-		addedEvent, err := eventService.AddEvent(c, title, startAt, endAt,
-			description, notifyAt, userId)
+		addedEvent, err := eventService.AddEvent(c, addEventRequest)
 
 		if err != nil {
 			c.String(http.StatusInternalServerError, "error")
@@ -502,60 +86,13 @@ func (s *Instance) Start(storage domain2.EventStorage) error {
 	})
 
 	router.PUT("/event/:id", func(c *gin.Context) {
-		userId := GetUserID(c)
-
-		idStr := c.Param("id")
-		id, err := strconv.Atoi(idStr)
+		updateEventRequest, err := prepareUpdateEventRequest(c)
 
 		if err != nil {
-			c.String(http.StatusBadRequest, "check eventId")
 			return
 		}
 
-		eventUpdate := entities.UpdateEventRequest{}
-		eventUpdate.ID = id
-		eventUpdate.UserID = userId
-		eventUpdate.Title = c.DefaultPostForm("title", domain.DefaultEmptyString)
-
-		startAtStr := c.DefaultPostForm("start_at", domain.DefaultEmptyString)
-		if startAtStr != domain.DefaultEmptyString {
-			startAt, err := getTimeFromTimestamp(startAtStr)
-
-			if err != nil {
-				c.String(http.StatusBadRequest, "start_at wrong format")
-				return
-			}
-
-			eventUpdate.StartAt = startAt
-		}
-
-		endAtStr := c.DefaultPostForm("end_at", domain.DefaultEmptyString)
-		if endAtStr != domain.DefaultEmptyString {
-			endAt, err := getTimeFromTimestamp(endAtStr)
-
-			if err != nil {
-				c.String(http.StatusBadRequest, "end_at wrong format")
-				return
-			}
-
-			eventUpdate.EndAt = endAt
-		}
-
-		eventUpdate.Description = c.DefaultPostForm("description", domain.DefaultEmptyString)
-
-		notifyAtStr := c.DefaultPostForm("notify_at", domain.DefaultEmptyString)
-		if notifyAtStr != domain.DefaultEmptyString {
-			notifyAt, err := getTimeFromTimestamp(notifyAtStr)
-
-			if err != nil {
-				c.String(http.StatusBadRequest, "notify_at wrong format")
-				return
-			}
-
-			eventUpdate.NotifyAt = notifyAt
-		}
-
-		addedEvent, err := eventService.UpdateEvent(c, &eventUpdate)
+		addedEvent, err := eventService.UpdateEvent(c, updateEventRequest)
 
 		if err != nil {
 			c.String(http.StatusInternalServerError, "error")
@@ -563,7 +100,6 @@ func (s *Instance) Start(storage domain2.EventStorage) error {
 		}
 
 		c.JSON(http.StatusOK, addedEvent)
-
 	})
 
 	fmt.Println("server starting at port :8080")
@@ -572,5 +108,146 @@ func (s *Instance) Start(storage domain2.EventStorage) error {
 }
 
 func (s *Instance) Stop(ctx context.Context) error {
+	// TODO: check how to remove domain1, domain2, domain3
+	// TODO: put correct shutdown
 	return s.instance.Shutdown(ctx)
+}
+
+func getTimeFromTimestamp(timestamp string) (time.Time, error) {
+	fromInt, err := strconv.Atoi(timestamp)
+	if err != nil {
+		return time.Now(), errors.New("can't convert from value")
+	}
+
+	from := time.Unix(int64(fromInt), 0)
+
+	return from, nil
+}
+
+func prepareDeleteEventRequest(c *gin.Context) (*entities.DeleteEventRequest, error) {
+	deleteEventRequest := entities.DeleteEventRequest{}
+
+	deleteEventRequest.UserID = GetUserID(c)
+
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.String(http.StatusBadRequest, "check eventId")
+		return nil, err
+	}
+	deleteEventRequest.ID = id
+
+	return &deleteEventRequest, nil
+}
+
+func prepareGetEventsRequest(c *gin.Context) (*entities.GetEventsRequest, error) {
+	getEventsRequest := entities.GetEventsRequest{}
+
+	getEventsRequest.UserID = GetUserID(c)
+	getEventsRequest.Type = c.DefaultQuery("period", domain.PeriodDay)
+
+	fromStr := c.Query("from")
+	from, err := getTimeFromTimestamp(fromStr)
+	if err != nil {
+		c.String(http.StatusBadRequest, "check from parameter")
+		return nil, err
+	}
+	getEventsRequest.From = from
+
+	return &getEventsRequest, nil
+}
+
+func prepareAddEventRequest(c *gin.Context) (*entities.AddEventRequest, error) {
+	addEventRequest := entities.AddEventRequest{}
+	addEventRequest.UserID = GetUserID(c)
+
+	addEventRequest.Title = c.PostForm("title")
+
+	startAt, err := getTimeFromTimestamp(c.PostForm("start_at"))
+	if err != nil {
+		c.String(http.StatusBadRequest, "StartAt wrong format")
+		return nil, err
+	}
+
+	addEventRequest.StartAt = startAt
+
+	endAt, err := getTimeFromTimestamp(c.PostForm("end_at"))
+	if err != nil {
+		c.String(http.StatusBadRequest, "EndAt wrong format")
+		return nil, err
+	}
+
+	addEventRequest.EndAt = endAt
+
+	addEventRequest.Description = c.PostForm("description")
+
+	notifyAt, err := getTimeFromTimestamp(c.PostForm("notify_at"))
+	if err != nil {
+		c.String(http.StatusBadRequest, "NotifyAt wrong format")
+		return nil, err
+	}
+	addEventRequest.NotifyAt = notifyAt
+
+	return &addEventRequest, nil
+}
+
+func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, error) {
+	userId := GetUserID(c)
+
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+
+	if err != nil {
+		c.String(http.StatusBadRequest, "check eventId")
+		return nil, err
+	}
+
+	eventUpdate := entities.UpdateEventRequest{}
+	eventUpdate.ID = id
+	eventUpdate.UserID = userId
+	eventUpdate.Title = c.DefaultPostForm("title", domain.DefaultEmptyString)
+
+	startAtStr := c.DefaultPostForm("start_at", domain.DefaultEmptyString)
+	if startAtStr != domain.DefaultEmptyString {
+		startAt, err := getTimeFromTimestamp(startAtStr)
+
+		if err != nil {
+			c.String(http.StatusBadRequest, "start_at wrong format")
+			return nil, err
+		}
+
+		eventUpdate.StartAt = startAt
+	}
+
+	endAtStr := c.DefaultPostForm("end_at", domain.DefaultEmptyString)
+	if endAtStr != domain.DefaultEmptyString {
+		endAt, err := getTimeFromTimestamp(endAtStr)
+
+		if err != nil {
+			c.String(http.StatusBadRequest, "end_at wrong format")
+			return nil, err
+		}
+
+		eventUpdate.EndAt = endAt
+	}
+
+	eventUpdate.Description = c.DefaultPostForm("description", domain.DefaultEmptyString)
+
+	notifyAtStr := c.DefaultPostForm("notify_at", domain.DefaultEmptyString)
+	if notifyAtStr != domain.DefaultEmptyString {
+		if notifyAtStr == "" {
+			eventUpdate.NotifyAt = domain.DefaultEmptyTime
+		} else {
+			notifyAt, err := getTimeFromTimestamp(notifyAtStr)
+
+			if err != nil {
+				c.String(http.StatusBadRequest, "notify_at wrong format")
+				return nil, err
+			}
+
+			eventUpdate.NotifyAt = notifyAt
+		}
+	}
+
+	return &eventUpdate, nil
 }

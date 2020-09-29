@@ -2,6 +2,8 @@
 package server
 
 import (
+	"calendar/internal/domain/entities"
+	domain "calendar/internal/domain/services"
 	"calendar/internal/grpc/events_grpc"
 	"calendar/internal/repository"
 	"context"
@@ -9,55 +11,65 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/grpc"
 	"log"
 	"net"
-	"time"
 )
 
 type Server struct {
+	eventService domain.EventService
 	db repository.BaseRepo
 }
 
-func createEventResponse(event repository.Event) *events_grpc.Event {
-	start_at, err := ptypes.TimestampProto(event.StartAt)
+func createEventResponse(event entities.Event) *events_grpc.Event {
+	startAt, err := ptypes.TimestampProto(event.StartAt)
 
 	if err != nil {
 		log.Fatal("Type conversion error")
 	}
 
-	end_at, err := ptypes.TimestampProto(event.EndAt)
+	endAt, err := ptypes.TimestampProto(event.EndAt)
 
 	if err != nil {
 		log.Fatal("Type conversion error")
 	}
 
-	notify_at, err := ptypes.TimestampProto(event.NotifyAt)
-
-	if err != nil {
-		// TODO: fix error handling
-		log.Fatal("Type conversion error")
+	var notifyAt *timestamp.Timestamp = nil
+	if !event.NotifyAt.IsZero() {
+		notifyAt, err = ptypes.TimestampProto(event.NotifyAt)
+		if err != nil {
+			// TODO: fix error handling
+			log.Fatal("Type conversion error")
+		}
 	}
 
 	return &events_grpc.Event{
 		Id:          uint32(event.ID),
 		Title:       event.Title,
-		StartAt:     start_at,
-		EndAt:       end_at,
-		Description: event.Description,
+		StartAt:     startAt,
+		EndAt:       endAt,
+		Description: &wrappers.StringValue{Value: event.Description},
 		UserId:      uint32(event.UserID),
-		NotifyAt:    notify_at,
+		NotifyAt:    notifyAt,
 	}
 }
 
-func getEvents(query *events_grpc.EventsQuery, cb func(userID repository.ID, from time.Time) ([]repository.Event, error)) (*events_grpc.EventsResponse, error) {
-	t, err := ptypes.Timestamp(query.From)
+func (s *Server) GetEvents(ctx context.Context, query *events_grpc.EventsQuery, period string) (*events_grpc.EventsResponse, error) {
+	from, err := ptypes.Timestamp(query.From)
 
 	if err != nil {
 		log.Fatal("Type conversion error")
 	}
 
-	events, err := cb(repository.ID(query.UserId), t)
+	getEventsRequest := entities.GetEventsRequest{
+		UserID: repository.ID(query.UserId),
+		Type:   period,
+		From:   from,
+	}
+
+	events, err := s.eventService.GetEvents(ctx, &getEventsRequest)
 
 	var eventsResponse []*events_grpc.Event
 
@@ -69,18 +81,18 @@ func getEvents(query *events_grpc.EventsQuery, cb func(userID repository.ID, fro
 }
 
 func (s *Server) GetEventsDay(ctx context.Context, query *events_grpc.EventsQuery) (*events_grpc.EventsResponse, error) {
-	return getEvents(query, s.db.GetEventsDay)
+	return s.GetEvents(ctx, query, domain.PeriodDay)
 }
 
 func (s *Server) GetEventsWeek(ctx context.Context, query *events_grpc.EventsQuery) (*events_grpc.EventsResponse, error) {
-	return getEvents(query, s.db.GetEventsWeek)
+	return s.GetEvents(ctx, query, domain.PeriodWeek)
 }
 
 func (s *Server) GetEventsMonth(ctx context.Context, query *events_grpc.EventsQuery) (*events_grpc.EventsResponse, error) {
-	return getEvents(query, s.db.GetEventsMonth)
+	return s.GetEvents(ctx, query, domain.PeriodMonth)
 }
 
-func convertEvent(eventGrpc *events_grpc.Event) (*repository.Event, error) {
+func prepareAddEventRequest(eventGrpc *events_grpc.Event) (*entities.AddEventRequest, error) {
 	// TODO: check how to handle errors
 	// TODO: check error handling with real errors
 	// TODO: memory error if we stop the server
@@ -103,26 +115,31 @@ func convertEvent(eventGrpc *events_grpc.Event) (*repository.Event, error) {
 		return nil, errors.New("error converting event.notifyAt")
 	}
 
-	return &repository.Event{
-		ID:          repository.ID(eventGrpc.Id),
+	description := ""
+	if eventGrpc.Description == nil {
+		description = domain.DefaultEmptyString
+	} else {
+		description = eventGrpc.Description.Value
+	}
+
+	return &entities.AddEventRequest{
 		Title:       eventGrpc.Title,
 		StartAt:     startAt,
 		EndAt:       endAt,
-		Description: eventGrpc.Description,
-		UserID:      repository.ID(eventGrpc.UserId),
+		Description: description,
 		NotifyAt:    notifyAt,
+		UserID:      repository.ID(eventGrpc.UserId),
 	}, nil
 }
 
 func (s *Server) AddEvent(ctx context.Context, query *events_grpc.Event) (*empty.Empty, error) {
-	event, err := convertEvent(query)
+	addEventRequest, err := prepareAddEventRequest(query)
 
 	if err != nil {
-		// TODO: check nil handling
 		return nil, err
 	}
 
-	err = s.db.AddEvent(*event)
+	_, err = s.eventService.AddEvent(ctx, addEventRequest)
 
 	if err != nil {
 		return nil, errors.New("problem adding event to the DB")
@@ -131,24 +148,66 @@ func (s *Server) AddEvent(ctx context.Context, query *events_grpc.Event) (*empty
 	return &empty.Empty{}, nil
 }
 
+func prepareUpdateEventRequest(eventGrpc *events_grpc.Event) (*entities.UpdateEventRequest, error) {
+	fmt.Printf("%+v\n", eventGrpc)
+
+	startAt, err := ptypes.Timestamp(eventGrpc.StartAt)
+	if err != nil {
+		return nil, errors.New("error converting event.startAt")
+	}
+
+	endAt, err := ptypes.Timestamp(eventGrpc.EndAt)
+	if err != nil {
+		return nil, errors.New("error converting event.endAt")
+	}
+
+	description := domain.DefaultEmptyString
+	if eventGrpc.Description != nil {
+		description = eventGrpc.Description.Value
+	}
+
+	notifyAt := domain.DefaultEmptyTime
+	if eventGrpc.NotifyAt != nil {
+		notifyAt, err = ptypes.Timestamp(eventGrpc.NotifyAt)
+		if err != nil {
+			return nil, errors.New("error converting event.notifyAt")
+		}
+	}
+
+	return &entities.UpdateEventRequest{
+		ID:          repository.ID(eventGrpc.Id),
+		Title:       eventGrpc.Title,
+		StartAt:     startAt,
+		EndAt:       endAt,
+		Description: description,
+		NotifyAt:    notifyAt,
+		UserID:      repository.ID(eventGrpc.UserId),
+	}, nil
+}
+
 func (s *Server) UpdateEvent(ctx context.Context, query *events_grpc.Event) (*empty.Empty, error) {
-	event, err := convertEvent(query)
+	updateEventRequest, err := prepareUpdateEventRequest(query)
 
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.db.UpdateEvent(*event)
+	_, err = s.eventService.UpdateEvent(ctx, updateEventRequest)
 
 	if err != nil {
-		return nil, errors.New("problem updating event to the DB")
+		return nil, errors.New("problem adding event to the DB")
 	}
 
 	return &empty.Empty{}, nil
 }
 
 func (s *Server) DeleteEvent(ctx context.Context, query *events_grpc.DeleteEventRequest) (*empty.Empty, error) {
-	err := s.db.DeleteEvent(repository.ID(query.UserId), repository.ID(query.EventId))
+	deleteEventRequest := entities.DeleteEventRequest{
+		ID:     repository.ID(query.EventId),
+		UserID: repository.ID(query.UserId),
+	}
+
+	_, err := s.eventService.DeleteEvent(ctx, &deleteEventRequest)
 
 	if err != nil {
 		return nil, errors.New("problem deleting event to the DB")
@@ -157,15 +216,15 @@ func (s *Server) DeleteEvent(ctx context.Context, query *events_grpc.DeleteEvent
 	return &empty.Empty{}, nil
 }
 
-func (s *Server) Start(r repository.BaseRepo) error {
-	lsn, err := net.Listen("tcp", "localhost:8080")
+func (s *Server) Start(eventService domain.EventService) error {
+	lsn, err := net.Listen("tcp", "localhost:9090")
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	server := grpc.NewServer()
-	service := &Server{db: r}
+	service := &Server{eventService: eventService}
 
 	events_grpc.RegisterEventsServer(server, service)
 
@@ -176,5 +235,9 @@ func (s *Server) Start(r repository.BaseRepo) error {
 		return err
 	}
 
+	return nil
+}
+
+func (s *Server) Stop(ctx context.Context) error {
 	return nil
 }

@@ -3,9 +3,10 @@ package main
 import (
 	"calendar/internal/app"
 	"calendar/internal/config"
+	grpcserver "calendar/internal/grpc/server"
 	"calendar/internal/logger"
 	"calendar/internal/repository/postgres"
-	http_server "calendar/internal/server/http"
+	httpserver "calendar/internal/server/http"
 	"context"
 	"flag"
 	"log"
@@ -38,11 +39,12 @@ func main() {
 	c, _ := config.Read("./configs/local.toml")
 	//c, _ := config.Read(args.configPath)
 
-	s := new(http_server.Instance)
+	s := new(httpserver.Instance)
+	grpcServer := new(grpcserver.Server)
 	l := new(logger.Instance)
 	storage := new(postgres.Repo)
 
-	a, err := app.New(s, l, storage)
+	a, err := app.New(s, grpcServer, l, storage)
 
 	if err != nil {
 		log.Fatal(err)
