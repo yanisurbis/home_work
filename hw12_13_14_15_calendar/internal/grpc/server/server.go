@@ -143,6 +143,7 @@ func (s *Server) AddEvent(ctx context.Context, query *events_grpc.AddEventReques
 }
 
 func prepareUpdateEventRequest(eventGrpc *events_grpc.UpdateEventRequest) (*entities.UpdateEventRequest, error) {
+	// TODO: wrap start_at and end_at in if
 	fmt.Printf("%+v\n", eventGrpc)
 
 	title := domain.DefaultEmptyString
@@ -165,11 +166,15 @@ func prepareUpdateEventRequest(eventGrpc *events_grpc.UpdateEventRequest) (*enti
 		description = eventGrpc.Description.Value
 	}
 
-	notifyAt := domain.DefaultEmptyTime
-	if eventGrpc.NotifyAt != nil {
-		notifyAt, err = ptypes.Timestamp(eventGrpc.NotifyAt)
-		if err != nil {
-			return nil, errors.New("error converting event.notifyAt")
+	notifyAt := time.Time{}
+	if eventGrpc.HasNotifyAt {
+		if eventGrpc.NotifyAt == nil {
+			notifyAt = domain.DefaultEmptyTime
+		} else {
+			notifyAt, err = ptypes.Timestamp(eventGrpc.NotifyAt)
+			if err != nil {
+				return nil, errors.New("error converting event.notifyAt")
+			}
 		}
 	}
 

@@ -23,6 +23,7 @@ message UpdateEventRequest {
   google.protobuf.StringValue description = 5;
   uint32 user_id = 6;
   google.protobuf.Timestamp notify_at = 7;
+  bool has_notify_at = 8;
 }
 
 message GetEventsRequest {
