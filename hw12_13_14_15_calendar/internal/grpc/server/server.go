@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"net"
+	"time"
 )
 
 type Server struct {
@@ -107,10 +108,12 @@ func prepareAddEventRequest(eventGrpc *events_grpc.AddEventRequest) (*entities.A
 		return nil, errors.New("error converting event.endAt")
 	}
 
-	notifyAt, err := ptypes.Timestamp(eventGrpc.NotifyAt)
-
-	if err != nil {
-		return nil, errors.New("error converting event.notifyAt")
+	notifyAt := time.Time{}
+	if eventGrpc.NotifyAt != nil {
+		notifyAt, err = ptypes.Timestamp(eventGrpc.NotifyAt)
+		if err != nil {
+			return nil, errors.New("error converting event.notifyAt")
+		}
 	}
 
 	return &entities.AddEventRequest{
