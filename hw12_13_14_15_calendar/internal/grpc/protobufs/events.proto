@@ -10,7 +10,7 @@ message AddEventRequest {
   string title = 1;
   google.protobuf.Timestamp start_at = 2;
   google.protobuf.Timestamp end_at = 3;
-  google.protobuf.StringValue description = 4;
+  string description = 4;
   uint32 user_id = 5;
   google.protobuf.Timestamp notify_at = 6;
 }
