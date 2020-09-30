@@ -12,7 +12,6 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/grpc"
-	"log"
 	"net"
 	"time"
 )
@@ -218,9 +217,8 @@ func (s *Server) DeleteEvent(ctx context.Context, query *events_grpc.DeleteEvent
 
 func (s *Server) Start(eventService domain.EventService) error {
 	lsn, err := net.Listen("tcp", "localhost:9090")
-
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	server := grpc.NewServer()
@@ -230,8 +228,6 @@ func (s *Server) Start(eventService domain.EventService) error {
 
 	fmt.Printf("Starting server on %s\n", lsn.Addr().String())
 	if err := server.Serve(lsn); err != nil {
-		log.Fatal(err)
-
 		return err
 	}
 
