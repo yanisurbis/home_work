@@ -181,13 +181,16 @@ func prepareAddEventRequest(c *gin.Context) (*entities.AddEventRequest, error) {
 
 	addEventRequest.Description = c.PostForm("description")
 
-	notifyAt, err := getTimeFromTimestamp(c.PostForm("notify_at"))
-	if err != nil {
-		c.String(http.StatusBadRequest, "NotifyAt wrong format")
-		return nil, err
+	notifyAtStr := c.PostForm("notify_at")
+	if notifyAtStr != "" {
+		notifyAt, err := getTimeFromTimestamp(notifyAtStr)
+		if err != nil {
+			c.String(http.StatusBadRequest, "NotifyAt wrong format")
+			return nil, err
+		}
+		addEventRequest.NotifyAt = notifyAt
 	}
-	addEventRequest.NotifyAt = notifyAt
-
+	
 	return &addEventRequest, nil
 }
 
