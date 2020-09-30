@@ -22,25 +22,22 @@ type Server struct {
 	db           repository.BaseRepo
 }
 
-func createEventResponse(event entities.Event) *events_grpc.EventResponse {
+func createEventResponse(event entities.Event) (*events_grpc.EventResponse, error) {
 	startAt, err := ptypes.TimestampProto(event.StartAt)
-
 	if err != nil {
-		log.Fatal("Type conversion error")
+		return nil, errors.New("start_at conversion error")
 	}
 
 	endAt, err := ptypes.TimestampProto(event.EndAt)
-
 	if err != nil {
-		log.Fatal("Type conversion error")
+		return nil, errors.New("end_at conversion error")
 	}
 
 	var notifyAt *timestamp.Timestamp = nil
 	if !event.NotifyAt.IsZero() {
 		notifyAt, err = ptypes.TimestampProto(event.NotifyAt)
 		if err != nil {
-			// TODO: fix error handling
-			log.Fatal("Type conversion error")
+			return nil, errors.New("notify_at conversion error")
 		}
 	}
 
@@ -52,14 +49,13 @@ func createEventResponse(event entities.Event) *events_grpc.EventResponse {
 		Description: event.Description,
 		UserId:      uint32(event.UserID),
 		NotifyAt:    notifyAt,
-	}
+	}, nil
 }
 
 func (s *Server) GetEvents(ctx context.Context, query *events_grpc.GetEventsRequest, period string) (*events_grpc.EventsResponse, error) {
 	from, err := ptypes.Timestamp(query.From)
-
 	if err != nil {
-		log.Fatal("Type conversion error")
+		return nil, errors.New("from conversion error")
 	}
 
 	getEventsRequest := entities.GetEventsRequest{
@@ -73,7 +69,12 @@ func (s *Server) GetEvents(ctx context.Context, query *events_grpc.GetEventsRequ
 	var eventsResponse []*events_grpc.EventResponse
 
 	for _, event := range events {
-		eventsResponse = append(eventsResponse, createEventResponse(event))
+		event, err := createEventResponse(event)
+		if err != nil {
+			return nil, err
+		}
+
+		eventsResponse = append(eventsResponse, event)
 	}
 
 	return &events_grpc.EventsResponse{Events: eventsResponse}, nil
@@ -139,7 +140,7 @@ func (s *Server) AddEvent(ctx context.Context, query *events_grpc.AddEventReques
 		return nil, errors.New("problem adding event to the DB")
 	}
 
-	return createEventResponse(*event), nil
+	return createEventResponse(*event)
 }
 
 func prepareUpdateEventRequest(eventGrpc *events_grpc.UpdateEventRequest) (*entities.UpdateEventRequest, error) {
@@ -197,7 +198,7 @@ func (s *Server) UpdateEvent(ctx context.Context, query *events_grpc.UpdateEvent
 		return nil, errors.New("problem adding event to the DB")
 	}
 
-	return createEventResponse(*event), nil
+	return createEventResponse(*event)
 }
 
 func (s *Server) DeleteEvent(ctx context.Context, query *events_grpc.DeleteEventRequest) (*events_grpc.EventResponse, error) {
@@ -212,7 +213,7 @@ func (s *Server) DeleteEvent(ctx context.Context, query *events_grpc.DeleteEvent
 		return nil, errors.New("problem deleting event to the DB")
 	}
 
-	return createEventResponse(*event), nil
+	return createEventResponse(*event)
 }
 
 func (s *Server) Start(eventService domain.EventService) error {
