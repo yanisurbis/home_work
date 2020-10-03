@@ -5,6 +5,7 @@ import (
 	"calendar/internal/domain/errors"
 	"calendar/internal/domain/interfaces"
 	"context"
+	"fmt"
 	"github.com/go-ozzo/ozzo-validation/v4"
 	"time"
 )
@@ -18,8 +19,8 @@ const (
 
 var (
 	// TODO: put random string here
-	DefaultEmptyString = "_~_~_"
-	DefaultEmptyTime   = time.Now().Add(-10)
+	ShouldResetString = "_~_~_"
+	ShouldResetTime = time.Now().Add(-10)
 )
 
 type EventService struct {
@@ -27,6 +28,8 @@ type EventService struct {
 }
 
 func validateEvent(e entities.Event) error {
+	fmt.Printf("value %+v\n", e)
+
 	return validation.ValidateStruct(&e,
 		validation.Field(&e.Title, validation.Required, validation.Length(1, 100)),
 		validation.Field(&e.StartAt, validation.Required),
@@ -48,6 +51,8 @@ func (es *EventService) AddEvent(ctx context.Context, addEventRequest *entities.
 
 	err := validateEvent(event)
 
+	fmt.Printf("err %+v\n", err)
+
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +72,7 @@ func mergeEvents(currEvent *entities.Event, e *entities.UpdateEventRequest) (*en
 	// TODO: we should check that startAt > endAt
 	// TODO: we should check that startAt > curr
 	// TODO: title shouldn't be empty
-	if e.Title != DefaultEmptyString {
+	if e.Title != ShouldResetString {
 		currEvent.Title = e.Title
 	}
 	if !e.StartAt.IsZero() {
@@ -76,10 +81,10 @@ func mergeEvents(currEvent *entities.Event, e *entities.UpdateEventRequest) (*en
 	if !e.EndAt.IsZero() {
 		currEvent.EndAt = e.EndAt
 	}
-	if e.Description != DefaultEmptyString {
+	if e.Description != ShouldResetString {
 		currEvent.Description = e.Description
 	}
-	if e.NotifyAt == DefaultEmptyTime {
+	if e.NotifyAt == ShouldResetTime {
 		currEvent.NotifyAt = *new(time.Time)
 	} else if !e.NotifyAt.IsZero() {
 		currEvent.NotifyAt = e.NotifyAt
@@ -118,6 +123,8 @@ func (es *EventService) UpdateEvent(ctx context.Context, eventUpdate *entities.U
 
 func (es *EventService) GetEvent(ctx context.Context, userID entities.ID, eventID entities.ID) (*entities.Event, error) {
 	event, err := es.EventStorage.GetEvent(eventID)
+
+	fmt.Printf("event %+v\n", event)
 
 	if err != nil {
 		return nil, err
@@ -163,5 +170,5 @@ func (es *EventService) GetEvents(ctx context.Context, getEventsRequest *entitie
 		return es.EventStorage.GetEventsDay(userID, from)
 	}
 	// TODO: log problem in case there is no match
-	return es.EventStorage.GetEventsDay(userID, from)
+	return []entities.Event{}, nil
 }

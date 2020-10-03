@@ -5,6 +5,7 @@ import (
 	"calendar/internal/repository"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -66,6 +67,8 @@ func (r *Repo) GetEvent(id repository.ID) (*entities.Event, error) {
 	var events []entities.Event
 	option := make(map[string]interface{})
 	option["id"] = id
+
+	fmt.Println("id ", id)
 
 	nstmt, err := r.db.PrepareNamed("SELECT * FROM events WHERE id = :id")
 

@@ -7,11 +7,12 @@ import (
 	"calendar/internal/grpc/events_grpc"
 	"calendar/internal/repository"
 	"context"
-	"errors"
 	"fmt"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"net"
 	"time"
 )
@@ -19,6 +20,13 @@ import (
 type Server struct {
 	eventService domain.EventService
 	db           repository.BaseRepo
+}
+
+func timestampToTime(ts *timestamppb.Timestamp) (time.Time, error) {
+	if ts == nil {
+		return time.Time{}, nil
+	}
+	return ptypes.Timestamp(ts)
 }
 
 func createEventResponse(event entities.Event) (*events_grpc.EventResponse, error) {
@@ -52,7 +60,7 @@ func createEventResponse(event entities.Event) (*events_grpc.EventResponse, erro
 }
 
 func (s *Server) GetEvents(ctx context.Context, query *events_grpc.GetEventsRequest, period string) (*events_grpc.EventsResponse, error) {
-	from, err := ptypes.Timestamp(query.From)
+	from, err := timestampToTime(query.From)
 	if err != nil {
 		return nil, errors.New("from conversion error")
 	}
@@ -95,29 +103,19 @@ func prepareAddEventRequest(eventGrpc *events_grpc.AddEventRequest) (*entities.A
 	// TODO: check how to handle errors
 	// TODO: check error handling with real errors
 	// TODO: memory error if we stop the server
-	if eventGrpc.StartAt == nil {
-		return nil, errors.New("start_at required")
-	}
-	startAt, err := ptypes.Timestamp(eventGrpc.StartAt)
+	startAt, err := timestampToTime(eventGrpc.StartAt)
 	if err != nil {
 		return nil, errors.New("error converting event.startAt")
 	}
 
-	if eventGrpc.EndAt == nil {
-		return nil, errors.New("end_at required")
-	}
-	endAt, err := ptypes.Timestamp(eventGrpc.EndAt)
+	endAt, err := timestampToTime(eventGrpc.EndAt)
 	if err != nil {
 		return nil, errors.New("error converting event.endAt")
 	}
 
-
-	notifyAt := time.Time{}
-	if eventGrpc.NotifyAt != nil {
-		notifyAt, err = ptypes.Timestamp(eventGrpc.NotifyAt)
-		if err != nil {
-			return nil, errors.New("error converting event.notifyAt")
-		}
+	notifyAt, err := timestampToTime(eventGrpc.NotifyAt)
+	if err != nil {
+		return nil, errors.New("error converting event.notifyAt")
 	}
 
 	return &entities.AddEventRequest{
@@ -140,57 +138,50 @@ func (s *Server) AddEvent(ctx context.Context, query *events_grpc.AddEventReques
 	event, err := s.eventService.AddEvent(ctx, addEventRequest)
 
 	if err != nil {
-		return nil, errors.New("problem adding event to the DB")
+		return nil, errors.Wrap(err, "problem adding event to the DB")
 	}
 
 	return createEventResponse(*event)
 }
 
 func prepareUpdateEventRequest(eventGrpc *events_grpc.UpdateEventRequest) (*entities.UpdateEventRequest, error) {
-	// TODO: wrap start_at and end_at in if
-	fmt.Printf("%+v\n", eventGrpc)
+	updateEventRequest := entities.UpdateEventRequest{}
 
-	title := domain.DefaultEmptyString
-	if eventGrpc.Description != nil {
-		title = eventGrpc.Title.Value
+	updateEventRequest.ID = repository.ID(eventGrpc.Id)
+	updateEventRequest.UserID = repository.ID(eventGrpc.UserId)
+	if eventGrpc.Title != nil {
+		updateEventRequest.Title = eventGrpc.Title.Value
 	}
 
-	startAt, err := ptypes.Timestamp(eventGrpc.StartAt)
+	if eventGrpc.Description != nil {
+		updateEventRequest.Description = eventGrpc.Description.Value
+	}
+
+	startAt, err := timestampToTime(eventGrpc.StartAt)
+	updateEventRequest.StartAt = startAt
 	if err != nil {
 		return nil, errors.New("error converting event.startAt")
 	}
 
-	endAt, err := ptypes.Timestamp(eventGrpc.EndAt)
+	endAt, err := timestampToTime(eventGrpc.EndAt)
+	updateEventRequest.EndAt = endAt
 	if err != nil {
 		return nil, errors.New("error converting event.endAt")
 	}
 
-	description := domain.DefaultEmptyString
-	if eventGrpc.Description != nil {
-		description = eventGrpc.Description.Value
-	}
-
-	notifyAt := time.Time{}
 	if eventGrpc.HasNotifyAt {
 		if eventGrpc.NotifyAt == nil {
-			notifyAt = domain.DefaultEmptyTime
+			updateEventRequest.NotifyAt = domain.ShouldResetTime
 		} else {
-			notifyAt, err = ptypes.Timestamp(eventGrpc.NotifyAt)
+			notifyAt, err := timestampToTime(eventGrpc.NotifyAt)
+			updateEventRequest.NotifyAt = notifyAt
 			if err != nil {
 				return nil, errors.New("error converting event.notifyAt")
 			}
 		}
 	}
 
-	return &entities.UpdateEventRequest{
-		ID:          repository.ID(eventGrpc.Id),
-		Title:       title,
-		StartAt:     startAt,
-		EndAt:       endAt,
-		Description: description,
-		NotifyAt:    notifyAt,
-		UserID:      repository.ID(eventGrpc.UserId),
-	}, nil
+	return &updateEventRequest, nil
 }
 
 func (s *Server) UpdateEvent(ctx context.Context, query *events_grpc.UpdateEventRequest) (*events_grpc.EventResponse, error) {
@@ -203,7 +194,7 @@ func (s *Server) UpdateEvent(ctx context.Context, query *events_grpc.UpdateEvent
 	event, err := s.eventService.UpdateEvent(ctx, updateEventRequest)
 
 	if err != nil {
-		return nil, errors.New("problem adding event to the DB")
+		return nil, errors.Wrap(err, "problem updating event")
 	}
 
 	return createEventResponse(*event)
@@ -218,7 +209,7 @@ func (s *Server) DeleteEvent(ctx context.Context, query *events_grpc.DeleteEvent
 	event, err := s.eventService.DeleteEvent(ctx, &deleteEventRequest)
 
 	if err != nil {
-		return nil, errors.New("problem deleting event to the DB")
+		return nil, errors.Wrap(err, "problem deleting event")
 	}
 
 	return createEventResponse(*event)

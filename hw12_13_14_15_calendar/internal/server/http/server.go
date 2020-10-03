@@ -208,10 +208,10 @@ func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, er
 	eventUpdate := entities.UpdateEventRequest{}
 	eventUpdate.ID = id
 	eventUpdate.UserID = userId
-	eventUpdate.Title = c.DefaultPostForm("title", domain.DefaultEmptyString)
+	eventUpdate.Title = c.DefaultPostForm("title", domain.ShouldResetString)
 
-	startAtStr := c.DefaultPostForm("start_at", domain.DefaultEmptyString)
-	if startAtStr != domain.DefaultEmptyString {
+	startAtStr := c.DefaultPostForm("start_at", domain.ShouldResetString)
+	if startAtStr != domain.ShouldResetString {
 		startAt, err := getTimeFromTimestamp(startAtStr)
 
 		if err != nil {
@@ -222,8 +222,8 @@ func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, er
 		eventUpdate.StartAt = startAt
 	}
 
-	endAtStr := c.DefaultPostForm("end_at", domain.DefaultEmptyString)
-	if endAtStr != domain.DefaultEmptyString {
+	endAtStr := c.DefaultPostForm("end_at", domain.ShouldResetString)
+	if endAtStr != domain.ShouldResetString {
 		endAt, err := getTimeFromTimestamp(endAtStr)
 
 		if err != nil {
@@ -234,12 +234,12 @@ func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, er
 		eventUpdate.EndAt = endAt
 	}
 
-	eventUpdate.Description = c.DefaultPostForm("description", domain.DefaultEmptyString)
+	eventUpdate.Description = c.DefaultPostForm("description", domain.ShouldResetString)
 
-	notifyAtStr := c.DefaultPostForm("notify_at", domain.DefaultEmptyString)
-	if notifyAtStr != domain.DefaultEmptyString {
+	notifyAtStr := c.DefaultPostForm("notify_at", domain.ShouldResetString)
+	if notifyAtStr != domain.ShouldResetString {
 		if notifyAtStr == "" {
-			eventUpdate.NotifyAt = domain.DefaultEmptyTime
+			eventUpdate.NotifyAt = domain.ShouldResetTime
 		} else {
 			notifyAt, err := getTimeFromTimestamp(notifyAtStr)
 
