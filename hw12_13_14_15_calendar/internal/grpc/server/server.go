@@ -95,18 +95,22 @@ func prepareAddEventRequest(eventGrpc *events_grpc.AddEventRequest) (*entities.A
 	// TODO: check how to handle errors
 	// TODO: check error handling with real errors
 	// TODO: memory error if we stop the server
-
+	if eventGrpc.StartAt == nil {
+		return nil, errors.New("start_at required")
+	}
 	startAt, err := ptypes.Timestamp(eventGrpc.StartAt)
-
 	if err != nil {
 		return nil, errors.New("error converting event.startAt")
 	}
 
+	if eventGrpc.EndAt == nil {
+		return nil, errors.New("end_at required")
+	}
 	endAt, err := ptypes.Timestamp(eventGrpc.EndAt)
-
 	if err != nil {
 		return nil, errors.New("error converting event.endAt")
 	}
+
 
 	notifyAt := time.Time{}
 	if eventGrpc.NotifyAt != nil {
