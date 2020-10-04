@@ -14,22 +14,11 @@ import (
 )
 
 type Instance struct {
-	// TODO: fix, it's wrong, should store somthing for graceful shutdown
 	instance *http.Server
 }
 
 const repositoryKey = "repository"
 const userIdKey = "userId"
-
-func getEventId(c *gin.Context) (int, error) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		return 0, errors.New("error converting event id")
-	}
-
-	return id, nil
-}
 
 func (s *Instance) Start(eventService domain.EventService) error {
 
@@ -114,12 +103,29 @@ func (s *Instance) Start(eventService domain.EventService) error {
 
 	fmt.Println("server starting at port :8080")
 
-	return router.Run(":8080")
+	s.instance = &http.Server{
+		Addr:    ":8080",
+		Handler: router,
+	}
+
+	if err := s.instance.ListenAndServe(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getEventId(c *gin.Context) (int, error) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return 0, errors.New("error converting event id")
+	}
+
+	return id, nil
 }
 
 func (s *Instance) Stop(ctx context.Context) error {
-	// TODO: check how to remove domain1, domain2, domain3
-	// TODO: put correct shutdown
 	return s.instance.Shutdown(ctx)
 }
 
