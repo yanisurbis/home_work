@@ -1,5 +1,4 @@
-//TODO: Rename to server_grpc
-package server
+package server_grpc
 
 import (
 	"calendar/internal/domain/entities"
@@ -80,7 +79,6 @@ func (s *Server) GetEvents(ctx context.Context, query *events_grpc.GetEventsRequ
 	for _, event := range events {
 		event, err := createEventResponse(event)
 		if err != nil {
-			// TODO: handle error?
 			return nil, err
 		}
 		eventsResponse = append(eventsResponse, event)
@@ -102,9 +100,6 @@ func (s *Server) GetEventsMonth(ctx context.Context, query *events_grpc.GetEvent
 }
 
 func prepareAddEventRequest(eventGrpc *events_grpc.AddEventRequest) (*entities.AddEventRequest, error) {
-	// TODO: check how to handle errors
-	// TODO: check error handling with real errors
-	// TODO: memory error if we stop the server
 	startAt, err := timestampToTime(eventGrpc.StartAt)
 	if err != nil {
 		return nil, errors.New("error converting event.startAt")
