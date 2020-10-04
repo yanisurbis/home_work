@@ -20,6 +20,7 @@ import (
 type Server struct {
 	eventService domain.EventService
 	db           repository.BaseRepo
+	instance     *grpc.Server
 }
 
 func timestampToTime(ts *timestamppb.Timestamp) (time.Time, error) {
@@ -222,19 +223,19 @@ func (s *Server) Start(eventService domain.EventService) error {
 		return err
 	}
 
-	server := grpc.NewServer()
+	s.instance = grpc.NewServer()
 	service := &Server{eventService: eventService}
 
-	events_grpc.RegisterEventsServer(server, service)
+	events_grpc.RegisterEventsServer(s.instance, service)
 
 	fmt.Printf("Starting server on %s\n", lsn.Addr().String())
-	if err := server.Serve(lsn); err != nil {
+	if err := s.instance.Serve(lsn); err != nil {
 		return err
 	}
-
 	return nil
 }
 
 func (s *Server) Stop(ctx context.Context) error {
+	s.instance.Stop()
 	return nil
 }
