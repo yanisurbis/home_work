@@ -21,6 +21,16 @@ type Instance struct {
 const repositoryKey = "repository"
 const userIdKey = "userId"
 
+func getEventId(c *gin.Context) (int, error) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return 0, errors.New("error converting event id")
+	}
+
+	return id, nil
+}
+
 func (s *Instance) Start(eventService domain.EventService) error {
 
 	router := gin.Default()
@@ -113,7 +123,7 @@ func (s *Instance) Stop(ctx context.Context) error {
 	return s.instance.Shutdown(ctx)
 }
 
-func getTimeFromTimestamp(timestamp string) (time.Time, error) {
+func timestampToTime(timestamp string) (time.Time, error) {
 	fromInt, err := strconv.Atoi(timestamp)
 	if err != nil {
 		return time.Now(), errors.New("can't convert from value")
@@ -129,10 +139,9 @@ func prepareDeleteEventRequest(c *gin.Context) (*entities.DeleteEventRequest, er
 
 	deleteEventRequest.UserID = GetUserID(c)
 
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
+	id, err := getEventId(c)
 	if err != nil {
-		c.String(http.StatusBadRequest, "check eventId")
+		c.String(http.StatusBadRequest, err.Error())
 		return nil, err
 	}
 	deleteEventRequest.ID = id
@@ -144,10 +153,10 @@ func prepareGetEventsRequest(c *gin.Context) (*entities.GetEventsRequest, error)
 	getEventsRequest := entities.GetEventsRequest{}
 
 	getEventsRequest.UserID = GetUserID(c)
-	getEventsRequest.Type = c.DefaultQuery("period", domain.PeriodDay)
+	getEventsRequest.Type = c.Query("period")
 
 	fromStr := c.Query("from")
-	from, err := getTimeFromTimestamp(fromStr)
+	from, err := timestampToTime(fromStr)
 	if err != nil {
 		c.String(http.StatusBadRequest, "check from parameter")
 		return nil, err
@@ -163,7 +172,7 @@ func prepareAddEventRequest(c *gin.Context) (*entities.AddEventRequest, error) {
 
 	addEventRequest.Title = c.PostForm("title")
 
-	startAt, err := getTimeFromTimestamp(c.PostForm("start_at"))
+	startAt, err := timestampToTime(c.PostForm("start_at"))
 	if err != nil {
 		c.String(http.StatusBadRequest, "StartAt wrong format")
 		return nil, err
@@ -171,7 +180,7 @@ func prepareAddEventRequest(c *gin.Context) (*entities.AddEventRequest, error) {
 
 	addEventRequest.StartAt = startAt
 
-	endAt, err := getTimeFromTimestamp(c.PostForm("end_at"))
+	endAt, err := timestampToTime(c.PostForm("end_at"))
 	if err != nil {
 		c.String(http.StatusBadRequest, "EndAt wrong format")
 		return nil, err
@@ -183,36 +192,35 @@ func prepareAddEventRequest(c *gin.Context) (*entities.AddEventRequest, error) {
 
 	notifyAtStr := c.PostForm("notify_at")
 	if notifyAtStr != "" {
-		notifyAt, err := getTimeFromTimestamp(notifyAtStr)
+		notifyAt, err := timestampToTime(notifyAtStr)
 		if err != nil {
 			c.String(http.StatusBadRequest, "NotifyAt wrong format")
 			return nil, err
 		}
 		addEventRequest.NotifyAt = notifyAt
 	}
-	
+
 	return &addEventRequest, nil
 }
 
 func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, error) {
 	userId := GetUserID(c)
 
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-
+	id, err := getEventId(c)
 	if err != nil {
-		c.String(http.StatusBadRequest, "check eventId")
+		c.String(http.StatusBadRequest, err.Error())
 		return nil, err
 	}
 
 	eventUpdate := entities.UpdateEventRequest{}
 	eventUpdate.ID = id
 	eventUpdate.UserID = userId
-	eventUpdate.Title = c.DefaultPostForm("title", domain.ShouldResetString)
 
-	startAtStr := c.DefaultPostForm("start_at", domain.ShouldResetString)
-	if startAtStr != domain.ShouldResetString {
-		startAt, err := getTimeFromTimestamp(startAtStr)
+	eventUpdate.Title = c.PostForm("title")
+
+	startAtStr := c.DefaultPostForm("start_at", domain.ValueNotPresent)
+	if startAtStr != domain.ValueNotPresent {
+		startAt, err := timestampToTime(startAtStr)
 
 		if err != nil {
 			c.String(http.StatusBadRequest, "start_at wrong format")
@@ -222,9 +230,9 @@ func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, er
 		eventUpdate.StartAt = startAt
 	}
 
-	endAtStr := c.DefaultPostForm("end_at", domain.ShouldResetString)
-	if endAtStr != domain.ShouldResetString {
-		endAt, err := getTimeFromTimestamp(endAtStr)
+	endAtStr := c.DefaultPostForm("end_at", domain.ValueNotPresent)
+	if endAtStr != domain.ValueNotPresent {
+		endAt, err := timestampToTime(endAtStr)
 
 		if err != nil {
 			c.String(http.StatusBadRequest, "end_at wrong format")
@@ -234,14 +242,14 @@ func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, er
 		eventUpdate.EndAt = endAt
 	}
 
-	eventUpdate.Description = c.DefaultPostForm("description", domain.ShouldResetString)
+	eventUpdate.Description = c.PostForm("description")
 
-	notifyAtStr := c.DefaultPostForm("notify_at", domain.ShouldResetString)
-	if notifyAtStr != domain.ShouldResetString {
+	notifyAtStr := c.DefaultPostForm("notify_at", domain.ValueNotPresent)
+	if notifyAtStr != domain.ValueNotPresent {
 		if notifyAtStr == "" {
 			eventUpdate.NotifyAt = domain.ShouldResetTime
 		} else {
-			notifyAt, err := getTimeFromTimestamp(notifyAtStr)
+			notifyAt, err := timestampToTime(notifyAtStr)
 
 			if err != nil {
 				c.String(http.StatusBadRequest, "notify_at wrong format")

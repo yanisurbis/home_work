@@ -20,7 +20,8 @@ const (
 var (
 	// TODO: put random string here
 	ShouldResetString = "_~_~_"
-	ShouldResetTime = time.Now().Add(-10)
+	ValueNotPresent   = "_~_~_"
+	ShouldResetTime   = time.Now().Add(-10)
 )
 
 type EventService struct {

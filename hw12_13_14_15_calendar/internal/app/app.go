@@ -11,10 +11,10 @@ import (
 )
 
 type App struct {
-	server server.Server
+	server     server.Server
 	grpcServer server.Server
-	logger logger.Logger
-	storage domain.EventStorage
+	logger     logger.Logger
+	storage    domain.EventStorage
 }
 
 func New(s server.Server, grpcServer server.Server, l logger.Logger, storage domain.EventStorage) (*App, error) {
@@ -41,20 +41,20 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 	}
 
 	// http server
-	//err = a.server.Start(eventService)
-	//if err != nil {
-	//	log.Println("Failed to start http server")
-	//	log.Fatal(err)
-	//	return err
-	//}
-
-	// grpc server
-	err = a.grpcServer.Start(eventService)
+	err = a.server.Start(eventService)
 	if err != nil {
-		log.Println("Failed to start grpc server")
+		log.Println("Failed to start http server")
 		log.Fatal(err)
 		return err
 	}
+
+	// grpc server
+	//err = a.grpcServer.Start(eventService)
+	//if err != nil {
+	//	log.Println("Failed to start grpc server")
+	//	log.Fatal(err)
+	//	return err
+	//}
 
 	return nil
 }
