@@ -3,9 +3,9 @@ package main
 import (
 	"calendar/internal/app"
 	"calendar/internal/config"
-	grpcserver "calendar/internal/grpc/server"
 	"calendar/internal/logger"
 	"calendar/internal/repository/postgres"
+	grpcserver "calendar/internal/server/grpc/server"
 	httpserver "calendar/internal/server/http"
 	"context"
 	"flag"

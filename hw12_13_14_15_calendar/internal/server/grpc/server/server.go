@@ -4,8 +4,8 @@ package server
 import (
 	"calendar/internal/domain/entities"
 	domain "calendar/internal/domain/services"
-	"calendar/internal/grpc/events_grpc"
 	"calendar/internal/repository"
+	"calendar/internal/server/grpc/events_grpc"
 	"context"
 	"fmt"
 	"github.com/golang/protobuf/ptypes"
