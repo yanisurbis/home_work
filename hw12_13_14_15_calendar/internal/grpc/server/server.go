@@ -62,7 +62,7 @@ func createEventResponse(event entities.Event) (*events_grpc.EventResponse, erro
 func (s *Server) GetEvents(ctx context.Context, query *events_grpc.GetEventsRequest, period string) (*events_grpc.EventsResponse, error) {
 	from, err := timestampToTime(query.From)
 	if err != nil {
-		return nil, errors.New("from conversion error")
+		return nil, errors.Wrap(err, "from field conversion error")
 	}
 
 	getEventsRequest := entities.GetEventsRequest{
@@ -70,17 +70,18 @@ func (s *Server) GetEvents(ctx context.Context, query *events_grpc.GetEventsRequ
 		Type:   period,
 		From:   from,
 	}
-
 	events, err := s.eventService.GetEvents(ctx, &getEventsRequest)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to fetch events")
+	}
 
 	var eventsResponse []*events_grpc.EventResponse
-
 	for _, event := range events {
 		event, err := createEventResponse(event)
 		if err != nil {
+			// TODO: handle error?
 			return nil, err
 		}
-
 		eventsResponse = append(eventsResponse, event)
 	}
 
