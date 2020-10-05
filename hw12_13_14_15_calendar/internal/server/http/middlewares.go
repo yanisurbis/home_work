@@ -77,12 +77,8 @@ func UserIDMiddleware() gin.HandlerFunc {
 			c.String(http.StatusBadRequest, "please validate userId in headers")
 			return
 		}
-
-		// Set example variable
+		
 		c.Set("userId", userId)
-
-		// before request
-		// TODO: should we use c.Next?
 		c.Next()
 	}
 }
