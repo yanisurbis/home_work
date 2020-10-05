@@ -15,6 +15,6 @@ lint:
 	$(GOPATH)/bin/golangci-lint run ./...
 
 proto:
-	protoc ./internal/grpc/protobuf/events.proto --go_out=plugins=grpc:.
+	protoc --proto_path=./internal/server/grpc/protobufs --go_out=./internal/server/grpc/events_grpc --plugin=$(GOPATH)/bin/protoc-gen-go --go_opt=paths=source_relative events.proto
 
 .PHONY: build
