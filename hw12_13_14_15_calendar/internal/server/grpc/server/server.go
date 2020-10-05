@@ -7,13 +7,14 @@ import (
 	"calendar/internal/server/grpc/events_grpc"
 	"context"
 	"fmt"
+	"net"
+	"time"
+
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"net"
-	"time"
 )
 
 type Server struct {

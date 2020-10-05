@@ -6,8 +6,9 @@ import (
 	"calendar/internal/domain/interfaces"
 	"context"
 	"fmt"
-	"github.com/go-ozzo/ozzo-validation/v4"
 	"time"
+
+	"github.com/go-ozzo/ozzo-validation/v4"
 )
 
 const (

@@ -10,8 +10,8 @@ test:
 	go test -race ./...
 
 optimize-imports:
-	GO111MODULE=off go get https://github.com/daixiang0/gci
-	$(GOPATH)/bin/gci run ./...
+	GO111MODULE=off go get github.com/daixiang0/gci
+	$(GOPATH)/bin/gci -w ./internal
 
 lint:
 	#GO111MODULE=off

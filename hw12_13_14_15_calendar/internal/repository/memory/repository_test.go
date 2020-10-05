@@ -2,9 +2,10 @@ package memory
 
 import (
 	"calendar/internal/repository"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var userID = 1
