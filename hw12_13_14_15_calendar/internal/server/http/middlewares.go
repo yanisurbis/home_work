@@ -14,6 +14,7 @@ func UserIDMiddleware() gin.HandlerFunc {
 
 		if err != nil {
 			c.String(http.StatusBadRequest, "please validate userId in headers")
+
 			return
 		}
 

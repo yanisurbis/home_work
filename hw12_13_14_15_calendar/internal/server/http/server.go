@@ -51,15 +51,16 @@ func createDeleteEventHandler(eventService domain.EventService) gin.HandlerFunc 
 		deletedEvent, err := eventService.DeleteEvent(c, deleteEventRequest)
 
 		if err != nil {
-			if err == domain3.ErrForbidden {
+			switch err {
+			case domain3.ErrForbidden:
 				c.String(http.StatusForbidden, "don't have access")
 
 				return
-			} else if err == domain3.ErrNotFound {
+			case domain3.ErrNotFound:
 				c.String(http.StatusNotFound, "event is not found")
 
 				return
-			} else {
+			default:
 				c.String(http.StatusInternalServerError, "error")
 
 				return
@@ -73,15 +74,14 @@ func createDeleteEventHandler(eventService domain.EventService) gin.HandlerFunc 
 func createGetEventsHandler(eventService domain.EventService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		getEventsRequest, err := prepareGetEventsRequest(c)
-
 		if err != nil {
 			return
 		}
-
 		events, err := eventService.GetEvents(c, getEventsRequest)
 
 		if err != nil {
 			c.String(http.StatusInternalServerError, "error")
+
 			return
 		}
 
@@ -101,6 +101,7 @@ func createAddEventHandler(eventService domain.EventService) gin.HandlerFunc {
 
 		if err != nil {
 			c.String(http.StatusInternalServerError, "error")
+
 			return
 		}
 
@@ -120,6 +121,7 @@ func createUpdateEventHandler(eventService domain.EventService) gin.HandlerFunc 
 
 		if err != nil {
 			c.String(http.StatusInternalServerError, "error")
+
 			return
 		}
 
@@ -160,6 +162,7 @@ func prepareDeleteEventRequest(c *gin.Context) (*entities.DeleteEventRequest, er
 	id, err := getEventID(c)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
+
 		return nil, err
 	}
 	deleteEventRequest.ID = id
@@ -177,6 +180,7 @@ func prepareGetEventsRequest(c *gin.Context) (*entities.GetEventsRequest, error)
 	from, err := timestampToTime(fromStr)
 	if err != nil {
 		c.String(http.StatusBadRequest, "check from parameter")
+
 		return nil, err
 	}
 	getEventsRequest.From = from
@@ -193,6 +197,7 @@ func prepareAddEventRequest(c *gin.Context) (*entities.AddEventRequest, error) {
 	startAt, err := timestampToTime(c.PostForm("start_at"))
 	if err != nil {
 		c.String(http.StatusBadRequest, "StartAt wrong format")
+
 		return nil, err
 	}
 
@@ -201,6 +206,7 @@ func prepareAddEventRequest(c *gin.Context) (*entities.AddEventRequest, error) {
 	endAt, err := timestampToTime(c.PostForm("end_at"))
 	if err != nil {
 		c.String(http.StatusBadRequest, "EndAt wrong format")
+
 		return nil, err
 	}
 
@@ -213,6 +219,7 @@ func prepareAddEventRequest(c *gin.Context) (*entities.AddEventRequest, error) {
 		notifyAt, err := timestampToTime(notifyAtStr)
 		if err != nil {
 			c.String(http.StatusBadRequest, "NotifyAt wrong format")
+
 			return nil, err
 		}
 		addEventRequest.NotifyAt = notifyAt
@@ -227,6 +234,7 @@ func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, er
 	id, err := getEventID(c)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
+
 		return nil, err
 	}
 
@@ -239,9 +247,9 @@ func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, er
 	startAtStr := c.DefaultPostForm("start_at", domain.ValueNotPresent)
 	if startAtStr != domain.ValueNotPresent {
 		startAt, err := timestampToTime(startAtStr)
-
 		if err != nil {
 			c.String(http.StatusBadRequest, "start_at wrong format")
+
 			return nil, err
 		}
 
@@ -251,9 +259,9 @@ func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, er
 	endAtStr := c.DefaultPostForm("end_at", domain.ValueNotPresent)
 	if endAtStr != domain.ValueNotPresent {
 		endAt, err := timestampToTime(endAtStr)
-
 		if err != nil {
 			c.String(http.StatusBadRequest, "end_at wrong format")
+
 			return nil, err
 		}
 
@@ -271,6 +279,7 @@ func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, er
 
 			if err != nil {
 				c.String(http.StatusBadRequest, "notify_at wrong format")
+
 				return nil, err
 			}
 
