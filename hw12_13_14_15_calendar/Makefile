@@ -9,6 +9,10 @@ build:
 test:
 	go test -race ./...
 
+optimize-imports:
+	GO111MODULE=off go get https://github.com/daixiang0/gci
+	$(GOPATH)/bin/gci run ./...
+
 lint:
 	#GO111MODULE=off
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0

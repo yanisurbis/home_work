@@ -54,6 +54,7 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 	if err != nil {
 		log.Println("Failed to start grpc server")
 		log.Fatal(err)
+
 		return err
 	}
 

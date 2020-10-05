@@ -6,5 +6,5 @@ import (
 
 var (
 	ErrForbidden = errors.New("access denied")
-	ErrNotFound = errors.New("not found")
+	ErrNotFound  = errors.New("not found")
 )

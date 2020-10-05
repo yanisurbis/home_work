@@ -22,7 +22,7 @@ type Event struct {
 	EndAt       time.Time `db:"end_at"`
 	Description string
 	NotifyAt    time.Time `db:"notify_at"`
-	UserID      ID       `db:"user_id"`
+	UserID      ID        `db:"user_id"`
 }
 
 type UpdateEventRequest struct {

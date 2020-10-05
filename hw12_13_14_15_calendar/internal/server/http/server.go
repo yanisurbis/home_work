@@ -1,4 +1,4 @@
-package http_server
+package httpserver
 
 import (
 	"calendar/internal/domain/entities"
@@ -17,15 +17,30 @@ type Instance struct {
 	instance *http.Server
 }
 
-const repositoryKey = "repository"
-const userIdKey = "userId"
-
 func (s *Instance) Start(eventService domain.EventService) error {
-
 	router := gin.Default()
 	router.Use(UserIDMiddleware())
 
-	router.DELETE("/event/:id", func(c *gin.Context) {
+	router.DELETE("/event/:id", createDeleteEventHandler(eventService))
+	router.GET("/events", createGetEventsHandler(eventService))
+	router.POST("/event", createAddEventHandler(eventService))
+	router.PUT("/event/:id", createUpdateEventHandler(eventService))
+
+	fmt.Println("server starting at port :8080")
+	s.instance = &http.Server{
+		Addr:    ":8080",
+		Handler: router,
+	}
+
+	if err := s.instance.ListenAndServe(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createDeleteEventHandler(eventService domain.EventService) gin.HandlerFunc {
+	return func(c *gin.Context) {
 		deleteEventRequest, err := prepareDeleteEventRequest(c)
 
 		if err != nil {
@@ -37,20 +52,25 @@ func (s *Instance) Start(eventService domain.EventService) error {
 		if err != nil {
 			if err == domain3.ErrForbidden {
 				c.String(http.StatusForbidden, "don't have access")
+
 				return
 			} else if err == domain3.ErrNotFound {
 				c.String(http.StatusNotFound, "event is not found")
+
 				return
 			} else {
 				c.String(http.StatusInternalServerError, "error")
+
 				return
 			}
 		}
 
 		c.JSON(http.StatusOK, deletedEvent)
-	})
+	}
+}
 
-	router.GET("/events", func(c *gin.Context) {
+func createGetEventsHandler(eventService domain.EventService) gin.HandlerFunc {
+	return func(c *gin.Context) {
 		getEventsRequest, err := prepareGetEventsRequest(c)
 
 		if err != nil {
@@ -65,9 +85,11 @@ func (s *Instance) Start(eventService domain.EventService) error {
 		}
 
 		c.JSON(http.StatusOK, events)
-	})
+	}
+}
 
-	router.POST("/event", func(c *gin.Context) {
+func createAddEventHandler(eventService domain.EventService) gin.HandlerFunc {
+	return func(c *gin.Context) {
 		addEventRequest, err := prepareAddEventRequest(c)
 
 		if err != nil {
@@ -82,9 +104,11 @@ func (s *Instance) Start(eventService domain.EventService) error {
 		}
 
 		c.JSON(http.StatusOK, addedEvent)
-	})
+	}
+}
 
-	router.PUT("/event/:id", func(c *gin.Context) {
+func createUpdateEventHandler(eventService domain.EventService) gin.HandlerFunc {
+	return func(c *gin.Context) {
 		updateEventRequest, err := prepareUpdateEventRequest(c)
 
 		if err != nil {
@@ -99,23 +123,10 @@ func (s *Instance) Start(eventService domain.EventService) error {
 		}
 
 		c.JSON(http.StatusOK, addedEvent)
-	})
-
-	fmt.Println("server starting at port :8080")
-
-	s.instance = &http.Server{
-		Addr:    ":8080",
-		Handler: router,
 	}
-
-	if err := s.instance.ListenAndServe(); err != nil {
-		return err
-	}
-
-	return nil
 }
 
-func getEventId(c *gin.Context) (int, error) {
+func getEventID(c *gin.Context) (int, error) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -145,7 +156,7 @@ func prepareDeleteEventRequest(c *gin.Context) (*entities.DeleteEventRequest, er
 
 	deleteEventRequest.UserID = GetUserID(c)
 
-	id, err := getEventId(c)
+	id, err := getEventID(c)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return nil, err
@@ -210,9 +221,9 @@ func prepareAddEventRequest(c *gin.Context) (*entities.AddEventRequest, error) {
 }
 
 func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, error) {
-	userId := GetUserID(c)
+	userID := GetUserID(c)
 
-	id, err := getEventId(c)
+	id, err := getEventID(c)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return nil, err
@@ -220,7 +231,7 @@ func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, er
 
 	eventUpdate := entities.UpdateEventRequest{}
 	eventUpdate.ID = id
-	eventUpdate.UserID = userId
+	eventUpdate.UserID = userID
 
 	eventUpdate.Title = c.PostForm("title")
 

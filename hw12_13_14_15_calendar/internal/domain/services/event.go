@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-// TODO: move somewhere?
 const (
 	PeriodDay   = "day"
 	PeriodWeek  = "week"
@@ -18,9 +17,8 @@ const (
 )
 
 var (
-	// TODO: put random string here
-	ShouldResetString = "_~_~_"
-	ValueNotPresent   = "_~_~_"
+	ShouldResetString = "should_reset_string"
+	ValueNotPresent   = "value_not_present"
 	ShouldResetTime   = time.Now().Add(-10)
 )
 
@@ -69,7 +67,6 @@ func (es *EventService) AddEvent(ctx context.Context, addEventRequest *entities.
 }
 
 func mergeEvents(currEvent *entities.Event, e *entities.UpdateEventRequest) (*entities.Event, error) {
-
 	// TODO: we should check that startAt > endAt
 	// TODO: we should check that startAt > curr
 	// TODO: title shouldn't be empty
@@ -163,13 +160,14 @@ func (es *EventService) GetEvents(ctx context.Context, getEventsRequest *entitie
 	userID := getEventsRequest.UserID
 	from := getEventsRequest.From
 
-	if period == PeriodMonth {
+	switch period {
+	case PeriodMonth:
 		return es.EventStorage.GetEventsMonth(userID, from)
-	} else if period == PeriodWeek {
+	case PeriodWeek:
 		return es.EventStorage.GetEventsWeek(userID, from)
-	} else if period == PeriodDay {
+	case PeriodDay:
 		return es.EventStorage.GetEventsDay(userID, from)
+	default:
+		return []entities.Event{}, nil
 	}
-	// TODO: log problem in case there is no match
-	return []entities.Event{}, nil
 }

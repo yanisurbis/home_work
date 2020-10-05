@@ -1,4 +1,4 @@
-package http_server
+package httpserver
 
 import (
 	"calendar/internal/domain/entities"
@@ -6,6 +6,7 @@ import (
 )
 
 func GetUserID(c *gin.Context) entities.ID {
-	userId, _ := c.Get("userId")
-	return userId.(entities.ID)
+	userID, _ := c.Get("userId")
+
+	return userID.(entities.ID)
 }

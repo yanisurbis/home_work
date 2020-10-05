@@ -1,4 +1,4 @@
-package server_grpc
+package servergrpc
 
 import (
 	"calendar/internal/domain/entities"
@@ -18,7 +18,6 @@ import (
 
 type Server struct {
 	eventService domain.EventService
-	db           repository.BaseRepo
 	instance     *grpc.Server
 }
 
@@ -26,6 +25,7 @@ func timestampToTime(ts *timestamppb.Timestamp) (time.Time, error) {
 	if ts == nil {
 		return time.Time{}, nil
 	}
+
 	return ptypes.Timestamp(ts)
 }
 
@@ -75,7 +75,7 @@ func (s *Server) GetEvents(ctx context.Context, query *events_grpc.GetEventsRequ
 		return nil, errors.Wrap(err, "failed to fetch events")
 	}
 
-	var eventsResponse []*events_grpc.EventResponse
+	eventsResponse := []*events_grpc.EventResponse{}
 	for _, event := range events {
 		event, err := createEventResponse(event)
 		if err != nil {
@@ -227,10 +227,12 @@ func (s *Server) Start(eventService domain.EventService) error {
 	if err := s.instance.Serve(lsn); err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (s *Server) Stop(ctx context.Context) error {
 	s.instance.Stop()
+
 	return nil
 }
