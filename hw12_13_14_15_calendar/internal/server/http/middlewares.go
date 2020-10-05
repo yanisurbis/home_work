@@ -2,8 +2,6 @@ package http_server
 
 import (
 	"calendar/internal/domain/entities"
-	"calendar/internal/repository"
-	"context"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -35,39 +33,6 @@ func logMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func createDbMiddleware(repo repository.BaseRepo) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			ctx = context.WithValue(ctx, repositoryKey, repo)
-
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
-}
-
-func userIdMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		userIdStr := r.Header.Get("userid")
-
-		if userIdStr == "" {
-			http.Error(w, "please specify userId in headers", http.StatusUnauthorized)
-			return
-		}
-
-		userId, err := strconv.Atoi(userIdStr)
-
-		if err != nil {
-			http.Error(w, "please check your userId", http.StatusUnauthorized)
-			return
-		}
-
-		ctx = context.WithValue(ctx, userIdKey, userId)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
 func UserIDMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userIdStr := c.GetHeader("userId")
@@ -77,7 +42,7 @@ func UserIDMiddleware() gin.HandlerFunc {
 			c.String(http.StatusBadRequest, "please validate userId in headers")
 			return
 		}
-		
+
 		c.Set("userId", userId)
 		c.Next()
 	}
