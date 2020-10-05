@@ -3,12 +3,12 @@ package domain
 import (
 	"calendar/internal/domain/entities"
 	"calendar/internal/domain/errors"
-	"calendar/internal/domain/interfaces"
+	domain "calendar/internal/domain/interfaces"
 	"context"
 	"fmt"
 	"time"
 
-	"github.com/go-ozzo/ozzo-validation/v4"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 const (

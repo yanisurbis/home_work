@@ -9,7 +9,11 @@ build:
 test:
 	go test -race ./...
 
-optimize-imports:
+goimports:
+	GO111MODULE=off go get golang.org/x/tools/cmd/goimports
+	$(GOPATH)/bin/goimports -w ./internal
+
+gci:
 	GO111MODULE=off go get github.com/daixiang0/gci
 	$(GOPATH)/bin/gci -w ./internal
 
