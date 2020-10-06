@@ -2,9 +2,10 @@ package domain
 
 import (
 	"calendar/internal/domain/entities"
-	"calendar/internal/domain/errors"
+	domainErrors "calendar/internal/domain/errors"
 	domain "calendar/internal/domain/interfaces"
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -29,6 +30,13 @@ type EventService struct {
 
 func validateEvent(e entities.Event) error {
 	fmt.Printf("value %+v\n", e)
+	if e.StartAt.Before(time.Now()) {
+		return errors.New("start_at should be grater than current date")
+	}
+
+	if e.EndAt.Before(e.StartAt) {
+		return errors.New("end_at should not be less than start_at")
+	}
 
 	return validation.ValidateStruct(&e,
 		validation.Field(&e.Title, validation.Required, validation.Length(1, 100)),
@@ -57,7 +65,6 @@ func (es *EventService) AddEvent(ctx context.Context, addEventRequest *entities.
 		return nil, err
 	}
 
-	// TODO: id should be created by us not to refetch db values
 	err = es.EventStorage.AddEvent(event)
 
 	if err != nil {
@@ -68,12 +75,6 @@ func (es *EventService) AddEvent(ctx context.Context, addEventRequest *entities.
 }
 
 func mergeEvents(currEvent *entities.Event, e *entities.UpdateEventRequest) (*entities.Event, error) {
-	// TODO: we should check that startAt > endAt
-	// TODO: we should check that startAt > curr
-	// TODO: title shouldn't be empty
-	if e.Title != ShouldResetString {
-		currEvent.Title = e.Title
-	}
 	if !e.StartAt.IsZero() {
 		currEvent.StartAt = e.StartAt
 	}
@@ -130,11 +131,11 @@ func (es *EventService) GetEvent(ctx context.Context, userID entities.ID, eventI
 	}
 
 	if event == nil {
-		return nil, errors.ErrNotFound
+		return nil, domainErrors.ErrNotFound
 	}
 
 	if event.UserID != userID {
-		return nil, errors.ErrForbidden
+		return nil, domainErrors.ErrForbidden
 	}
 
 	return event, nil

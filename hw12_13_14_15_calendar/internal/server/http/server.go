@@ -100,7 +100,7 @@ func createAddEventHandler(eventService domain.EventService) gin.HandlerFunc {
 		addedEvent, err := eventService.AddEvent(c, addEventRequest)
 
 		if err != nil {
-			c.String(http.StatusInternalServerError, "error")
+			c.String(http.StatusInternalServerError, err.Error())
 
 			return
 		}
