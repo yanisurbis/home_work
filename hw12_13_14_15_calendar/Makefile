@@ -17,6 +17,12 @@ gci:
 	GO111MODULE=off go get github.com/daixiang0/gci
 	$(GOPATH)/bin/gci -w ./internal
 
+#install-lint-deps:
+#	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.30.0
+#
+#lint: install-lint-deps
+#	golangci-lint run ./...
+
 lint:
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0
 		go mod tidy
