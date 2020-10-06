@@ -7,7 +7,7 @@ build:
 	go build -o calendar cmd/app/*
 
 test:
-	go test -race ./...
+	go test -race ./internal/... ./pkg/...
 
 goimports:
 	GO111MODULE=off go get golang.org/x/tools/cmd/goimports
