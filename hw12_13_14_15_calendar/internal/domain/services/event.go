@@ -6,7 +6,6 @@ import (
 	domain "calendar/internal/domain/interfaces"
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -29,7 +28,6 @@ type EventService struct {
 }
 
 func validateEvent(e entities.Event) error {
-	fmt.Printf("value %+v\n", e)
 	if e.StartAt.Before(time.Now()) {
 		return errors.New("start_at should be grater than current date")
 	}
@@ -58,8 +56,6 @@ func (es *EventService) AddEvent(ctx context.Context, addEventRequest *entities.
 	}
 
 	err := validateEvent(event)
-
-	fmt.Printf("err %+v\n", err)
 
 	if err != nil {
 		return nil, err
@@ -123,8 +119,6 @@ func (es *EventService) UpdateEvent(ctx context.Context, eventUpdate *entities.U
 
 func (es *EventService) GetEvent(ctx context.Context, userID entities.ID, eventID entities.ID) (*entities.Event, error) {
 	event, err := es.EventStorage.GetEvent(eventID)
-
-	fmt.Printf("event %+v\n", event)
 
 	if err != nil {
 		return nil, err
