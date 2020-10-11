@@ -36,6 +36,10 @@ func validateEvent(e entities.Event) error {
 		return errors.New("end_at should not be less than start_at")
 	}
 
+	if !e.NotifyAt.IsZero() && e.NotifyAt.Before(e.StartAt) {
+		return errors.New("notify_at should not be less than start_at")
+	}
+
 	return validation.ValidateStruct(&e,
 		validation.Field(&e.Title, validation.Required, validation.Length(1, 100)),
 		validation.Field(&e.StartAt, validation.Required),
