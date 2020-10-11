@@ -15,7 +15,7 @@ goimports:
 
 gci:
 	GO111MODULE=off go get github.com/daixiang0/gci
-	$(GOPATH)/bin/gci -w ./internal
+	$(GOPATH)/bin/gci -w .
 
 install-lint-deps:
 	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.30.0
