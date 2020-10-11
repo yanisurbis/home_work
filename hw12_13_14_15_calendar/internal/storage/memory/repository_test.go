@@ -1,10 +1,11 @@
 package memory
 
 import (
-	"calendar/internal/repository"
-	"github.com/stretchr/testify/assert"
+	"calendar/internal/storage"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var userID = 1
@@ -120,8 +121,8 @@ func TestImMemoryImplementation(t *testing.T) {
 	})
 }
 
-func createEvent(initialTime time.Time) repository.Event {
-	return repository.Event{
+func createEvent(initialTime time.Time) storage.Event {
+	return storage.Event{
 		ID:          0,
 		Title:       "title",
 		StartAt:     initialTime,

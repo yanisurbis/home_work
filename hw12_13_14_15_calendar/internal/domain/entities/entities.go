@@ -4,17 +4,6 @@ import "time"
 
 type ID = int
 
-/*
-db event
-id uuid
-title string, length > 0
-start_at date
-end_at date
-description string, length >= 0
-notify_at date, NULL if we don't have anything
-user_id uuid
-*/
-
 type Event struct {
 	ID          ID
 	Title       string
@@ -22,7 +11,7 @@ type Event struct {
 	EndAt       time.Time `db:"end_at"`
 	Description string
 	NotifyAt    time.Time `db:"notify_at"`
-	UserID      ID       `db:"user_id"`
+	UserID      ID        `db:"user_id"`
 }
 
 type UpdateEventRequest struct {

@@ -1,8 +1,8 @@
-package postgres
+package sql
 
 import (
 	"calendar/internal/domain/entities"
-	"calendar/internal/repository"
+	"calendar/internal/storage"
 	"context"
 	"errors"
 	"time"
@@ -43,7 +43,7 @@ func (r *Repo) AddEvent(event entities.Event) (err error) {
 	return err
 }
 
-func (r *Repo) UpdateEvent(userID repository.ID, event entities.Event) (err error) {
+func (r *Repo) UpdateEvent(userID storage.ID, event entities.Event) (err error) {
 	if userID != event.UserID {
 		return ErrForbidden
 	}
@@ -62,7 +62,7 @@ func (r *Repo) UpdateEvent(userID repository.ID, event entities.Event) (err erro
 	return
 }
 
-func (r *Repo) GetEvent(id repository.ID) (*entities.Event, error) {
+func (r *Repo) GetEvent(id storage.ID) (*entities.Event, error) {
 	var events []entities.Event
 	option := make(map[string]interface{})
 	option["id"] = id
@@ -86,7 +86,7 @@ func (r *Repo) GetEvent(id repository.ID) (*entities.Event, error) {
 	return &events[0], nil
 }
 
-func (r *Repo) DeleteEvent(eventID repository.ID) error {
+func (r *Repo) DeleteEvent(eventID storage.ID) error {
 	var events []entities.Event
 	option := make(map[string]interface{})
 	option["event_id"] = eventID
@@ -100,7 +100,7 @@ func (r *Repo) DeleteEvent(eventID repository.ID) error {
 	return nstmt.Select(&events, option)
 }
 
-func (r *Repo) getEvents(userID repository.ID, from time.Time, to time.Time) ([]entities.Event, error) {
+func (r *Repo) getEvents(userID storage.ID, from time.Time, to time.Time) ([]entities.Event, error) {
 	var events []entities.Event
 	option := make(map[string]interface{})
 	option["start"] = from
@@ -122,14 +122,14 @@ func (r *Repo) getEvents(userID repository.ID, from time.Time, to time.Time) ([]
 	return events, err
 }
 
-func (r *Repo) GetEventsDay(userID repository.ID, from time.Time) ([]entities.Event, error) {
+func (r *Repo) GetEventsDay(userID storage.ID, from time.Time) ([]entities.Event, error) {
 	return r.getEvents(userID, from, from.Add(time.Hour*24))
 }
 
-func (r *Repo) GetEventsWeek(userID repository.ID, from time.Time) ([]entities.Event, error) {
+func (r *Repo) GetEventsWeek(userID storage.ID, from time.Time) ([]entities.Event, error) {
 	return r.getEvents(userID, from, from.AddDate(0, 0, 7))
 }
 
-func (r *Repo) GetEventsMonth(userID repository.ID, from time.Time) ([]entities.Event, error) {
+func (r *Repo) GetEventsMonth(userID storage.ID, from time.Time) ([]entities.Event, error) {
 	return r.getEvents(userID, from, from.AddDate(0, 1, 0))
 }

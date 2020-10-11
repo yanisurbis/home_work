@@ -2,14 +2,15 @@ package domain
 
 import (
 	"calendar/internal/domain/entities"
-	"calendar/internal/domain/errors"
-	"calendar/internal/domain/interfaces"
+	domainErrors "calendar/internal/domain/errors"
+	domain "calendar/internal/domain/interfaces"
 	"context"
-	"github.com/go-ozzo/ozzo-validation/v4"
+	"errors"
 	"time"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
-// TODO: move somewhere?
 const (
 	PeriodDay   = "day"
 	PeriodWeek  = "week"
@@ -17,9 +18,9 @@ const (
 )
 
 var (
-	// TODO: put random string here
-	DefaultEmptyString = "_~_~_"
-	DefaultEmptyTime   = time.Now().Add(-10)
+	ShouldResetString = "should_reset_string"
+	ValueNotPresent   = "value_not_present"
+	ShouldResetTime   = time.Now().Add(-10)
 )
 
 type EventService struct {
@@ -27,6 +28,14 @@ type EventService struct {
 }
 
 func validateEvent(e entities.Event) error {
+	if e.StartAt.Before(time.Now()) {
+		return errors.New("start_at should be grater than current date")
+	}
+
+	if e.EndAt.Before(e.StartAt) {
+		return errors.New("end_at should not be less than start_at")
+	}
+
 	return validation.ValidateStruct(&e,
 		validation.Field(&e.Title, validation.Required, validation.Length(1, 100)),
 		validation.Field(&e.StartAt, validation.Required),
@@ -52,7 +61,6 @@ func (es *EventService) AddEvent(ctx context.Context, addEventRequest *entities.
 		return nil, err
 	}
 
-	// TODO: id should be created by us not to refetch db values
 	err = es.EventStorage.AddEvent(event)
 
 	if err != nil {
@@ -63,23 +71,16 @@ func (es *EventService) AddEvent(ctx context.Context, addEventRequest *entities.
 }
 
 func mergeEvents(currEvent *entities.Event, e *entities.UpdateEventRequest) (*entities.Event, error) {
-
-	// TODO: we should check that startAt > endAt
-	// TODO: we should check that startAt > curr
-	// TODO: title shouldn't be empty
-	if e.Title != DefaultEmptyString {
-		currEvent.Title = e.Title
-	}
 	if !e.StartAt.IsZero() {
 		currEvent.StartAt = e.StartAt
 	}
 	if !e.EndAt.IsZero() {
 		currEvent.EndAt = e.EndAt
 	}
-	if e.Description != DefaultEmptyString {
+	if e.Description != ShouldResetString {
 		currEvent.Description = e.Description
 	}
-	if e.NotifyAt == DefaultEmptyTime {
+	if e.NotifyAt == ShouldResetTime {
 		currEvent.NotifyAt = *new(time.Time)
 	} else if !e.NotifyAt.IsZero() {
 		currEvent.NotifyAt = e.NotifyAt
@@ -124,11 +125,11 @@ func (es *EventService) GetEvent(ctx context.Context, userID entities.ID, eventI
 	}
 
 	if event == nil {
-		return nil, errors.ErrNotFound
+		return nil, domainErrors.ErrNotFound
 	}
 
 	if event.UserID != userID {
-		return nil, errors.ErrForbidden
+		return nil, domainErrors.ErrForbidden
 	}
 
 	return event, nil
@@ -155,13 +156,14 @@ func (es *EventService) GetEvents(ctx context.Context, getEventsRequest *entitie
 	userID := getEventsRequest.UserID
 	from := getEventsRequest.From
 
-	if period == PeriodMonth {
+	switch period {
+	case PeriodMonth:
 		return es.EventStorage.GetEventsMonth(userID, from)
-	} else if period == PeriodWeek {
+	case PeriodWeek:
 		return es.EventStorage.GetEventsWeek(userID, from)
-	} else if period == PeriodDay {
+	case PeriodDay:
 		return es.EventStorage.GetEventsDay(userID, from)
+	default:
+		return []entities.Event{}, nil
 	}
-	// TODO: log problem in case there is no match
-	return es.EventStorage.GetEventsDay(userID, from)
 }
