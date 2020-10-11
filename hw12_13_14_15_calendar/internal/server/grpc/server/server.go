@@ -22,6 +22,7 @@ type Server struct {
 	instance     *grpc.Server
 }
 
+// TODO: move to lib (copied in grpc client)
 func timestampToTime(ts *timestamppb.Timestamp) (time.Time, error) {
 	if ts == nil {
 		return time.Time{}, nil
