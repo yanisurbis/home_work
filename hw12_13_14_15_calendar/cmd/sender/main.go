@@ -1,6 +1,9 @@
 package main
 
 import (
+	"calendar/internal/domain/entities"
+	"encoding/json"
+	"fmt"
 	"github.com/streadway/amqp"
 	"log"
 )
@@ -49,12 +52,12 @@ func main() {
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
-		"hello", // name
-		false,   // durable
-		false,   // delete when unused
-		false,   // exclusive
-		false,   // no-wait
-		nil,     // arguments
+		"notifications", // name
+		false,           // durable
+		false,           // delete when unused
+		false,           // exclusive
+		false,           // no-wait
+		nil,             // arguments
 	)
 	failOnError(err, "Failed to declare a queue")
 
@@ -74,6 +77,14 @@ func main() {
 	go func() {
 		for d := range msgs {
 			log.Printf("Received a message: %s", d.Body)
+			var notifications []entities.Notification
+
+			err := json.Unmarshal(d.Body, &notifications)
+			if err != nil {
+				log.Fatal("Error unmarshalling json")
+			}
+
+			fmt.Println("%+v", notifications)
 		}
 	}()
 

@@ -3,8 +3,8 @@ package servergrpc
 import (
 	"calendar/internal/domain/entities"
 	domain "calendar/internal/domain/services"
-	"calendar/internal/storage"
 	"calendar/internal/server/grpc/events_grpc"
+	"calendar/internal/storage"
 	"context"
 	"fmt"
 	"net"
@@ -22,6 +22,7 @@ type Server struct {
 	instance     *grpc.Server
 }
 
+// TODO: move to lib (copied in grpc client)
 func timestampToTime(ts *timestamppb.Timestamp) (time.Time, error) {
 	if ts == nil {
 		return time.Time{}, nil

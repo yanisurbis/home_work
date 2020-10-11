@@ -43,3 +43,10 @@ type GetEventsRequest struct {
 	Type   string
 	From   time.Time
 }
+
+type Notification struct {
+	EventId    ID
+	UserId     ID
+	EventTitle string
+	StartAt    time.Time
+}

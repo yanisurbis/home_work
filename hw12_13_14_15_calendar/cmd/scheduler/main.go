@@ -1,6 +1,8 @@
 package main
 
 import (
+	grpcclient "calendar/internal/client/grpc"
+	"encoding/json"
 	"github.com/streadway/amqp"
 	"log"
 )
@@ -49,25 +51,29 @@ func main() {
 	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
-		"hello", // name
-		false,   // durable
-		false,   // delete when unused
-		false,   // exclusive
-		false,   // no-wait
-		nil,     // arguments
+		"notifications", // name
+		false,           // durable
+		false,           // delete when unused
+		false,           // exclusive
+		false,           // no-wait
+		nil,             // arguments
 	)
-	failOnError(err, "Failed to declare a queue")
 
-	body := "Hello"
+	notifications := grpcclient.GetNotifications()
+
+	failOnError(err, "Failed to declare a queue")
+	msg, err := json.Marshal(notifications)
+	failOnError(err, "Couldn't serialize notifications")
+
 	err = ch.Publish(
 		"",     // exchange
 		q.Name, // routing key
 		false,  // mandatory
 		false,  // immediate
 		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(body),
+			ContentType: "application/json",
+			Body:        msg,
 		})
-	log.Printf(" [x] Sent %s", body)
+	log.Printf(" [x] Sent %s", msg)
 	failOnError(err, "Failed to publish a message")
 }
