@@ -4,7 +4,7 @@ import (
 	"calendar/internal/app"
 	"calendar/internal/config"
 	"calendar/internal/logger"
-	"calendar/internal/repository/postgres"
+	"calendar/internal/storage/sql"
 	grpcserver "calendar/internal/server/grpc/server"
 	httpserver "calendar/internal/server/http"
 	"context"
@@ -42,7 +42,7 @@ func main() {
 	s := new(httpserver.Instance)
 	grpcServer := new(grpcserver.Server)
 	l := new(logger.Instance)
-	storage := new(postgres.Repo)
+	storage := new(sql.Repo)
 
 	a, err := app.New(s, grpcServer, l, storage)
 

@@ -3,7 +3,7 @@ package servergrpc
 import (
 	"calendar/internal/domain/entities"
 	domain "calendar/internal/domain/services"
-	"calendar/internal/repository"
+	"calendar/internal/storage"
 	"calendar/internal/server/grpc/events_grpc"
 	"context"
 	"fmt"
@@ -67,7 +67,7 @@ func (s *Server) GetEvents(ctx context.Context, query *events_grpc.GetEventsRequ
 	}
 
 	getEventsRequest := entities.GetEventsRequest{
-		UserID: repository.ID(query.UserId),
+		UserID: storage.ID(query.UserId),
 		Type:   period,
 		From:   from,
 	}
@@ -122,7 +122,7 @@ func prepareAddEventRequest(eventGrpc *events_grpc.AddEventRequest) (*entities.A
 		EndAt:       endAt,
 		Description: eventGrpc.Description,
 		NotifyAt:    notifyAt,
-		UserID:      repository.ID(eventGrpc.UserId),
+		UserID:      storage.ID(eventGrpc.UserId),
 	}, nil
 }
 
@@ -145,8 +145,8 @@ func (s *Server) AddEvent(ctx context.Context, query *events_grpc.AddEventReques
 func prepareUpdateEventRequest(eventGrpc *events_grpc.UpdateEventRequest) (*entities.UpdateEventRequest, error) {
 	updateEventRequest := entities.UpdateEventRequest{}
 
-	updateEventRequest.ID = repository.ID(eventGrpc.Id)
-	updateEventRequest.UserID = repository.ID(eventGrpc.UserId)
+	updateEventRequest.ID = storage.ID(eventGrpc.Id)
+	updateEventRequest.UserID = storage.ID(eventGrpc.UserId)
 	if eventGrpc.Title != nil {
 		updateEventRequest.Title = eventGrpc.Title.Value
 	}
@@ -200,8 +200,8 @@ func (s *Server) UpdateEvent(ctx context.Context, query *events_grpc.UpdateEvent
 
 func (s *Server) DeleteEvent(ctx context.Context, query *events_grpc.DeleteEventRequest) (*events_grpc.EventResponse, error) {
 	deleteEventRequest := entities.DeleteEventRequest{
-		ID:     repository.ID(query.EventId),
-		UserID: repository.ID(query.UserId),
+		ID:     storage.ID(query.EventId),
+		UserID: storage.ID(query.UserId),
 	}
 
 	event, err := s.eventService.DeleteEvent(ctx, &deleteEventRequest)
