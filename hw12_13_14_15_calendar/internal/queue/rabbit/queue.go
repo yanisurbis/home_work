@@ -1,4 +1,4 @@
-package consumer
+package rabbit
 
 // docker run -d --name rabbitmq -p 15672:15672 -p 5672:5672 rabbitmq:3-management
 // https://github.com/rabbitmq/rabbitmq-consistent-hash-exchange
@@ -8,16 +8,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
-	"time"
 	"github.com/cenkalti/backoff/v3"
 	"github.com/streadway/amqp"
+	"log"
+	"time"
 )
 
-// Consumer ...
-type Consumer struct {
+type Queue struct {
 	conn         *amqp.Connection
 	channel      *amqp.Channel
+	clientType   string
 	done         chan error
 	consumerTag  string
 	uri          string
@@ -30,17 +30,18 @@ type Consumer struct {
 
 const defaultMaxInt = time.Second * 15
 
-type Opt func(consumer *Consumer)
+type Opt func(consumer *Queue)
 
 func WithMaxInterval(interval time.Duration) Opt {
-	return func(consumer *Consumer) {
+	return func(consumer *Queue) {
 		consumer.maxInterval = interval
 	}
 }
 
-func NewConsumer(consumerTag, uri, exchangeName, exchangeType, queue, bindingKey string, opts ...Opt) *Consumer {
-	c := &Consumer{
+func NewQueue(consumerTag, clientType, uri, exchangeName, exchangeType, queue, bindingKey string, opts ...Opt) *Queue {
+	c := &Queue{
 		consumerTag:  consumerTag,
+		clientType:   clientType,
 		uri:          uri,
 		exchangeName: exchangeName,
 		exchangeType: exchangeType,
@@ -57,7 +58,7 @@ func NewConsumer(consumerTag, uri, exchangeName, exchangeType, queue, bindingKey
 	return c
 }
 
-func (c *Consumer) reConnect() (<-chan amqp.Delivery, error) {
+func (c *Queue) reConnect() (<-chan amqp.Delivery, error) {
 	be := backoff.NewExponentialBackOff()
 	be.MaxElapsedTime = time.Minute
 	be.InitialInterval = 1 * time.Second
@@ -88,7 +89,7 @@ func (c *Consumer) reConnect() (<-chan amqp.Delivery, error) {
 	}
 }
 
-func (c *Consumer) connect() error {
+func (c *Queue) connect() error {
 
 	var err error
 
@@ -124,7 +125,7 @@ func (c *Consumer) connect() error {
 }
 
 // Задекларировать очередь, которую будем слушать.
-func (c *Consumer) announceQueue() (<-chan amqp.Delivery, error) {
+func (c *Queue) announceQueue() (<-chan amqp.Delivery, error) {
 	queue, err := c.channel.QueueDeclare(
 		c.queue,
 		true,
@@ -155,23 +156,28 @@ func (c *Consumer) announceQueue() (<-chan amqp.Delivery, error) {
 		return nil, fmt.Errorf("Queue Bind: %s", err)
 	}
 
-	msgs, err := c.channel.Consume(
-		queue.Name,
-		c.consumerTag,
-		false,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("Queue Consume: %s", err)
+	if c.clientType == "consumer" {
+		msgs, err := c.channel.Consume(
+			queue.Name,
+			c.consumerTag,
+			false,
+			false,
+			false,
+			false,
+			nil,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("Queue Consume: %s", err)
+		}
+
+		return msgs, nil
 	}
 
-	return msgs, nil
+	return nil, nil
+
 }
 
-func (c *Consumer) Handle(fn func(<-chan amqp.Delivery), threads int) error {
+func (c *Queue) Handle(fn func(<-chan amqp.Delivery), threads int) error {
 	var err error
 	if err = c.connect(); err != nil {
 		return fmt.Errorf("Error: %v", err)
@@ -196,7 +202,7 @@ func (c *Consumer) Handle(fn func(<-chan amqp.Delivery), threads int) error {
 	}
 }
 
-func (c *Consumer) Run(mesgs <-chan amqp.Publishing) error {
+func (c *Queue) Run(msgs <-chan amqp.Publishing) error {
 	var err error
 	if err = c.connect(); err != nil {
 		return fmt.Errorf("Error: %v", err)
@@ -208,12 +214,13 @@ func (c *Consumer) Run(mesgs <-chan amqp.Publishing) error {
 
 	for {
 		select {
-		case msg := <-mesgs:
+		case msg := <-msgs:
+			fmt.Println("%+v", msg)
 			err = c.channel.Publish(
-				"",     // exchange
-				"TODO", // routing key
-				false,  // mandatory
-				false,  // immediate
+				c.exchangeName, // exchange
+				c.bindingKey,   // routing key
+				false,          // mandatory
+				false,          // immediate
 				msg,
 			)
 		case <-c.done:
