@@ -197,8 +197,8 @@ func (c *Queue) Handle(fn func(<-chan amqp.Delivery), threads int) error {
 			if err != nil {
 				return fmt.Errorf("Reconnecting Error: %s", err)
 			}
+			fmt.Println("Reconnected... possibly")
 		}
-		fmt.Println("Reconnected... possibly")
 	}
 }
 
@@ -228,7 +228,7 @@ func (c *Queue) Run(msgs <-chan amqp.Publishing) error {
 			if err != nil {
 				return fmt.Errorf("Reconnecting Error: %s", err)
 			}
+			fmt.Println("Reconnected... possibly")
 		}
-		fmt.Println("Reconnected... possibly")
 	}
 }

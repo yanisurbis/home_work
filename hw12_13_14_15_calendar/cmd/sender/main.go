@@ -44,9 +44,11 @@ func (s *Sender) connect() {
 func main() {
 	queue := rabbit.NewQueue("events_consumer", "consumer", "amqp://guest:guest@localhost:5672/", "exchange", "fanout", "events_notifications", "events")
 	queue.Handle(func(msgs <-chan amqp.Delivery) {
-		select {
-		case msg := <-msgs:
-			fmt.Println("%+v", msg)
+		for {
+			select {
+			case msg := <-msgs:
+				fmt.Println("%+v", msg)
+			}
 		}
 	}, 1)
 

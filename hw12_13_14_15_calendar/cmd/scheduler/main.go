@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/streadway/amqp"
 	"log"
+	"time"
 )
 
 func failOnError(err error, msg string) {
@@ -20,18 +21,31 @@ func main() {
 	channel := make(chan amqp.Publishing)
 
 	go queue.Run(channel)
-	notifications := grpcclient.GetNotifications()
 
-	msg, err := json.Marshal(notifications)
-	failOnError(err, "Couldn't serialize notifications")
-	channel <- amqp.Publishing{
-		ContentType: "application/json",
-		Body:        msg,
+	ticker := time.NewTicker(5 * time.Second)
+	quit := make(chan struct{})
+	//go func() {
+	for {
+		select {
+		case <-ticker.C:
+			notifications := grpcclient.GetNotifications()
+
+			msg, err := json.Marshal(notifications)
+			failOnError(err, "Couldn't serialize notifications")
+			channel <- amqp.Publishing{
+				ContentType: "application/json",
+				Body:        msg,
+			}
+		case <-quit:
+			ticker.Stop()
+			return
+		}
 	}
+	//}()
 
-	emptyChannel := make(chan int)
+	/*emptyChannel := make(chan int)
 
-	<-emptyChannel
+	<-emptyChannel*/
 
 	/*failOnError(err, "Failed to open a channel")
 	defer ch.Close()
