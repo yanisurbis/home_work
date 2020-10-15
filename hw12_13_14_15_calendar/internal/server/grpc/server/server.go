@@ -3,8 +3,8 @@ package servergrpc
 import (
 	"calendar/internal/domain/entities"
 	domain "calendar/internal/domain/services"
-	"calendar/internal/storage"
 	"calendar/internal/server/grpc/events_grpc"
+	"calendar/internal/storage"
 	"context"
 	"fmt"
 	"net"
