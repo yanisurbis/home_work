@@ -2,6 +2,7 @@ package main
 
 import (
 	grpcclient "calendar/internal/client/grpc"
+	queue2 "calendar/internal/queue"
 	"calendar/internal/queue/rabbit"
 	"encoding/json"
 	"github.com/streadway/amqp"
@@ -16,15 +17,18 @@ func failOnError(err error, msg string) {
 }
 
 func main() {
-	queue := rabbit.NewQueue("events_consumer", "sender", "amqp://guest:guest@localhost:5672/", "exchange", "fanout", "events_notifications", "events")
+	var producer queue2.Producer
+
+	producer = rabbit.Initialize("events_consumer", "sender", "amqp://guest:guest@localhost:5672/", "exchange", "fanout", "events_notifications", "events")
 
 	channel := make(chan amqp.Publishing)
 
-	go queue.Run(channel)
+	go func() {
+		_ = producer.Run(channel)
+	}()
 
 	ticker := time.NewTicker(5 * time.Second)
 	quit := make(chan struct{})
-	//go func() {
 	for {
 		select {
 		case <-ticker.C:
@@ -41,39 +45,4 @@ func main() {
 			return
 		}
 	}
-	//}()
-
-	/*emptyChannel := make(chan int)
-
-	<-emptyChannel*/
-
-	/*failOnError(err, "Failed to open a channel")
-	defer ch.Close()
-
-	q, err := ch.QueueDeclare(
-		"notifications", // name
-		false,           // durable
-		false,           // delete when unused
-		false,           // exclusive
-		false,           // no-wait
-		nil,             // arguments
-	)
-
-	notifications := grpcclient.GetNotifications()
-
-	failOnError(err, "Failed to declare a queue")
-	msg, err := json.Marshal(notifications)
-	failOnError(err, "Couldn't serialize notifications")
-
-	err = ch.Publish(
-		"",     // exchange
-		q.Name, // routing key
-		false,  // mandatory
-		false,  // immediate
-		amqp.Publishing{
-			ContentType: "application/json",
-			Body:        msg,
-		})
-	log.Printf(" [x] Sent %s", msg)
-	failOnError(err, "Failed to publish a message")*/
 }

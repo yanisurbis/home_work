@@ -30,16 +30,8 @@ type Queue struct {
 
 const defaultMaxInt = time.Second * 15
 
-type Opt func(consumer *Queue)
-
-func WithMaxInterval(interval time.Duration) Opt {
-	return func(consumer *Queue) {
-		consumer.maxInterval = interval
-	}
-}
-
-func NewQueue(consumerTag, clientType, uri, exchangeName, exchangeType, queue, bindingKey string, opts ...Opt) *Queue {
-	c := &Queue{
+func Initialize(consumerTag, clientType, uri, exchangeName, exchangeType, queue, bindingKey string) *Queue {
+	return &Queue{
 		consumerTag:  consumerTag,
 		clientType:   clientType,
 		uri:          uri,
@@ -50,12 +42,6 @@ func NewQueue(consumerTag, clientType, uri, exchangeName, exchangeType, queue, b
 		done:         make(chan error),
 		maxInterval:  defaultMaxInt,
 	}
-
-	for _, opt := range opts {
-		opt(c)
-	}
-
-	return c
 }
 
 func (c *Queue) reConnect() (<-chan amqp.Delivery, error) {
@@ -177,7 +163,7 @@ func (c *Queue) announceQueue() (<-chan amqp.Delivery, error) {
 
 }
 
-func (c *Queue) Handle(fn func(<-chan amqp.Delivery), threads int) error {
+func (c *Queue) Handle(fn func(<-chan amqp.Delivery)) error {
 	var err error
 	if err = c.connect(); err != nil {
 		return fmt.Errorf("Error: %v", err)
@@ -188,9 +174,7 @@ func (c *Queue) Handle(fn func(<-chan amqp.Delivery), threads int) error {
 	}
 
 	for {
-		for i := 0; i < threads; i++ {
-			go fn(msgs)
-		}
+		go fn(msgs)
 
 		if <-c.done != nil {
 			msgs, err = c.reConnect()
@@ -215,7 +199,6 @@ func (c *Queue) Run(msgs <-chan amqp.Publishing) error {
 	for {
 		select {
 		case msg := <-msgs:
-			fmt.Println("%+v", msg)
 			err = c.channel.Publish(
 				c.exchangeName, // exchange
 				c.bindingKey,   // routing key
