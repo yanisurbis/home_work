@@ -16,5 +16,6 @@ type EventStorage interface {
 	GetEventsWeek(userID entities.ID, from time.Time) ([]entities.Event, error)
 	GetEventsMonth(userID entities.ID, from time.Time) ([]entities.Event, error)
 	GetEventsToNotify(userID entities.ID, from time.Time, to time.Time) ([]entities.Event, error)
+	DeleteOldEvents(to time.Time) error
 	GetEvent(id entities.ID) (*entities.Event, error)
 }

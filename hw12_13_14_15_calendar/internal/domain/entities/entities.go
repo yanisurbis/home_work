@@ -50,6 +50,10 @@ type GetEventsToNotifyRequest struct {
 	To     time.Time
 }
 
+type DeleteOldEventsRequest struct {
+	To     time.Time
+}
+
 type Notification struct {
 	EventId    ID
 	UserId     ID

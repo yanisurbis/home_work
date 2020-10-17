@@ -68,3 +68,27 @@ func GetNotifications() []*entities.Notification {
 
 	return convertEventsToNotifications(res.Events)
 }
+
+func DeleteOldEvents() {
+	// Set up a connection to the server.
+	conn, err := grpc.Dial("localhost:9090", grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+	defer conn.Close()
+	c := events_grpc.NewEventsClient(conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	r := events_grpc.DeleteOldEventsRequest{
+		To: &timestamp.Timestamp{Seconds: time.Now().Unix()},
+	}
+
+	_, err = c.DeleteOldEvents(ctx, &r)
+	if err != nil {
+		log.Fatalf("could not greet: %v", err)
+	}
+
+	return
+}

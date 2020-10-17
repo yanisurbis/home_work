@@ -3,6 +3,7 @@ package events;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
 
 option go_package = "internal/protobufs/events_grpc";
 
@@ -37,6 +38,10 @@ message GetEventsToNotifyRequest {
   google.protobuf.Timestamp to = 3;
 }
 
+message DeleteOldEventsRequest {
+  google.protobuf.Timestamp to = 3;
+}
+
 message DeleteEventRequest {
   uint32 userId = 1;
   uint32  eventId = 2;
@@ -61,6 +66,7 @@ service Events {
   rpc GetEventsWeek(GetEventsRequest) returns (EventsResponse);
   rpc GetEventsMonth(GetEventsRequest) returns (EventsResponse);
   rpc GetEventsToNotify(GetEventsToNotifyRequest) returns (EventsResponse);
+  rpc DeleteOldEvents(DeleteOldEventsRequest) returns (google.protobuf.Empty);
   rpc AddEvent(AddEventRequest) returns (EventResponse);
   rpc UpdateEvent(UpdateEventRequest) returns (EventResponse);
   rpc DeleteEvent(DeleteEventRequest) returns (EventResponse);

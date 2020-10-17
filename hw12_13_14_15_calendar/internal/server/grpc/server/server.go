@@ -7,6 +7,7 @@ import (
 	"calendar/internal/storage"
 	"context"
 	"fmt"
+	"github.com/golang/protobuf/ptypes/empty"
 	"net"
 	"time"
 
@@ -121,6 +122,18 @@ func (s *Server) GetEventsToNotify(ctx context.Context, query *events_grpc.GetEv
 	}
 
 	return &events_grpc.EventsResponse{Events: eventsResponse}, nil
+}
+
+func (s *Server) DeleteOldEvents(ctx context.Context, query *events_grpc.DeleteOldEventsRequest) (*empty.Empty, error) {
+	to, err := timestampToTime(query.To)
+	if err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "'to' field conversion error")
+	}
+
+	getEventsRequest := entities.DeleteOldEventsRequest{
+		To: to,
+	}
+	return &empty.Empty{}, s.eventService.DeleteOldEvents(ctx, &getEventsRequest)
 }
 
 func (s *Server) GetEventsDay(ctx context.Context, query *events_grpc.GetEventsRequest) (*events_grpc.EventsResponse, error) {
