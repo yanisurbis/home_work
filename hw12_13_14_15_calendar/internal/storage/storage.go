@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// TODO: delete
 type BaseRepo interface {
 	Connect(ctx context.Context, dsn string) error
 	Close() error
@@ -14,11 +15,13 @@ type BaseRepo interface {
 	GetEventsDay(userID ID, from time.Time) ([]Event, error)
 	GetEventsWeek(userID ID, from time.Time) ([]Event, error)
 	GetEventsMonth(userID ID, from time.Time) ([]Event, error)
+	GetEventsToNotify(userID ID, from time.Time, to time.Time) ([]Event, error)
 	GetEvent(userID ID, id ID) (Event, error)
 }
 
 type ID = int
 
+// TODO: delete
 type Event struct {
 	ID          ID
 	Title       string
@@ -29,6 +32,7 @@ type Event struct {
 	NotifyAt    time.Time `db:"notify_at"`
 }
 
+// TODO: delete
 type User struct {
 	ID
 }

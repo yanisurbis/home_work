@@ -134,11 +134,11 @@ func (r *Repo) GetEventsMonth(userID storage.ID, from time.Time) ([]entities.Eve
 	return r.getEvents(userID, from, from.AddDate(0, 1, 0))
 }
 
-func (r *Repo) GetEventsToNotify(userID storage.ID, from time.Time) ([]entities.Event, error) {
+func (r *Repo) GetEventsToNotify(userID storage.ID, from time.Time, to time.Time) ([]entities.Event, error) {
 	var events []entities.Event
 	option := make(map[string]interface{})
 	option["start"] = from
-	option["end"] = from.Add(time.Minute)
+	option["end"] = to
 	option["user_id"] = userID
 
 	nstmt, err := r.db.PrepareNamed("SELECT * FROM events WHERE user_id = :user_id and notify_at >= :start and notify_at < :end")

@@ -89,6 +89,40 @@ func (s *Server) GetEvents(ctx context.Context, query *events_grpc.GetEventsRequ
 	return &events_grpc.EventsResponse{Events: eventsResponse}, nil
 }
 
+func (s *Server) GetEventsToNotify(ctx context.Context, query *events_grpc.GetEventsToNotifyRequest) (*events_grpc.EventsResponse, error) {
+	from, err := timestampToTime(query.From)
+	if err != nil {
+		return nil, errors.Wrap(err, "'from' field conversion error")
+	}
+
+	to, err := timestampToTime(query.To)
+	if err != nil {
+		return nil, errors.Wrap(err, "'to' field conversion error")
+	}
+
+	getEventsRequest := entities.GetEventsToNotifyRequest{
+		UserID: storage.ID(query.UserId),
+		From:   from,
+		To: to,
+	}
+	events, err := s.eventService.GetEventsToNotify(ctx, &getEventsRequest)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to fetch events")
+	}
+
+	// TODO: remove duplication
+	eventsResponse := []*events_grpc.EventResponse{}
+	for _, event := range events {
+		event, err := createEventResponse(event)
+		if err != nil {
+			return nil, err
+		}
+		eventsResponse = append(eventsResponse, event)
+	}
+
+	return &events_grpc.EventsResponse{Events: eventsResponse}, nil
+}
+
 func (s *Server) GetEventsDay(ctx context.Context, query *events_grpc.GetEventsRequest) (*events_grpc.EventsResponse, error) {
 	return s.GetEvents(ctx, query, domain.PeriodDay)
 }

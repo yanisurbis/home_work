@@ -34,6 +34,7 @@ resetdb:
 	$(GOPATH)/bin/goose -dir migrations postgres "user=yanis password=yanis dbname=events sslmode=disable" up
 
 proto:
+	#protoc protobufs/events.proto --go_out=plugins=grpc:.
 	protoc --proto_path=./internal/server/grpc/protobufs --go_out=./internal/server/grpc/events_grpc --plugin=$(GOPATH)/bin/protoc-gen-go --go_opt=paths=source_relative events.proto
 
 .PHONY: build test lint

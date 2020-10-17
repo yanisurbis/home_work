@@ -55,12 +55,13 @@ func GetNotifications() []*entities.Notification {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	r := events_grpc.GetEventsRequest{
+	r := events_grpc.GetEventsToNotifyRequest{
 		UserId: 1,
-		From:   &timestamp.Timestamp{Seconds: time.Now().Unix()},
+		From:   &timestamp.Timestamp{Seconds: time.Now().Add(-2 * time.Hour).Unix()},
+		To: &timestamp.Timestamp{Seconds: time.Now().Add(24 * time.Hour).Unix()},
 	}
 
-	res, err := c.GetEventsMonth(ctx, &r)
+	res, err := c.GetEventsToNotify(ctx, &r)
 	if err != nil {
 		log.Fatalf("could not greet: %v", err)
 	}

@@ -31,6 +31,12 @@ message GetEventsRequest {
   google.protobuf.Timestamp from = 2;
 }
 
+message GetEventsToNotifyRequest {
+  uint32 user_id = 1;
+  google.protobuf.Timestamp from = 2;
+  google.protobuf.Timestamp to = 3;
+}
+
 message DeleteEventRequest {
   uint32 userId = 1;
   uint32  eventId = 2;
@@ -54,6 +60,7 @@ service Events {
   rpc GetEventsDay(GetEventsRequest) returns (EventsResponse);
   rpc GetEventsWeek(GetEventsRequest) returns (EventsResponse);
   rpc GetEventsMonth(GetEventsRequest) returns (EventsResponse);
+  rpc GetEventsToNotify(GetEventsToNotifyRequest) returns (EventsResponse);
   rpc AddEvent(AddEventRequest) returns (EventResponse);
   rpc UpdateEvent(UpdateEventRequest) returns (EventResponse);
   rpc DeleteEvent(DeleteEventRequest) returns (EventResponse);

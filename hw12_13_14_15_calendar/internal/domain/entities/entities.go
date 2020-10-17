@@ -44,6 +44,12 @@ type GetEventsRequest struct {
 	From   time.Time
 }
 
+type GetEventsToNotifyRequest struct {
+	UserID ID
+	From   time.Time
+	To     time.Time
+}
+
 type Notification struct {
 	EventId    ID
 	UserId     ID
