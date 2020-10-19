@@ -12,6 +12,25 @@ import (
 	"time"
 )
 
+type Client struct {
+	conn   *grpc.ClientConn
+	client events_grpc.EventsClient
+}
+
+func NewClient() *Client {
+	return &Client{}
+}
+
+func (c *Client) Start() {
+	conn, err := grpc.Dial("localhost:9090", grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+
+	c.conn = conn
+	c.client = events_grpc.NewEventsClient(c.conn)
+}
+
 func timestampToTime(ts *timestamppb.Timestamp) (time.Time, error) {
 	if ts == nil {
 		return time.Time{}, nil
@@ -43,41 +62,26 @@ func convertEventsToNotifications(events []*events_grpc.EventResponse) []*entiti
 	return notifications
 }
 
-func GetNotifications() []*entities.Notification {
-	// Set up a connection to the server.
-	conn, err := grpc.Dial("localhost:9090", grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
-	defer conn.Close()
-	c := events_grpc.NewEventsClient(conn)
-
+func (c *Client) GetNotifications(from, to time.Time) []*entities.Notification {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
 	r := events_grpc.GetEventsToNotifyRequest{
 		UserId: 1,
-		From:   &timestamp.Timestamp{Seconds: time.Now().Add(-2 * time.Hour).Unix()},
-		To: &timestamp.Timestamp{Seconds: time.Now().Add(24 * time.Hour).Unix()},
+		From:   &timestamp.Timestamp{Seconds: from.Unix()},
+		To:     &timestamp.Timestamp{Seconds: to.Unix()},
 	}
 
-	res, err := c.GetEventsToNotify(ctx, &r)
+	res, err := c.client.GetEventsToNotify(ctx, &r)
 	if err != nil {
+		// TODO: handle error
 		log.Fatalf("could not greet: %v", err)
 	}
 
 	return convertEventsToNotifications(res.Events)
 }
 
-func DeleteOldEvents() {
-	// Set up a connection to the server.
-	conn, err := grpc.Dial("localhost:9090", grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
-	defer conn.Close()
-	c := events_grpc.NewEventsClient(conn)
-
+func (c *Client) DeleteOldEvents() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -85,7 +89,7 @@ func DeleteOldEvents() {
 		To: &timestamp.Timestamp{Seconds: time.Now().Unix()},
 	}
 
-	_, err = c.DeleteOldEvents(ctx, &r)
+	_, err := c.client.DeleteOldEvents(ctx, &r)
 	if err != nil {
 		log.Fatalf("could not greet: %v", err)
 	}
