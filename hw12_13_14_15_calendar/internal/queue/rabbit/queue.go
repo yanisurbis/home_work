@@ -164,7 +164,7 @@ func (c *Queue) announceQueue() (<-chan amqp.Delivery, error) {
 
 }
 
-func (c *Queue) Handle(fn func(<-chan amqp.Delivery)) error {
+func (c *Queue) Handle(ctx context.Context, fn func(<-chan amqp.Delivery)) error {
 	var err error
 	if err = c.connect(); err != nil {
 		return fmt.Errorf("Error: %v", err)
@@ -177,13 +177,21 @@ func (c *Queue) Handle(fn func(<-chan amqp.Delivery)) error {
 	for {
 		go fn(msgs)
 
-		if <-c.done != nil {
-			msgs, err = c.reConnect()
-			if err != nil {
-				return fmt.Errorf("Reconnecting Error: %s", err)
+		select {
+		case done := <-c.done:
+			{
+				if done != nil {
+					msgs, err = c.reConnect()
+					if err != nil {
+						return fmt.Errorf("Reconnecting Error: %s", err)
+					}
+					fmt.Println("Reconnected... possibly XXX")
+				}
 			}
-			fmt.Println("Reconnected... possibly")
+		case <-ctx.Done():
+			return c.Close()
 		}
+
 	}
 }
 
@@ -199,7 +207,10 @@ func (c *Queue) Run(msgs <-chan amqp.Publishing) error {
 
 	for {
 		select {
-		case msg := <-msgs:
+		case msg, ok := <-msgs:
+			if ok == false {
+				return c.Close()
+			}
 			err = c.channel.Publish(
 				c.exchangeName, // exchange
 				c.bindingKey,   // routing key
@@ -215,4 +226,8 @@ func (c *Queue) Run(msgs <-chan amqp.Publishing) error {
 			fmt.Println("Reconnected... possibly")
 		}
 	}
+}
+
+func (c *Queue) Close() error {
+	return c.conn.Close()
 }

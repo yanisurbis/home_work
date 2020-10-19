@@ -21,22 +21,23 @@ func NewClient() *Client {
 	return &Client{}
 }
 
-func (c *Client) Start() {
-	conn, err := grpc.Dial("localhost:9090", grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
-
-	c.conn = conn
-	c.client = events_grpc.NewEventsClient(c.conn)
-}
-
 func timestampToTime(ts *timestamppb.Timestamp) (time.Time, error) {
 	if ts == nil {
 		return time.Time{}, nil
 	}
 
 	return ptypes.Timestamp(ts)
+}
+
+func (c *Client) Start(cc context.Context) {
+	ctx, _ := context.WithTimeout(cc, time.Second*15)
+	conn, err := grpc.DialContext(ctx, "localhost:9090", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+
+	c.conn = conn
+	c.client = events_grpc.NewEventsClient(c.conn)
 }
 
 func convertEventsToNotifications(events []*events_grpc.EventResponse) []*entities.Notification {
@@ -95,4 +96,8 @@ func (c *Client) DeleteOldEvents() {
 	}
 
 	return
+}
+
+func (c *Client) Stop() error {
+	return c.conn.Close()
 }
