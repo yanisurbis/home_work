@@ -1,6 +1,7 @@
 package main
 
 import (
+	"calendar/internal/config"
 	"calendar/internal/domain/entities"
 	queue2 "calendar/internal/queue"
 	"calendar/internal/queue/rabbit"
@@ -18,8 +19,9 @@ func failOnError(err error, msg string) {
 
 func main() {
 	var consumer queue2.Consumer
+	c, _ := config.Read("./configs/local.toml")
 
-	consumer = rabbit.Initialize("events_consumer", "consumer", "amqp://guest:guest@localhost:5672/", "exchange", "fanout", "events_notifications", "events")
+	consumer = rabbit.Initialize(c.Queue.ConsumerTag, "consumer", c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
 	_ = consumer.Handle(func(msgs <-chan amqp.Delivery) {
 		for {
 			select {

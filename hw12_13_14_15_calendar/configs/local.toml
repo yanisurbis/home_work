@@ -3,3 +3,11 @@ dsn = "host=localhost port=5432 user=yanis password=yanis dbname=events sslmode=
 
 [logger]
 path = "./logs/logs.txt"
+
+[queue]
+consumerTag = "events_consumer"
+uri = "amqp://guest:guest@localhost:5672/"
+exchangeName = "exchange"
+exchangeType = "fanout"
+queue = "events_notifications"
+bindingKey = "events"

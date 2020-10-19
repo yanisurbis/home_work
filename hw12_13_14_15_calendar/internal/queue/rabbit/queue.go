@@ -25,7 +25,8 @@ type Queue struct {
 	exchangeType string
 	queue        string
 	bindingKey   string
-	maxInterval  time.Duration
+	//TODO: delete
+	maxInterval time.Duration
 }
 
 const defaultMaxInt = time.Second * 15
