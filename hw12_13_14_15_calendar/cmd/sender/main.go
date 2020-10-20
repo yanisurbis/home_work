@@ -13,12 +13,6 @@ import (
 	"os/signal"
 )
 
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
-	}
-}
-
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -26,7 +20,7 @@ func main() {
 
 	consumer := rabbit.CreateConsumer(c.Queue.ConsumerTag, c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
 	go handleSignals(cancel)
-	_ = consumer.Handle(ctx, func(msgs <-chan amqp.Delivery) {
+	err := consumer.Handle(ctx, func(msgs <-chan amqp.Delivery) {
 		for {
 			select {
 			case msg, ok := <-msgs:
@@ -36,14 +30,21 @@ func main() {
 				var notifications []entities.Notification
 				err := json.Unmarshal(msg.Body, &notifications)
 				if err != nil {
-					failOnError(err, "Error unmarshalling json")
+					log.Println(err)
+				} else {
+					if len(notifications) != 0 {
+						for _, notification := range notifications {
+							fmt.Println(notification.EventId, notification.EventTitle, notification.StartAt)
+						}
+						fmt.Println("=========================================================")
+					}
 				}
-
-				fmt.Println("%+v", notifications)
 			}
 		}
 	})
-
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func handleSignals(cancel context.CancelFunc) {

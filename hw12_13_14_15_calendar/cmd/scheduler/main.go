@@ -6,12 +6,15 @@ import (
 	"calendar/internal/queue/rabbit"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/streadway/amqp"
 	"log"
 	"os"
 	"os/signal"
 	"time"
 )
+
+const interval = 5 * time.Second
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -27,11 +30,12 @@ func main() {
 		_ = producer.Run(msgs)
 	}()
 
-	everyMinute := time.NewTicker(60 * time.Second)
+	ticker := time.NewTicker(interval)
 	for {
 		select {
-		case <-everyMinute.C:
-			notifications, err := client.GetNotifications(time.Now().Add(-1*time.Minute), time.Now())
+		case <-ticker.C:
+			notifications, err := client.GetNotifications(time.Now().Add(-1*interval), time.Now())
+			//notifications, err := client.GetNotifications(time.Now().Add(-2*time.Hour), time.Now())
 			if err != nil {
 				log.Println(err)
 			} else {
@@ -39,6 +43,7 @@ func main() {
 				if err != nil {
 					log.Println(err)
 				} else {
+					fmt.Println(time.Now().Format(time.Stamp), "sending", len(notifications), "messages")
 					msgs <- amqp.Publishing{
 						ContentType: "application/json",
 						Body:        msg,
@@ -46,12 +51,12 @@ func main() {
 				}
 			}
 
-			err = client.DeleteOldEvents(time.Now().Add(-1*time.Minute))
-			if err != nil {
-				log.Println(err)
-			}
+			//err = client.DeleteOldEvents(time.Now().Add(-1*time.Minute))
+			//if err != nil {
+			//	log.Println(err)
+			//}
 		case <-ctx.Done():
-			everyMinute.Stop()
+			ticker.Stop()
 			close(msgs)
 			err := client.Stop()
 			if err != nil {
