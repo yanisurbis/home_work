@@ -14,14 +14,7 @@ import (
 	"time"
 )
 
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
-	}
-}
-
 func main() {
-	//grpcclient.DeleteOldEvents()
 	ctx, cancel := context.WithCancel(context.Background())
 	msgs := make(chan amqp.Publishing)
 	c, _ := config.Read("./configs/local.toml")
@@ -41,18 +34,28 @@ func main() {
 	for {
 		select {
 		case <-everyMinute.C:
-			notifications := client.GetNotifications(time.Now().Add(-2*time.Hour), time.Now())
-
-			msg, err := json.Marshal(notifications)
-			failOnError(err, "Couldn't serialize notifications")
-			msgs <- amqp.Publishing{
-				ContentType: "application/json",
-				Body:        msg,
+			notifications, err := client.GetNotifications(time.Now().Add(-2*time.Hour), time.Now())
+			if err != nil {
+				log.Println(err)
+			} else {
+				msg, err := json.Marshal(notifications)
+				if err != nil {
+					log.Println(err)
+				} else {
+					msgs <- amqp.Publishing{
+						ContentType: "application/json",
+						Body:        msg,
+					}
+				}
 			}
 
-			client.DeleteOldEvents()
+			err = client.DeleteOldEvents()
+			if err != nil {
+				log.Println(err)
+			}
 		case <-ctx.Done():
 			close(msgs)
+
 			err := client.Stop()
 			if err != nil {
 				log.Fatal(err)

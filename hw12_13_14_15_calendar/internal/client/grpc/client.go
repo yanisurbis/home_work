@@ -40,15 +40,13 @@ func (c *Client) Start(cc context.Context) {
 	c.client = events_grpc.NewEventsClient(c.conn)
 }
 
-func convertEventsToNotifications(events []*events_grpc.EventResponse) []*entities.Notification {
-	// TODO: initialize length
+func convertEventsToNotifications(events []*events_grpc.EventResponse) ([]*entities.Notification, error) {
 	var notifications []*entities.Notification
 
 	for _, event := range events {
 		startAt, err := timestampToTime(event.StartAt)
-		// TODO: handler errors
 		if err != nil {
-			return nil
+			return notifications, err
 		}
 
 		notification := entities.Notification{
@@ -60,10 +58,10 @@ func convertEventsToNotifications(events []*events_grpc.EventResponse) []*entiti
 		notifications = append(notifications, &notification)
 	}
 
-	return notifications
+	return notifications, nil
 }
 
-func (c *Client) GetNotifications(from, to time.Time) []*entities.Notification {
+func (c *Client) GetNotifications(from, to time.Time) ([]*entities.Notification, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -75,14 +73,13 @@ func (c *Client) GetNotifications(from, to time.Time) []*entities.Notification {
 
 	res, err := c.client.GetEventsToNotify(ctx, &r)
 	if err != nil {
-		// TODO: handle error
-		log.Fatalf("could not greet: %v", err)
+		return nil, nil
 	}
 
 	return convertEventsToNotifications(res.Events)
 }
 
-func (c *Client) DeleteOldEvents() {
+func (c *Client) DeleteOldEvents() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
@@ -92,10 +89,10 @@ func (c *Client) DeleteOldEvents() {
 
 	_, err := c.client.DeleteOldEvents(ctx, &r)
 	if err != nil {
-		log.Fatalf("could not greet: %v", err)
+		return err
 	}
 
-	return
+	return nil
 }
 
 func (c *Client) Stop() error {

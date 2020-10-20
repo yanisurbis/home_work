@@ -30,7 +30,7 @@ lint: install-lint-deps
 
 resetdb:
 	GO111MODULE=off go get -u github.com/pressly/goose/cmd/goose
-	$(GOPATH)/bin/goose -dir migrations postgres "user=yanis password=yanis dbname=events sslmode=disable" down
+	#$(GOPATH)/bin/goose -dir migrations postgres "user=yanis password=yanis dbname=events sslmode=disable" down
 	$(GOPATH)/bin/goose -dir migrations postgres "user=yanis password=yanis dbname=events sslmode=disable" up
 
 proto:
