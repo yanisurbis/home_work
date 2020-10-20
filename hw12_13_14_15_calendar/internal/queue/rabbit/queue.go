@@ -30,8 +30,10 @@ type Queue struct {
 }
 
 const defaultMaxInt = time.Second * 15
+const producer = "producer"
+const consumer = "consumer"
 
-func Initialize(consumerTag, clientType, uri, exchangeName, exchangeType, queue, bindingKey string) *Queue {
+func initialize(consumerTag, clientType, uri, exchangeName, exchangeType, queue, bindingKey string) *Queue {
 	return &Queue{
 		consumerTag:  consumerTag,
 		clientType:   clientType,
@@ -43,6 +45,14 @@ func Initialize(consumerTag, clientType, uri, exchangeName, exchangeType, queue,
 		done:         make(chan error),
 		maxInterval:  defaultMaxInt,
 	}
+}
+
+func CreateProducer(consumerTag, uri, exchangeName, exchangeType, queue, bindingKey string) *Queue {
+	return initialize(consumerTag, producer, uri, exchangeName, exchangeType, queue, bindingKey)
+}
+
+func CreateConsumer(consumerTag, uri, exchangeName, exchangeType, queue, bindingKey string) *Queue {
+	return initialize(consumerTag, consumer, uri, exchangeName, exchangeType, queue, bindingKey)
 }
 
 func (c *Queue) reConnect() (<-chan amqp.Delivery, error) {
@@ -143,7 +153,7 @@ func (c *Queue) announceQueue() (<-chan amqp.Delivery, error) {
 		return nil, fmt.Errorf("Queue Bind: %s", err)
 	}
 
-	if c.clientType == "consumer" {
+	if c.clientType == consumer {
 		msgs, err := c.channel.Consume(
 			queue.Name,
 			c.consumerTag,

@@ -25,8 +25,7 @@ func main() {
 	go handleSignals(cancel)
 	go func() {
 		var producer queue2.Producer
-		// TODO: client type should be producer
-		producer = rabbit.Initialize(c.Queue.ConsumerTag, "sender", c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
+		producer = rabbit.CreateProducer(c.Queue.ConsumerTag, c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
 		_ = producer.Run(msgs)
 	}()
 

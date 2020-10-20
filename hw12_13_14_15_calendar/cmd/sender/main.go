@@ -26,7 +26,7 @@ func main() {
 	var consumer queue2.Consumer
 	c, _ := config.Read("./configs/local.toml")
 
-	consumer = rabbit.Initialize(c.Queue.ConsumerTag, "consumer", c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
+	consumer = rabbit.CreateConsumer(c.Queue.ConsumerTag, c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
 	go handleSignals(cancel)
 	_ = consumer.Handle(ctx, func(msgs <-chan amqp.Delivery) {
 		for {
