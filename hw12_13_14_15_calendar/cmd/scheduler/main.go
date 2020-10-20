@@ -46,7 +46,7 @@ func main() {
 				}
 			}
 
-			err = client.DeleteOldEvents()
+			err = client.DeleteOldEvents(time.Now().Add(-1*time.Minute))
 			if err != nil {
 				log.Println(err)
 			}

@@ -79,12 +79,12 @@ func (c *Client) GetNotifications(from, to time.Time) ([]*entities.Notification,
 	return convertEventsToNotifications(res.Events)
 }
 
-func (c *Client) DeleteOldEvents() error {
+func (c *Client) DeleteOldEvents(to time.Time) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
 	r := events_grpc.DeleteOldEventsRequest{
-		To: &timestamp.Timestamp{Seconds: time.Now().Unix()},
+		To: &timestamp.Timestamp{Seconds: to.Unix()},
 	}
 
 	_, err := c.client.DeleteOldEvents(ctx, &r)
