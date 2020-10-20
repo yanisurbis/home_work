@@ -25,11 +25,8 @@ type Queue struct {
 	exchangeType string
 	queue        string
 	bindingKey   string
-	//TODO: delete
-	maxInterval time.Duration
 }
 
-const defaultMaxInt = time.Second * 15
 const producer = "producer"
 const consumer = "consumer"
 
@@ -43,7 +40,6 @@ func initialize(consumerTag, clientType, uri, exchangeName, exchangeType, queue,
 		queue:        queue,
 		bindingKey:   bindingKey,
 		done:         make(chan error),
-		maxInterval:  defaultMaxInt,
 	}
 }
 
@@ -60,7 +56,6 @@ func (c *Queue) reConnect() (<-chan amqp.Delivery, error) {
 	be.MaxElapsedTime = time.Minute
 	be.InitialInterval = 1 * time.Second
 	be.Multiplier = 2
-	be.MaxInterval = 15 * time.Second
 
 	b := backoff.WithContext(be, context.Background())
 	for {
