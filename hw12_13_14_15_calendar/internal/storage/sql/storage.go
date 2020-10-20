@@ -142,10 +142,15 @@ func (r *Repo) GetEventsToNotify(userID storage.ID, from time.Time, to time.Time
 	option["user_id"] = userID
 
 	nstmt, err := r.db.PrepareNamed("SELECT * FROM events WHERE user_id = :user_id and notify_at >= :start and notify_at < :end")
+	if err != nil {
+		return []entities.Event{}, err
+	}
 
 	err = nstmt.Select(&events, option)
-
-	if events == nil {
+	if err != nil {
+		return []entities.Event{}, err
+	}
+	if events == nil{
 		return []entities.Event{}, nil
 	}
 
@@ -163,6 +168,5 @@ func (r *Repo) DeleteOldEvents(to time.Time) error {
 		return err
 	}
 
-	// TODO: nstmt.Exec
 	return nstmt.Select(&events, option)
 }
