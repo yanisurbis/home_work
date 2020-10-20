@@ -51,14 +51,12 @@ func main() {
 				log.Println(err)
 			}
 		case <-ctx.Done():
+			everyMinute.Stop()
 			close(msgs)
-
 			err := client.Stop()
 			if err != nil {
 				log.Fatal(err)
 			}
-
-			everyMinute.Stop()
 
 			return
 		}
