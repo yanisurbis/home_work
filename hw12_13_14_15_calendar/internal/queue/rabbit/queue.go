@@ -119,7 +119,7 @@ func (c *Queue) connect() error {
 
 // Задекларировать очередь, которую будем слушать.
 func (c *Queue) announceQueue() (<-chan amqp.Delivery, error) {
-	queue, err := c.channel.QueueDeclare(
+	q, err := c.channel.QueueDeclare(
 		c.queue,
 		true,
 		false,
@@ -140,7 +140,7 @@ func (c *Queue) announceQueue() (<-chan amqp.Delivery, error) {
 
 	// Создаём биндинг (правило маршрутизации).
 	if err = c.channel.QueueBind(
-		queue.Name,
+		q.Name,
 		c.bindingKey,
 		c.exchangeName,
 		false,
@@ -151,7 +151,7 @@ func (c *Queue) announceQueue() (<-chan amqp.Delivery, error) {
 
 	if c.clientType == consumer {
 		msgs, err := c.channel.Consume(
-			queue.Name,
+			q.Name,
 			c.consumerTag,
 			false,
 			false,
