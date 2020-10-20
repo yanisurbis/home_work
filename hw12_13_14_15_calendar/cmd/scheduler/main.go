@@ -31,7 +31,7 @@ func main() {
 	for {
 		select {
 		case <-everyMinute.C:
-			notifications, err := client.GetNotifications(time.Now().Add(-2*time.Hour), time.Now())
+			notifications, err := client.GetNotifications(time.Now().Add(-1*time.Minute), time.Now())
 			if err != nil {
 				log.Println(err)
 			} else {
