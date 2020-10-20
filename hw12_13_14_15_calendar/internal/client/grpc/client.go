@@ -2,12 +2,11 @@ package grpcclient
 
 import (
 	"calendar/internal/domain/entities"
+	"calendar/internal/lib"
 	"calendar/internal/server/grpc/events_grpc"
 	"context"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 	"time"
 )
@@ -19,14 +18,6 @@ type Client struct {
 
 func NewClient() *Client {
 	return &Client{}
-}
-
-func timestampToTime(ts *timestamppb.Timestamp) (time.Time, error) {
-	if ts == nil {
-		return time.Time{}, nil
-	}
-
-	return ptypes.Timestamp(ts)
 }
 
 func (c *Client) Start(cc context.Context) {
@@ -44,7 +35,7 @@ func convertEventsToNotifications(events []*events_grpc.EventResponse) ([]*entit
 	var notifications []*entities.Notification
 
 	for _, event := range events {
-		startAt, err := timestampToTime(event.StartAt)
+		startAt, err := lib.TimestampToTime(event.StartAt)
 		if err != nil {
 			return notifications, err
 		}
