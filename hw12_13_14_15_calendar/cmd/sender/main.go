@@ -36,8 +36,10 @@ func main() {
 						for _, notification := range notifications {
 							fmt.Println(notification.EventId, notification.EventTitle, notification.StartAt)
 						}
-						fmt.Println("=========================================================")
+					} else {
+						fmt.Println("Zero events received")
 					}
+					fmt.Println("=========================================================")
 				}
 			}
 		}

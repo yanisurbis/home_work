@@ -15,7 +15,7 @@ type BaseRepo interface {
 	GetEventsDay(userID ID, from time.Time) ([]Event, error)
 	GetEventsWeek(userID ID, from time.Time) ([]Event, error)
 	GetEventsMonth(userID ID, from time.Time) ([]Event, error)
-	GetEventsToNotify(userID ID, from time.Time, to time.Time) ([]Event, error)
+	GetEventsToNotify(from time.Time, to time.Time) ([]Event, error)
 	GetEvent(userID ID, id ID) (Event, error)
 }
 

@@ -102,9 +102,8 @@ func (s *Server) GetEventsToNotify(ctx context.Context, query *events_grpc.GetEv
 	}
 
 	getEventsRequest := entities.GetEventsToNotifyRequest{
-		UserID: storage.ID(query.UserId),
-		From:   from,
-		To: to,
+		From: from,
+		To:   to,
 	}
 	events, err := s.eventService.GetEventsToNotify(ctx, &getEventsRequest)
 	if err != nil {

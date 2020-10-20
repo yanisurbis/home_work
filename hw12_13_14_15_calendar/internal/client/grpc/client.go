@@ -66,9 +66,8 @@ func (c *Client) GetNotifications(from, to time.Time) ([]*entities.Notification,
 	defer cancel()
 
 	r := events_grpc.GetEventsToNotifyRequest{
-		UserId: 1,
-		From:   &timestamp.Timestamp{Seconds: from.Unix()},
-		To:     &timestamp.Timestamp{Seconds: to.Unix()},
+		From: &timestamp.Timestamp{Seconds: from.Unix()},
+		To:   &timestamp.Timestamp{Seconds: to.Unix()},
 	}
 
 	res, err := c.client.GetEventsToNotify(ctx, &r)
