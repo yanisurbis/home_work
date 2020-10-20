@@ -3,7 +3,6 @@ package main
 import (
 	"calendar/internal/config"
 	"calendar/internal/domain/entities"
-	queue2 "calendar/internal/queue"
 	"calendar/internal/queue/rabbit"
 	"context"
 	"encoding/json"
@@ -23,10 +22,9 @@ func failOnError(err error, msg string) {
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	var consumer queue2.Consumer
 	c, _ := config.Read("./configs/local.toml")
 
-	consumer = rabbit.CreateConsumer(c.Queue.ConsumerTag, c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
+	consumer := rabbit.CreateConsumer(c.Queue.ConsumerTag, c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
 	go handleSignals(cancel)
 	_ = consumer.Handle(ctx, func(msgs <-chan amqp.Delivery) {
 		for {
@@ -53,5 +51,4 @@ func handleSignals(cancel context.CancelFunc) {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt)
 	<-sigCh
-
 }

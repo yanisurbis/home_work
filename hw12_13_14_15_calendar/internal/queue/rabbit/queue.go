@@ -5,6 +5,7 @@ package rabbit
 // rabbitmq-plugins enable rabbitmq_consistent_hash_exchange
 
 import (
+	"calendar/internal/queue"
 	"context"
 	"errors"
 	"fmt"
@@ -43,11 +44,11 @@ func initialize(consumerTag, clientType, uri, exchangeName, exchangeType, queue,
 	}
 }
 
-func CreateProducer(consumerTag, uri, exchangeName, exchangeType, queue, bindingKey string) *Queue {
+func CreateProducer(consumerTag, uri, exchangeName, exchangeType, queue, bindingKey string) queue.Producer {
 	return initialize(consumerTag, producer, uri, exchangeName, exchangeType, queue, bindingKey)
 }
 
-func CreateConsumer(consumerTag, uri, exchangeName, exchangeType, queue, bindingKey string) *Queue {
+func CreateConsumer(consumerTag, uri, exchangeName, exchangeType, queue, bindingKey string) queue.Consumer {
 	return initialize(consumerTag, consumer, uri, exchangeName, exchangeType, queue, bindingKey)
 }
 

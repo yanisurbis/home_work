@@ -3,7 +3,6 @@ package main
 import (
 	grpcclient "calendar/internal/client/grpc"
 	"calendar/internal/config"
-	queue2 "calendar/internal/queue"
 	"calendar/internal/queue/rabbit"
 	"context"
 	"encoding/json"
@@ -24,8 +23,7 @@ func main() {
 
 	go handleSignals(cancel)
 	go func() {
-		var producer queue2.Producer
-		producer = rabbit.CreateProducer(c.Queue.ConsumerTag, c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
+		producer := rabbit.CreateProducer(c.Queue.ConsumerTag, c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
 		_ = producer.Run(msgs)
 	}()
 
