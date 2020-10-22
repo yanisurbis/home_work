@@ -9,10 +9,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cenkalti/backoff/v3"
-	"github.com/streadway/amqp"
 	"log"
 	"time"
+
+	"github.com/cenkalti/backoff/v3"
+	"github.com/streadway/amqp"
 )
 
 type Queue struct {

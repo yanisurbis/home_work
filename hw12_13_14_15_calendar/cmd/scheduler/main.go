@@ -7,11 +7,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/streadway/amqp"
 	"log"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/streadway/amqp"
 )
 
 const interval = 5 * time.Second

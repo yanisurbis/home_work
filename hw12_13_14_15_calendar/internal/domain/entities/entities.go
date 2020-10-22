@@ -51,7 +51,7 @@ type GetEventsToNotifyRequest struct {
 }
 
 type DeleteOldEventsRequest struct {
-	To     time.Time
+	To time.Time
 }
 
 type Notification struct {

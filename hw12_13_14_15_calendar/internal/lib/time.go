@@ -2,10 +2,11 @@ package lib
 
 import (
 	"errors"
-	"github.com/golang/protobuf/ptypes"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"strconv"
 	"time"
+
+	"github.com/golang/protobuf/ptypes"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TimestampToTime(ts *timestamppb.Timestamp) (time.Time, error) {

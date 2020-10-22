@@ -7,10 +7,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/streadway/amqp"
 	"log"
 	"os"
 	"os/signal"
+
+	"github.com/streadway/amqp"
 )
 
 func main() {

@@ -5,9 +5,10 @@ import (
 	"calendar/internal/lib"
 	"calendar/internal/server/grpc/events_grpc"
 	"context"
+	"time"
+
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/grpc"
-	"time"
 )
 
 type Client struct {
