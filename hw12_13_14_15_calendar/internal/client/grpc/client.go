@@ -7,7 +7,6 @@ import (
 	"context"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/grpc"
-	"log"
 	"time"
 )
 
@@ -20,15 +19,17 @@ func NewClient() *Client {
 	return &Client{}
 }
 
-func (c *Client) Start(cc context.Context) {
+func (c *Client) Start(cc context.Context) error {
 	ctx, _ := context.WithTimeout(cc, time.Second*15)
 	conn, err := grpc.DialContext(ctx, "localhost:9090", grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		return err
 	}
 
 	c.conn = conn
 	c.client = events_grpc.NewEventsClient(c.conn)
+
+	return err
 }
 
 func convertEventsToNotifications(events []*events_grpc.EventResponse) ([]*entities.Notification, error) {

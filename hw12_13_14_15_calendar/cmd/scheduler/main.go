@@ -22,7 +22,10 @@ func main() {
 	c, _ := config.Read("./configs/local.toml")
 
 	client := grpcclient.NewClient()
-	client.Start(ctx)
+	err := client.Start(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	go handleSignals(cancel)
 	go func() {
