@@ -1,45 +1,69 @@
 package main
 
 import (
+	"calendar/internal/app"
+	"calendar/internal/config"
+	"calendar/internal/logger"
+	grpcserver "calendar/internal/server/grpc/server"
+	httpserver "calendar/internal/server/http"
+	"calendar/internal/storage/sql"
+	"context"
 	"flag"
+	"log"
 	"os"
 	"os/signal"
 
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/storage/memory"
+	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
-var configFile string
+type Args struct {
+	configPath string
+}
 
-func init() {
-	flag.StringVar(&configFile, "config", "/etc/calendar/config.toml", "Path to configuration file")
+func getArgs() *Args {
+	configPath := flag.String("config", "", "path to config file")
+	flag.Parse()
+
+	args := Args{
+		configPath: *configPath,
+	}
+
+	return &args
 }
 
 func main() {
-	config := NewConfig()
-	logg := logger.New(config.Logger.Level)
+	args := getArgs()
 
-	storage := memorystorage.New()
-	calendar := app.New(logg, storage)
+	ctx, cancel := context.WithCancel(context.Background())
 
-	server := internalhttp.NewServer(calendar)
+	//c, _ := config.Read("./configs/local.toml")
+	c, _ := config.Read(args.configPath)
 
-	go func() {
-		signals := make(chan os.Signal, 1)
-		signal.Notify(signals)
+	s := new(httpserver.Instance)
+	grpcServer := new(grpcserver.Server)
+	l := new(logger.Instance)
+	storage := new(sql.Repo)
 
-		<-signals
-		signal.Stop(signals)
+	a, err := app.New(s, grpcServer, l, storage)
 
-		if err := server.Stop(); err != nil {
-			logger.Error("failed to stop http server: " + err.String())
-		}
-	}()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	if err := server.Start(); err != nil {
-		logger.Error("failed to start http server: " + err.String())
-		os.Exit(1)
+	go handleSignals(ctx, cancel, a)
+
+	if err := a.Run(ctx, c.Logger.Path, c.PSQL.DSN); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func handleSignals(ctx context.Context, cancel context.CancelFunc, app *app.App) {
+	defer cancel()
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt)
+	<-sigCh
+	err := app.Stop(ctx)
+	if err != nil {
+		log.Fatal(err)
 	}
 }

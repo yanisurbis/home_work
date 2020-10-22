@@ -1,0 +1,61 @@
+syntax = "proto3";
+package events;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+option go_package = "internal/protobufs/events_grpc";
+
+message AddEventRequest {
+  string title = 1;
+  google.protobuf.Timestamp start_at = 2;
+  google.protobuf.Timestamp end_at = 3;
+  string description = 4;
+  uint32 user_id = 5;
+  google.protobuf.Timestamp notify_at = 6;
+}
+
+message UpdateEventRequest {
+  uint32 id = 1;
+  google.protobuf.StringValue title = 2;
+  google.protobuf.Timestamp start_at = 3;
+  google.protobuf.Timestamp end_at = 4;
+  google.protobuf.StringValue description = 5;
+  uint32 user_id = 6;
+  google.protobuf.Timestamp notify_at = 7;
+  bool has_notify_at = 8;
+}
+
+message GetEventsRequest {
+  uint32 user_id = 1;
+  google.protobuf.Timestamp from = 2;
+}
+
+message DeleteEventRequest {
+  uint32 userId = 1;
+  uint32  eventId = 2;
+}
+
+message EventResponse {
+  uint32 id = 1;
+  string title = 2;
+  google.protobuf.Timestamp start_at = 3;
+  google.protobuf.Timestamp end_at = 4;
+  string description = 5;
+  uint32 user_id = 6;
+  google.protobuf.Timestamp notify_at = 7;
+}
+
+message EventsResponse {
+  repeated EventResponse events = 1;
+}
+
+service Events {
+  rpc GetEventsDay(GetEventsRequest) returns (EventsResponse);
+  rpc GetEventsWeek(GetEventsRequest) returns (EventsResponse);
+  rpc GetEventsMonth(GetEventsRequest) returns (EventsResponse);
+  rpc AddEvent(AddEventRequest) returns (EventResponse);
+  rpc UpdateEvent(UpdateEventRequest) returns (EventResponse);
+  rpc DeleteEvent(DeleteEventRequest) returns (EventResponse);
+}
+
