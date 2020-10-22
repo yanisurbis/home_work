@@ -32,12 +32,12 @@ func getArgs() *Args {
 }
 
 func main() {
-	//args := getArgs()
+	args := getArgs()
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	c, _ := config.Read("./configs/local.toml")
-	//c, _ := config.Read(args.configPath)
+	//c, _ := config.Read("./configs/local.toml")
+	c, _ := config.Read(args.configPath)
 
 	s := new(httpserver.Instance)
 	grpcServer := new(grpcserver.Server)

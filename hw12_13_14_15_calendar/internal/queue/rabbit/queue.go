@@ -60,47 +60,47 @@ func (c *Queue) reConnect() (<-chan amqp.Delivery, error) {
 	be.Multiplier = 2
 
 	b := backoff.WithContext(be, context.Background())
-	for {
+	d := b.NextBackOff()
+
+	for range time.After(d) {
 		d := b.NextBackOff()
 		if d == backoff.Stop {
 			return nil, fmt.Errorf("stop reconnecting")
 		}
 
-		select {
-		case <-time.After(d):
-			if err := c.connect(); err != nil {
-				log.Printf("could not connect in reconnect call: %+v", err)
-				continue
-			}
-			msgs, err := c.announceQueue()
-			if err != nil {
-				fmt.Printf("Couldn't connect: %+v", err)
-				continue
-			}
-
-			return msgs, nil
+		if err := c.connect(); err != nil {
+			log.Printf("could not connect in reconnect call: %+v", err)
+			continue
 		}
+		msgs, err := c.announceQueue()
+		if err != nil {
+			fmt.Printf("Couldn't connect: %+v", err)
+			continue
+		}
+
+		return msgs, nil
 	}
+
+	return nil, nil
 }
 
 func (c *Queue) connect() error {
-
 	var err error
 
 	c.conn, err = amqp.Dial(c.uri)
 	if err != nil {
-		return fmt.Errorf("Dial: %s", err)
+		return fmt.Errorf("dial: %s", err)
 	}
 
 	c.channel, err = c.conn.Channel()
 	if err != nil {
-		return fmt.Errorf("Channel: %s", err)
+		return fmt.Errorf("channel: %s", err)
 	}
 
 	go func() {
 		log.Printf("closing: %s", <-c.conn.NotifyClose(make(chan *amqp.Error)))
 		// Понимаем, что канал сообщений закрыт, надо пересоздать соединение.
-		c.done <- errors.New("Channel Closed")
+		c.done <- errors.New("channel closed")
 	}()
 
 	if err = c.channel.ExchangeDeclare(
@@ -112,7 +112,7 @@ func (c *Queue) connect() error {
 		false,
 		nil,
 	); err != nil {
-		return fmt.Errorf("Exchange Declare: %s", err)
+		return fmt.Errorf("exchange Declare: %s", err)
 	}
 
 	return nil
@@ -130,13 +130,13 @@ func (c *Queue) announceQueue() (<-chan amqp.Delivery, error) {
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("Queue Declare: %s", err)
+		return nil, fmt.Errorf("queue Declare: %s", err)
 	}
 
 	// Число сообщений, которые можно подтвердить за раз.
 	err = c.channel.Qos(50, 0, false)
 	if err != nil {
-		return nil, fmt.Errorf("Error setting qos: %s", err)
+		return nil, fmt.Errorf("error setting qos: %s", err)
 	}
 
 	// Создаём биндинг (правило маршрутизации).
@@ -147,7 +147,7 @@ func (c *Queue) announceQueue() (<-chan amqp.Delivery, error) {
 		false,
 		nil,
 	); err != nil {
-		return nil, fmt.Errorf("Queue Bind: %s", err)
+		return nil, fmt.Errorf("queue Bind: %s", err)
 	}
 
 	if c.clientType == consumer {
@@ -168,17 +168,16 @@ func (c *Queue) announceQueue() (<-chan amqp.Delivery, error) {
 	}
 
 	return nil, nil
-
 }
 
 func (c *Queue) Handle(ctx context.Context, fn func(<-chan amqp.Delivery)) error {
 	var err error
 	if err = c.connect(); err != nil {
-		return fmt.Errorf("Error: %v", err)
+		return fmt.Errorf("error: %v", err)
 	}
 	msgs, err := c.announceQueue()
 	if err != nil {
-		return fmt.Errorf("Error: %v", err)
+		return fmt.Errorf("error: %v", err)
 	}
 
 	for {
@@ -190,32 +189,31 @@ func (c *Queue) Handle(ctx context.Context, fn func(<-chan amqp.Delivery)) error
 				if done != nil {
 					msgs, err = c.reConnect()
 					if err != nil {
-						return fmt.Errorf("Reconnecting Error: %s", err)
+						return fmt.Errorf("reconnecting Error: %s", err)
 					}
-					fmt.Println("Reconnected... possibly")
+					fmt.Println("reconnected... possibly")
 				}
 			}
 		case <-ctx.Done():
 			return c.Close()
 		}
-
 	}
 }
 
 func (c *Queue) Run(msgs <-chan amqp.Publishing) error {
 	var err error
 	if err = c.connect(); err != nil {
-		return fmt.Errorf("Error: %v", err)
+		return fmt.Errorf("error: %v", err)
 	}
 	_, err = c.announceQueue()
 	if err != nil {
-		return fmt.Errorf("Error: %v", err)
+		return fmt.Errorf("error: %v", err)
 	}
 
 	for {
 		select {
 		case msg, ok := <-msgs:
-			if ok == false {
+			if !ok {
 				return c.Close()
 			}
 			err = c.channel.Publish(
@@ -225,10 +223,13 @@ func (c *Queue) Run(msgs <-chan amqp.Publishing) error {
 				false,          // immediate
 				msg,
 			)
+			if err != nil {
+				log.Printf("failed to send a message: %v", err)
+			}
 		case <-c.done:
 			_, err = c.reConnect()
 			if err != nil {
-				return fmt.Errorf("Reconnecting Error: %s", err)
+				return fmt.Errorf("reconnecting Error: %s", err)
 			}
 			fmt.Println("Reconnected... possibly")
 		}

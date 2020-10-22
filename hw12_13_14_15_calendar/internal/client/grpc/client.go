@@ -20,8 +20,7 @@ func NewClient() *Client {
 	return &Client{}
 }
 
-func (c *Client) Start(cc context.Context) error {
-	ctx, _ := context.WithTimeout(cc, time.Second*15)
+func (c *Client) Start(ctx context.Context) error {
 	conn, err := grpc.DialContext(ctx, "localhost:9090", grpc.WithInsecure())
 	if err != nil {
 		return err
@@ -34,7 +33,7 @@ func (c *Client) Start(cc context.Context) error {
 }
 
 func convertEventsToNotifications(events []*events_grpc.EventResponse) ([]*entities.Notification, error) {
-	var notifications []*entities.Notification
+	notifications := make([]*entities.Notification, 0, len(events))
 
 	for _, event := range events {
 		startAt, err := lib.TimestampToTime(event.StartAt)
@@ -43,8 +42,8 @@ func convertEventsToNotifications(events []*events_grpc.EventResponse) ([]*entit
 		}
 
 		notification := entities.Notification{
-			EventId:    entities.ID(event.Id),
-			UserId:     entities.ID(event.UserId),
+			EventID:    entities.ID(event.Id),
+			UserID:     entities.ID(event.UserId),
 			EventTitle: event.Title,
 			StartAt:    startAt,
 		}

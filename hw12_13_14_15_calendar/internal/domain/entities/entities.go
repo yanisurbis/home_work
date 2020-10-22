@@ -55,8 +55,8 @@ type DeleteOldEventsRequest struct {
 }
 
 type Notification struct {
-	EventId    ID
-	UserId     ID
+	EventID    ID
+	UserID     ID
 	EventTitle string
 	StartAt    time.Time
 }

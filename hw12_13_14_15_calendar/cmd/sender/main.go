@@ -22,26 +22,20 @@ func main() {
 	consumer := rabbit.CreateConsumer(c.Queue.ConsumerTag, c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
 	go handleSignals(cancel)
 	err := consumer.Handle(ctx, func(msgs <-chan amqp.Delivery) {
-		for {
-			select {
-			case msg, ok := <-msgs:
-				if ok == false {
-					return
-				}
-				var notifications []entities.Notification
-				err := json.Unmarshal(msg.Body, &notifications)
-				if err != nil {
-					log.Println(err)
-				} else {
-					if len(notifications) != 0 {
-						for _, notification := range notifications {
-							fmt.Println(notification.EventId, notification.EventTitle, notification.StartAt)
-						}
-					} else {
-						fmt.Println("Zero events received")
+		for msg := range msgs {
+			var notifications []entities.Notification
+			err := json.Unmarshal(msg.Body, &notifications)
+			if err != nil {
+				log.Println(err)
+			} else {
+				if len(notifications) != 0 {
+					for _, notification := range notifications {
+						fmt.Println(notification.EventID, notification.EventTitle, notification.StartAt)
 					}
-					fmt.Println("=========================================================")
+				} else {
+					fmt.Println("Zero events received")
 				}
+				fmt.Println("=========================================================")
 			}
 		}
 	})
