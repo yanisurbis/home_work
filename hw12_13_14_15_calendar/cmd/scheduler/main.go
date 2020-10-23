@@ -41,24 +41,20 @@ func main() {
 			//notifications, err := client.GetNotifications(time.Now().Add(-2*time.Hour), time.Now())
 			if err != nil {
 				log.Println(err)
-			} else {
-				if len(notifications) > 0 {
-					msg, err := json.Marshal(notifications)
-					if err != nil {
-						log.Println(err)
-					} else {
-						log.Println(time.Now().Format(time.Stamp), "sending", len(notifications), "messages")
-						msgs <- amqp.Publishing{
-							ContentType: "application/json",
-							Body:        msg,
-						}
-					}
+			} else if len(notifications) > 0 {
+				msg, err := json.Marshal(notifications)
+				if err != nil {
+					log.Println(err)
 				} else {
-					log.Println(time.Now().Format(time.Stamp), "not sending, 0 messages")
+					log.Println(time.Now().Format(time.Stamp), "sending", len(notifications), "messages")
+					msgs <- amqp.Publishing{
+						ContentType: "application/json",
+						Body:        msg,
+					}
 				}
 			}
 
-			err = client.DeleteOldEvents(time.Now().Add(-1*time.Minute))
+			err = client.DeleteOldEvents(time.Now().Add(-1 * time.Minute))
 			if err != nil {
 				log.Println(err)
 			}
