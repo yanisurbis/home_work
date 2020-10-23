@@ -171,3 +171,11 @@ func (es *EventService) GetEvents(ctx context.Context, getEventsRequest *entitie
 		return []entities.Event{}, nil
 	}
 }
+
+func (es *EventService) GetEventsToNotify(ctx context.Context, getEventsRequest *entities.GetEventsToNotifyRequest) ([]entities.Event, error) {
+	return es.EventStorage.GetEventsToNotify(getEventsRequest.From, getEventsRequest.To)
+}
+
+func (es *EventService) DeleteOldEvents(ctx context.Context, deleteEventsRequest *entities.DeleteOldEventsRequest) error {
+	return es.EventStorage.DeleteOldEvents(deleteEventsRequest.To)
+}

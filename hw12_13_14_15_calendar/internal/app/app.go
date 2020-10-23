@@ -25,14 +25,13 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 	// logger
 	err := a.logger.Init(logPath)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// storage
 	err = a.storage.Connect(ctx, dsn)
-	log.Println(err)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// service
@@ -44,7 +43,7 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 	go func() {
 		err = a.server.Start(eventService)
 		if err != nil {
-			log.Println("Failed to start http server")
+			// TODO: handle fatal
 			log.Fatal(err)
 		}
 	}()
@@ -52,9 +51,6 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 	// grpc server
 	err = a.grpcServer.Start(eventService)
 	if err != nil {
-		log.Println("Failed to start grpc server")
-		log.Fatal(err)
-
 		return err
 	}
 
@@ -65,15 +61,15 @@ func (a *App) Stop(ctx context.Context) error {
 	fmt.Println("Shutting down...")
 
 	if err := a.server.Stop(ctx); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	if err := a.grpcServer.Stop(ctx); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	if err := a.storage.Close(); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	return nil
