@@ -1,16 +1,11 @@
 package config
 
 import (
-	"fmt"
-
 	"github.com/BurntSushi/toml"
 )
 
 func Read(fpath string) (c Config, err error) {
 	_, err = toml.DecodeFile(fpath, &c)
-	if err != nil {
-		fmt.Println(err)
-	}
 
 	return
 }
