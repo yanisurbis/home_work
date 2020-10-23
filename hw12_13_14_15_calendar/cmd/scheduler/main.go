@@ -6,7 +6,6 @@ import (
 	"calendar/internal/queue/rabbit"
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -43,22 +42,26 @@ func main() {
 			if err != nil {
 				log.Println(err)
 			} else {
-				msg, err := json.Marshal(notifications)
-				if err != nil {
-					log.Println(err)
-				} else {
-					fmt.Println(time.Now().Format(time.Stamp), "sending", len(notifications), "messages")
-					msgs <- amqp.Publishing{
-						ContentType: "application/json",
-						Body:        msg,
+				if len(notifications) > 0 {
+					msg, err := json.Marshal(notifications)
+					if err != nil {
+						log.Println(err)
+					} else {
+						log.Println(time.Now().Format(time.Stamp), "sending", len(notifications), "messages")
+						msgs <- amqp.Publishing{
+							ContentType: "application/json",
+							Body:        msg,
+						}
 					}
+				} else {
+					log.Println(time.Now().Format(time.Stamp), "not sending, 0 messages")
 				}
 			}
 
-			//err = client.DeleteOldEvents(time.Now().Add(-1*time.Minute))
-			//if err != nil {
-			//	log.Println(err)
-			//}
+			err = client.DeleteOldEvents(time.Now().Add(-1*time.Minute))
+			if err != nil {
+				log.Println(err)
+			}
 		case <-ctx.Done():
 			ticker.Stop()
 			close(msgs)
