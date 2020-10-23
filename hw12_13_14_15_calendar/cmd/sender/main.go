@@ -6,10 +6,10 @@ import (
 	"calendar/internal/queue/rabbit"
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/streadway/amqp"
 )
@@ -30,12 +30,11 @@ func main() {
 			} else {
 				if len(notifications) != 0 {
 					for _, notification := range notifications {
-						fmt.Println(notification.EventID, notification.EventTitle, notification.StartAt)
+						log.Println(time.Now().Format(time.Stamp), notification.EventID, notification.EventTitle, notification.StartAt)
 					}
 				} else {
-					fmt.Println("Zero events received")
+					log.Println(time.Now().Format(time.Stamp), "zero events received")
 				}
-				fmt.Println("=========================================================")
 			}
 		}
 	})
