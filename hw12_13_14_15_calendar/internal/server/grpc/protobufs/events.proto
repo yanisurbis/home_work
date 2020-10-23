@@ -38,7 +38,7 @@ message GetEventsToNotifyRequest {
 }
 
 message DeleteOldEventsRequest {
-  google.protobuf.Timestamp to = 3;
+  google.protobuf.Timestamp to = 1;
 }
 
 message DeleteEventRequest {
