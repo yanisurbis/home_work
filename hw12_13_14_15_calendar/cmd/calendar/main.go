@@ -2,14 +2,17 @@ package main
 
 import (
 	"calendar/internal/app"
+	"calendar/internal/config"
+	"calendar/internal/logger"
+	grpcserver "calendar/internal/server/grpc/server"
+	httpserver "calendar/internal/server/http"
+	"calendar/internal/storage/sql"
 	"context"
 	"flag"
-	"fmt"
+	_ "github.com/jackc/pgx/v4/stdlib"
 	"log"
 	"os"
 	"os/signal"
-
-	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 type Args struct {
@@ -28,13 +31,15 @@ func getArgs() *Args {
 }
 
 func main() {
-	fmt.Println("Hello world")
-	/*args := getArgs()
+	//fmt.Println("Hello world123")
+	//args := getArgs()
 
 	ctx, cancel := context.WithCancel(context.Background())
-
-	//c, _ := config.Read("./configs/local.toml")
-	c, _ := config.Read(args.configPath)
+	c, err := config.Read("./configs/local.toml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	//c, _ := config.Read(args.configPath)
 
 	s := new(httpserver.Instance)
 	grpcServer := new(grpcserver.Server)
@@ -50,7 +55,7 @@ func main() {
 
 	if err := a.Run(ctx, c.Logger.Path, c.PSQL.DSN); err != nil {
 		log.Fatal(err)
-	}*/
+	}
 }
 
 func handleSignals(ctx context.Context, cancel context.CancelFunc, app *app.App) {

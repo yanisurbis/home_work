@@ -26,6 +26,9 @@ func (s *Instance) Start(eventService domain.EventService) error {
 	router.GET("/events", createGetEventsHandler(eventService))
 	router.POST("/event", createAddEventHandler(eventService))
 	router.PUT("/event/:id", createUpdateEventHandler(eventService))
+	router.GET("/status", func(c *gin.Context) {
+		c.String(http.StatusOK, "OK")
+	})
 
 	fmt.Println("server starting at port :8080")
 	s.instance = &http.Server{

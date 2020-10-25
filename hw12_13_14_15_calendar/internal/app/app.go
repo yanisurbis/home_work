@@ -29,6 +29,7 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 	}
 
 	// storage
+	fmt.Println("DSN:", dsn)
 	err = a.storage.Connect(ctx, dsn)
 	if err != nil {
 		return err

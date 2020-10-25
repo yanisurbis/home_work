@@ -1,0 +1,28 @@
+version: "3.3"
+
+services:
+  db:
+    image: postgres
+    networks:
+      - test_api
+    volumes:
+      - /home/yanis/psqldata:/var/lib/postgresql/data
+      - ./init_db:/docker-entrypoint-initdb.d/
+    ports:
+      - '5432:5432'
+  web:
+    build:
+      dockerfile: ./cmd/calendar/Dockerfile
+      context: .
+    networks:
+      - test_api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+volumes:
+  pgdata: {}
+
+networks:
+  test_api:
