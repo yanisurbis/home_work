@@ -2,13 +2,9 @@ package main
 
 import (
 	"calendar/internal/app"
-	"calendar/internal/config"
-	"calendar/internal/logger"
-	grpcserver "calendar/internal/server/grpc/server"
-	httpserver "calendar/internal/server/http"
-	"calendar/internal/storage/sql"
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -32,7 +28,8 @@ func getArgs() *Args {
 }
 
 func main() {
-	args := getArgs()
+	fmt.Println("Hello world")
+	/*args := getArgs()
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -53,7 +50,7 @@ func main() {
 
 	if err := a.Run(ctx, c.Logger.Path, c.PSQL.DSN); err != nil {
 		log.Fatal(err)
-	}
+	}*/
 }
 
 func handleSignals(ctx context.Context, cancel context.CancelFunc, app *app.App) {
