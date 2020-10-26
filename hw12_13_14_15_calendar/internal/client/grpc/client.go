@@ -22,7 +22,7 @@ func NewClient() *Client {
 }
 
 func (c *Client) Start(ctx context.Context) error {
-	conn, err := grpc.DialContext(ctx, "localhost:9090", grpc.WithInsecure())
+	conn, err := grpc.DialContext(ctx, "web:9090", grpc.WithInsecure())
 	if err != nil {
 		return err
 	}

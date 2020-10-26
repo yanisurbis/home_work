@@ -18,8 +18,17 @@ services:
       - test_api
     ports:
       - "8080:8080"
+      - "9090:9090"
     depends_on:
       - db
+  scheduler:
+    build:
+      dockerfile: ./cmd/scheduler/Dockerfile
+      context: .
+    networks:
+      - test_api
+    depends_on:
+      - web
 
 volumes:
   pgdata: {}
