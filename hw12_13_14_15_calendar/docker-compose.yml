@@ -9,7 +9,7 @@ services:
       - /home/yanis/psqldata:/var/lib/postgresql/data
       - ./init_db:/docker-entrypoint-initdb.d/
     ports:
-      - '5432:5432'
+      - "5432:5432"
   web:
     build:
       dockerfile: ./cmd/calendar/Dockerfile
@@ -29,6 +29,26 @@ services:
       - test_api
     depends_on:
       - web
+      - queue
+  sender:
+    build:
+      dockerfile: ./cmd/sender/Dockerfile
+      context: .
+    networks:
+      - test_api
+    depends_on:
+      - queue
+  queue:
+    image: rabbitmq:3-management
+#    volumes:
+#      - /home/yanis/rabbitmq/etc/:/etc/rabbitmq/
+#      - /home/yanis/rabbitmq/data/:/var/lib/rabbitmq/
+#      - /home/yanis/rabbitmq/logs/:/var/log/rabbitmq/
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - test_api
 
 volumes:
   pgdata: {}

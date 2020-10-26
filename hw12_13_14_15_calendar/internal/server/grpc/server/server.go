@@ -7,7 +7,9 @@ import (
 	"calendar/internal/server/grpc/events_grpc"
 	"context"
 	"fmt"
+	"log"
 	"net"
+	"time"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -99,6 +101,7 @@ func (s *Server) GetEventsToNotify(ctx context.Context, query *events_grpc.GetEv
 		To:   to,
 	}
 	events, err := s.eventService.GetEventsToNotify(ctx, &getEventsRequest)
+	log.Println(time.Now().Format(time.Stamp), "rpc:", len(events), "events")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch events")
 	}
@@ -244,7 +247,7 @@ func (s *Server) DeleteEvent(ctx context.Context, query *events_grpc.DeleteEvent
 }
 
 func (s *Server) Start(eventService domain.EventService) error {
-	lsn, err := net.Listen("tcp", "localhost:9090")
+	lsn, err := net.Listen("tcp", "web:9090")
 	if err != nil {
 		return err
 	}

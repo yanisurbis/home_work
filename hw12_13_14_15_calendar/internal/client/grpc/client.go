@@ -65,7 +65,7 @@ func (c *Client) GetNotifications(from, to time.Time) ([]*entities.Notification,
 
 	res, err := c.client.GetEventsToNotify(ctx, &r)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	return convertEventsToNotifications(res.Events)

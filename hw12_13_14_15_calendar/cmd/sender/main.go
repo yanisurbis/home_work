@@ -6,6 +6,7 @@ import (
 	"calendar/internal/queue/rabbit"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -15,13 +16,20 @@ import (
 )
 
 func main() {
+	time.Sleep(5 * time.Second)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	c, _ := config.Read("./configs/local.toml")
 
+	fmt.Println("sender")
+
 	consumer := rabbit.CreateConsumer(c.Queue.ConsumerTag, c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
 	go handleSignals(cancel)
+
+	fmt.Println("before handler")
+
 	err := consumer.Handle(ctx, func(msgs <-chan amqp.Delivery) {
+		fmt.Println("inside handler")
 		for msg := range msgs {
 			var notifications []entities.Notification
 			err := json.Unmarshal(msg.Body, &notifications)
