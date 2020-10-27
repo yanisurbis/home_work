@@ -40,6 +40,7 @@ services:
       - queue
   queue:
     image: rabbitmq:3-management
+    hostname: rabbit
 #    volumes:
 #      - /home/yanis/rabbitmq/etc/:/etc/rabbitmq/
 #      - /home/yanis/rabbitmq/data/:/var/lib/rabbitmq/
@@ -47,6 +48,11 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 30s
+      retries: 6
     networks:
       - test_api
 

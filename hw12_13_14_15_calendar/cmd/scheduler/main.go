@@ -16,6 +16,7 @@ import (
 const interval = 5 * time.Second
 
 func main() {
+	time.Sleep(5 * time.Second)
 	ctx, cancel := context.WithCancel(context.Background())
 	msgs := make(chan amqp.Publishing)
 	c, _ := config.Read("./configs/local.toml")
@@ -30,7 +31,10 @@ func main() {
 
 	go func() {
 		producer := rabbit.CreateProducer(c.Queue.ConsumerTag, c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
-		_ = producer.Run(msgs)
+		err = producer.Run(msgs)
+		if err != nil {
+			log.Println(err)
+		}
 	}()
 
 	ticker := time.NewTicker(interval)

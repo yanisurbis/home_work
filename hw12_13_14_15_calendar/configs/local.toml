@@ -6,7 +6,7 @@ path = "./logs/logs.txt"
 
 [queue]
 consumerTag = "events_consumer"
-uri = "amqp://guest:guest@queue:5672/"
+uri = "amqp://guest:guest@queue/"
 exchangeName = "exchange"
 exchangeType = "direct"
 queue = "events_notifications"

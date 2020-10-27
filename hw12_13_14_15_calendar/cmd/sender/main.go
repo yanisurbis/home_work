@@ -19,7 +19,10 @@ func main() {
 	time.Sleep(5 * time.Second)
 	ctx, cancel := context.WithCancel(context.Background())
 
-	c, _ := config.Read("./configs/local.toml")
+	c, err := config.Read("./configs/local.toml")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	fmt.Println("sender")
 
@@ -28,7 +31,7 @@ func main() {
 
 	fmt.Println("before handler")
 
-	err := consumer.Handle(ctx, func(msgs <-chan amqp.Delivery) {
+	err = consumer.Handle(ctx, func(msgs <-chan amqp.Delivery) {
 		fmt.Println("inside handler")
 		for msg := range msgs {
 			var notifications []entities.Notification
