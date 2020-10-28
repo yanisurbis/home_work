@@ -9,11 +9,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
-	"time"
-
 	"github.com/cenkalti/backoff/v3"
 	"github.com/streadway/amqp"
+	"log"
 )
 
 type Queue struct {
@@ -53,35 +51,19 @@ func CreateConsumer(consumerTag, uri, exchangeName, exchangeType, queue, binding
 	return initialize(consumerTag, consumer, uri, exchangeName, exchangeType, queue, bindingKey)
 }
 
-func (c *Queue) reConnect() (<-chan amqp.Delivery, error) {
-	be := backoff.NewExponentialBackOff()
-	be.MaxElapsedTime = time.Minute
-	be.InitialInterval = 1 * time.Second
-	be.Multiplier = 2
+func (c *Queue) connectWithRetries() error {
+	ticker := backoff.NewTicker(backoff.NewExponentialBackOff())
 
-	b := backoff.WithContext(be, context.Background())
-	d := b.NextBackOff()
-
-	for range time.After(d) {
-		d := b.NextBackOff()
-		if d == backoff.Stop {
-			return nil, fmt.Errorf("stop reconnecting")
-		}
-
+	for range ticker.C {
 		if err := c.connect(); err != nil {
 			log.Printf("could not connect in reconnect call: %+v", err)
 			continue
 		}
-		msgs, err := c.announceQueue()
-		if err != nil {
-			fmt.Printf("Couldn't connect: %+v", err)
-			continue
-		}
-
-		return msgs, nil
+		log.Printf("connected successfully")
+		return nil
 	}
 
-	return nil, nil
+	return fmt.Errorf("failed to connect")
 }
 
 func (c *Queue) connect() error {
@@ -172,7 +154,7 @@ func (c *Queue) announceQueue() (<-chan amqp.Delivery, error) {
 
 func (c *Queue) Handle(ctx context.Context, fn func(<-chan amqp.Delivery)) error {
 	var err error
-	if err = c.connect(); err != nil {
+	if err = c.connectWithRetries(); err != nil {
 		return fmt.Errorf("error: %v", err)
 	}
 	msgs, err := c.announceQueue()
@@ -187,9 +169,13 @@ func (c *Queue) Handle(ctx context.Context, fn func(<-chan amqp.Delivery)) error
 		case done := <-c.done:
 			{
 				if done != nil {
-					msgs, err = c.reConnect()
+					err = c.connectWithRetries()
 					if err != nil {
-						return fmt.Errorf("reconnecting Error: %s", err)
+						return err
+					}
+					msgs, err = c.announceQueue()
+					if err != nil {
+						return err
 					}
 					fmt.Println("reconnected... possibly")
 				}
@@ -202,7 +188,7 @@ func (c *Queue) Handle(ctx context.Context, fn func(<-chan amqp.Delivery)) error
 
 func (c *Queue) Run(msgs <-chan amqp.Publishing) error {
 	var err error
-	if err = c.connect(); err != nil {
+	if err = c.connectWithRetries(); err != nil {
 		return fmt.Errorf("error: %v", err)
 	}
 	_, err = c.announceQueue()
@@ -227,9 +213,9 @@ func (c *Queue) Run(msgs <-chan amqp.Publishing) error {
 				log.Printf("failed to send a message: %v", err)
 			}
 		case <-c.done:
-			_, err = c.reConnect()
+			err = c.connectWithRetries()
 			if err != nil {
-				return fmt.Errorf("reconnecting Error: %s", err)
+				return err
 			}
 			fmt.Println("Reconnected... possibly")
 		}

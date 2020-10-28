@@ -16,7 +16,6 @@ import (
 const interval = 5 * time.Second
 
 func main() {
-	time.Sleep(5 * time.Second)
 	ctx, cancel := context.WithCancel(context.Background())
 	msgs := make(chan amqp.Publishing)
 	c, _ := config.Read("./configs/local.toml")
@@ -33,7 +32,7 @@ func main() {
 		producer := rabbit.CreateProducer(c.Queue.ConsumerTag, c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
 		err = producer.Run(msgs)
 		if err != nil {
-			log.Println(err)
+			log.Fatal(err)
 		}
 	}()
 
@@ -42,7 +41,6 @@ func main() {
 		select {
 		case <-ticker.C:
 			notifications, err := client.GetNotifications(time.Now().Add(-1*interval), time.Now())
-			//notifications, err := client.GetNotifications(time.Now().Add(-2*time.Hour), time.Now())
 			if err != nil {
 				log.Println(err)
 			} else if len(notifications) > 0 {
