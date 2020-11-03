@@ -29,8 +29,7 @@ type EventService struct {
 }
 
 func validateEvent(e entities.Event) error {
-	// TODO: now - 1 minute
-	if e.StartAt.Before(time.Now()) {
+	if e.StartAt.Before(time.Now().Add(-1 * time.Minute)) {
 		return errors.New("start_at should be grater than current date")
 	}
 
