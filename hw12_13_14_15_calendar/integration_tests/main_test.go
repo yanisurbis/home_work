@@ -24,13 +24,14 @@ func getEvents(client *grpcclient.Client) []entities.Event {
 
 func testCreate(t *testing.T, client *grpcclient.Client) *entities.Event {
 	// TODO: remove add minute
-	baseTime := time.Now().Add(1 * time.Minute)
+	location, _ := time.LoadLocation("UTC")
+	baseTime := time.Now().In(location).Add(1 * time.Minute)
 	addEventRequest := entities.AddEventRequest{
 		Title:       "Test event, title",
 		StartAt:     baseTime,
 		EndAt:       baseTime.Add(3 * time.Minute),
 		Description: "Test event, description",
-		NotifyAt:    baseTime.Add(2 * time.Minute),
+		NotifyAt:    baseTime.Add(-2 * time.Minute),
 		UserID:      1,
 	}
 
@@ -57,6 +58,9 @@ func testCreate(t *testing.T, client *grpcclient.Client) *entities.Event {
 		Description: addEventRequest.Description,
 		UserID:      addEventRequest.UserID,
 	})
+	assert.Equal(t, 0, addedEvent.StartAt.Second() - addEventRequest.StartAt.Second())
+	assert.Equal(t, 0, addedEvent.EndAt.Second() - addEventRequest.EndAt.Second())
+	assert.Equal(t, 0, addedEvent.NotifyAt.Second() - addEventRequest.NotifyAt.Second())
 
 	return addedEvent
 }
@@ -119,13 +123,36 @@ func testCRUD(t *testing.T, client *grpcclient.Client) {
 }
 
 func testCRUDErrors(t *testing.T, client *grpcclient.Client) {
+	startAt := time.Now()
+	endAt := startAt.Add(3 * time.Minute)
+	notifyAt := startAt.Add(-2 * time.Minute)
+
 	requests := []entities.AddEventRequest{
+		// Notify after Start
 		entities.AddEventRequest{
 			Title:       "Event from test",
-			StartAt:     time.Now().Add(-1 * time.Hour),
-			EndAt:       time.Now().Add(5 * time.Hour),
+			StartAt:     startAt,
+			EndAt:       endAt,
 			Description: "Description from test",
-			NotifyAt:    time.Now().Add(4 * time.Hour),
+			NotifyAt:    startAt.Add(2 * time.Minute),
+			UserID:      1,
+		},
+		// Notify after Start
+		entities.AddEventRequest{
+			Title:       "Event from test",
+			StartAt:     startAt,
+			EndAt:       startAt.Add(-2 * time.Minute),
+			Description: "Description from test",
+			NotifyAt:    notifyAt,
+			UserID:      1,
+		},
+		// Long title
+		entities.AddEventRequest{
+			Title:       "01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890",
+			StartAt:     startAt,
+			EndAt:       endAt,
+			Description: "Description from test",
+			NotifyAt:    notifyAt,
 			UserID:      1,
 		},
 	}
