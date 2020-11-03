@@ -6,8 +6,10 @@ services:
     networks:
       - test_api
     volumes:
-      - /home/yanis/psqldata:/var/lib/postgresql/data
+      - /c/Users/yzaytsev/Desktop/psqldata:/var/lib/postgresql/data
       - ./init_db:/docker-entrypoint-initdb.d/
+    environment:
+      - POSTGRES_PASSWORD=yanis
     ports:
       - "5432:5432"
   web:

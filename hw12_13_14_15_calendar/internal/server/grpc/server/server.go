@@ -247,7 +247,8 @@ func (s *Server) DeleteEvent(ctx context.Context, query *events_grpc.DeleteEvent
 }
 
 func (s *Server) Start(eventService domain.EventService) error {
-	lsn, err := net.Listen("tcp", "web:9090")
+	// TODO: docker
+	lsn, err := net.Listen("tcp", "localhost:9090")
 	if err != nil {
 		return err
 	}
