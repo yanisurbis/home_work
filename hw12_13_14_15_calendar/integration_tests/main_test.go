@@ -4,23 +4,11 @@ import (
 	grpcclient "calendar/internal/client/grpc"
 	"calendar/internal/domain/entities"
 	"context"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
 	"time"
 )
-
-//func findEventByTitle(events []entities.Event, title string) *entities.Event {
-//	foundEvent := new(entities.Event)
-//	for _, event := range events {
-//		if event.Title == title {
-//			foundEvent = &event
-//		}
-//	}
-//
-//	return foundEvent
-//}
 
 func getEvents(client *grpcclient.Client) []entities.Event {
 	events, err := client.GetEventsDay(entities.GetEventsRequest{
@@ -35,15 +23,16 @@ func getEvents(client *grpcclient.Client) []entities.Event {
 }
 
 func testCreate(t *testing.T, client *grpcclient.Client) *entities.Event {
+	// TODO: remove add minute
+	baseTime := time.Now().Add(1 * time.Minute)
 	addEventRequest := entities.AddEventRequest{
-		Title:       "Event from test",
-		StartAt:     time.Now().Add(3 * time.Hour),
-		EndAt:       time.Now().Add(5 * time.Hour),
-		Description: "Description from test",
-		NotifyAt:    time.Now().Add(4 * time.Hour),
+		Title:       "Test event, title",
+		StartAt:     baseTime,
+		EndAt:       baseTime.Add(3 * time.Minute),
+		Description: "Test event, description",
+		NotifyAt:    baseTime.Add(2 * time.Minute),
 		UserID:      1,
 	}
-
 
 	err := client.AddEvent(addEventRequest)
 	if err != nil {
@@ -59,13 +48,15 @@ func testCreate(t *testing.T, client *grpcclient.Client) *entities.Event {
 		}
 	}
 
-	assert.Equal(t, addedEvent.Description, addEventRequest.Description)
-	assert.Equal(t, addedEvent.Title, addEventRequest.Title)
-	// TODO: check dates
-	//assert.Equal(t, addedEvent.StartAt, addEventRequest.StartAt)
-	//assert.Equal(t, addedEvent.EndAt, addEventRequest.EndAt)
-	assert.Equal(t, addedEvent.Description, addEventRequest.Description)
-	assert.Equal(t, addedEvent.UserID, addEventRequest.UserID)
+	assert.Equal(t, entities.Event{
+		Title:       addedEvent.Title,
+		Description: addedEvent.Description,
+		UserID:      addedEvent.UserID,
+	}, entities.Event{
+		Title:       addEventRequest.Title,
+		Description: addEventRequest.Description,
+		UserID:      addEventRequest.UserID,
+	})
 
 	return addedEvent
 }
@@ -85,21 +76,18 @@ func testUpdate(t *testing.T, client *grpcclient.Client, addedEvent *entities.Ev
 
 	events := getEvents(client)
 
-	addedEvent1 := new(entities.Event)
+	updatedEvent := new(entities.Event)
 	for _, event := range events {
 		if event.ID == updateEventRequest.ID {
-			addedEvent1 = &event
+			updatedEvent = &event
 		}
 	}
 
-	assert.Equal(t, updateEventRequest.Description, addedEvent1.Description)
-	assert.Equal(t, updateEventRequest.Title, addedEvent1.Title)
-	// TODO: check dates
-	//assert.Equal(t, addedEvent.StartAt, addEventRequest.StartAt)
-	//assert.Equal(t, addedEvent.EndAt, addEventRequest.EndAt)
-	assert.Equal(t, updateEventRequest.UserID, addedEvent1.UserID)
+	assert.Equal(t, updateEventRequest.Description, updatedEvent.Description)
+	assert.Equal(t, updateEventRequest.Title, updatedEvent.Title)
+	assert.Equal(t, updateEventRequest.UserID, updatedEvent.UserID)
 
-	return addedEvent1
+	return updatedEvent
 }
 
 func testDelete(t *testing.T, client *grpcclient.Client, addedEvent *entities.Event) {
@@ -149,7 +137,6 @@ func testCRUDErrors(t *testing.T, client *grpcclient.Client) {
 	}
 
 	for _, response := range responses {
-		fmt.Println(response)
 		assert.Error(t, response)
 	}
 }
