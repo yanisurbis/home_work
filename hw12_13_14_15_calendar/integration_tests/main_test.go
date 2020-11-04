@@ -87,9 +87,20 @@ func testUpdate(t *testing.T, client *grpcclient.Client, addedEvent *entities.Ev
 		}
 	}
 
-	assert.Equal(t, updateEventRequest.Description, updatedEvent.Description)
-	assert.Equal(t, updateEventRequest.Title, updatedEvent.Title)
-	assert.Equal(t, updateEventRequest.UserID, updatedEvent.UserID)
+	assert.Equal(t, entities.Event{
+		ID: updatedEvent.ID,
+		Title:       updatedEvent.Title,
+		Description: updatedEvent.Description,
+		UserID:      updatedEvent.UserID,
+	}, entities.Event{
+		ID: updateEventRequest.ID,
+		Title:       updateEventRequest.Title,
+		Description: updateEventRequest.Description,
+		UserID:      updateEventRequest.UserID,
+	})
+	assert.Equal(t, 0, updatedEvent.StartAt.Second() - addedEvent.StartAt.Second())
+	assert.Equal(t, 0, updatedEvent.EndAt.Second() - addedEvent.EndAt.Second())
+	assert.Equal(t, 0, updatedEvent.NotifyAt.Second() - addedEvent.NotifyAt.Second())
 
 	return updatedEvent
 }
