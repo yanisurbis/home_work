@@ -37,7 +37,7 @@ func (c *Client) Start(ctx context.Context) error {
 }
 
 func convertEventsResponseToEvents(response *events_grpc.EventsResponse) ([]entities.Event, error) {
-	events := make([]entities.Event, len(response.Events))
+	events := make([]entities.Event, 0, len(response.Events))
 
 	for _, grpcEvent := range response.Events {
 		startAt, err := lib.TimestampToTime(grpcEvent.StartAt)
@@ -200,6 +200,46 @@ func (c *Client) GetEventsDay(request entities.GetEventsRequest) ([]entities.Eve
 	}
 
 	eventsResponse, err := c.client.GetEventsDay(context.Background(), &r)
+	if err != nil {
+		return nil, err
+	}
+
+	return convertEventsResponseToEvents(eventsResponse)
+
+}
+
+func (c *Client) GetEventsWeek(request entities.GetEventsRequest) ([]entities.Event, error) {
+	from, err := ptypes.TimestampProto(request.From)
+	if err != nil {
+		return nil, err
+	}
+
+	r := events_grpc.GetEventsRequest{
+		UserId: uint32(request.UserID),
+		From:   from,
+	}
+
+	eventsResponse, err := c.client.GetEventsWeek(context.Background(), &r)
+	if err != nil {
+		return nil, err
+	}
+
+	return convertEventsResponseToEvents(eventsResponse)
+
+}
+
+func (c *Client) GetEventsMonth(request entities.GetEventsRequest) ([]entities.Event, error) {
+	from, err := ptypes.TimestampProto(request.From)
+	if err != nil {
+		return nil, err
+	}
+
+	r := events_grpc.GetEventsRequest{
+		UserId: uint32(request.UserID),
+		From:   from,
+	}
+
+	eventsResponse, err := c.client.GetEventsMonth(context.Background(), &r)
 	if err != nil {
 		return nil, err
 	}
