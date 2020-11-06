@@ -6,6 +6,7 @@ import (
 	domain "calendar/internal/domain/interfaces"
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -28,7 +29,7 @@ type EventService struct {
 }
 
 func validateEvent(e entities.Event) error {
-	if e.StartAt.Before(time.Now()) {
+	if e.StartAt.Before(time.Now().Add(-1 * time.Minute)) {
 		return errors.New("start_at should be grater than current date")
 	}
 
@@ -36,8 +37,8 @@ func validateEvent(e entities.Event) error {
 		return errors.New("end_at should not be less than start_at")
 	}
 
-	if !e.NotifyAt.IsZero() && e.NotifyAt.Before(e.StartAt) {
-		return errors.New("notify_at should not be less than start_at")
+	if !e.NotifyAt.IsZero() && e.NotifyAt.After(e.StartAt) {
+		return errors.New("notify_at should be less than start_at")
 	}
 
 	return validation.ValidateStruct(&e,
@@ -81,6 +82,9 @@ func mergeEvents(currEvent *entities.Event, e *entities.UpdateEventRequest) (*en
 	if !e.EndAt.IsZero() {
 		currEvent.EndAt = e.EndAt
 	}
+	if e.Title != ShouldResetString {
+		currEvent.Title = e.Title
+	}
 	if e.Description != ShouldResetString {
 		currEvent.Description = e.Description
 	}
@@ -111,6 +115,8 @@ func (es *EventService) UpdateEvent(ctx context.Context, eventUpdate *entities.U
 	if err != nil {
 		return nil, err
 	}
+
+	log.Printf("updatedEvent: %v", updatedEvent)
 
 	err = es.EventStorage.UpdateEvent(eventUpdate.UserID, *updatedEvent)
 
