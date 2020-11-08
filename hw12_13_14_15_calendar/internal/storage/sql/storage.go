@@ -168,3 +168,43 @@ func (r *Repo) DeleteOldEvents(to time.Time) error {
 
 	return nstmt.Select(&events, option)
 }
+
+func (r *Repo) AddNotifications(notifications []entities.Notification) error {
+	var ntfs []entities.Notification
+
+	nstmt, err := r.db.PrepareNamed(
+		"INSERT INTO notifications (event_id, user_id, event_title, start_at) VALUES (:event_id, :user_id, :event_title, :start_at)")
+
+	if err != nil {
+		return err
+	}
+
+	// TODO: improve operation
+	for _, notification := range notifications {
+		err = nstmt.Select(&ntfs, notification)
+		if err != nil {
+			return err
+		}
+	}
+
+	return err
+}
+
+func (r *Repo) GetAllNotifications() ([]entities.Notification, error) {
+	var notifications []entities.Notification
+
+	nstmt, err := r.db.PrepareNamed("SELECT * FROM notifications")
+	if err != nil {
+		return []entities.Notification{}, err
+	}
+
+	err = nstmt.Select(&notifications, nil)
+	if err != nil {
+		return []entities.Notification{}, err
+	}
+	if notifications == nil {
+		return []entities.Notification{}, err
+	}
+
+	return notifications, err
+}

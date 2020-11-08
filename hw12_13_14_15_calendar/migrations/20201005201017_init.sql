@@ -17,6 +17,15 @@ create table events (
                         constraint fk_user FOREIGN KEY(user_id) REFERENCES users(id)
 );
 
+create table notifications (
+                        event_id int,
+                        user_id int,
+                        start_at timestamp,
+                        event_title varchar(100),
+                        constraint fk_event FOREIGN KEY(event_id) REFERENCES events(id),
+                        constraint fk_user FOREIGN KEY(user_id) REFERENCES users(id)
+);
+
 insert into events (title, start_at, end_at, description, user_id, notify_at)
 values ('Event 1', current_timestamp, current_timestamp, 'Description 1', 1, current_timestamp),
        ('Event 2', current_timestamp, current_timestamp, 'Description 2', 1, current_timestamp),
