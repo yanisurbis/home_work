@@ -3,7 +3,9 @@ package memory
 import (
 	grpcclient "calendar/internal/client/grpc"
 	"calendar/internal/domain/entities"
+	"calendar/internal/storage/sql"
 	"context"
+	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"strconv"
@@ -290,19 +292,49 @@ func testLists(t *testing.T, client *grpcclient.Client) {
 }
 
 func TestIntegration(t *testing.T) {
-	client := grpcclient.NewClient()
-	err := client.Start(context.Background())
+	//c, err := config.Read("./configs/local.toml")
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+
+	storage := new(sql.Repo)
+
+	err := storage.Connect(context.Background(), "host=localhost port=5432 user=yanis password=yanis dbname=events sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	t.Run("CRUD, basic cases work", func(t *testing.T) {
-		testCRUD(t, client)
-	})
-	t.Run("CRUD, basic validations are present", func(t *testing.T) {
-		testCRUDErrors(t, client)
-	})
-	t.Run("Check getEventsDay, getEventsWeek, getEventsMonth", func(t *testing.T) {
-		testLists(t, client)
-	})
+	notifications := []entities.Notification{
+		entities.Notification{
+			EventID:    1,
+			UserID:     1,
+			EventTitle: "Hello",
+			StartAt:    time.Now(),
+		},
+		entities.Notification{
+			EventID:    2,
+			UserID:     1,
+			EventTitle: "Hello 2",
+			StartAt:    time.Now(),
+		},
+	}
+	err = storage.AddNotifications(notifications)
+	if err != nil {
+		log.Fatal(err)
+	}
+	//client := grpcclient.NewClient()
+	//err := client.Start(context.Background())
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//
+	//t.Run("CRUD, basic cases work", func(t *testing.T) {
+	//	testCRUD(t, client)
+	//})
+	//t.Run("CRUD, basic validations are present", func(t *testing.T) {
+	//	testCRUDErrors(t, client)
+	//})
+	//t.Run("Check getEventsDay, getEventsWeek, getEventsMonth", func(t *testing.T) {
+	//	testLists(t, client)
+	//})
 }
