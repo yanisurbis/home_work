@@ -322,6 +322,22 @@ func TestIntegration(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	dbNotifications, err := storage.GetAllNotifications()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//fmt.Printf("%v\n", dbNotifications)
+	for i, _ := range notifications {
+		n1 := notifications[i]
+		n2 := dbNotifications[i]
+		assert.Equal(t, n1.UserID, n2.UserID)
+		assert.Equal(t, n1.EventTitle, n2.EventTitle)
+		assert.Equal(t, n1.EventID, n2.EventID)
+		assert.Equal(t, 0, n1.StartAt.Second()-n2.StartAt.Second())
+	}
+
 	//client := grpcclient.NewClient()
 	//err := client.Start(context.Background())
 	//if err != nil {
