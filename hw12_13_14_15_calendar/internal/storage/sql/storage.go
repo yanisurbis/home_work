@@ -193,12 +193,13 @@ func (r *Repo) AddNotifications(notifications []entities.Notification) error {
 func (r *Repo) GetAllNotifications() ([]entities.Notification, error) {
 	var notifications []entities.Notification
 
-	nstmt, err := r.db.PrepareNamed("SELECT * FROM notifications")
+	nstmt, err := r.db.PrepareNamed("SELECT * FROM notifications ORDER BY event_id")
 	if err != nil {
 		return []entities.Notification{}, err
 	}
 
-	err = nstmt.Select(&notifications, nil)
+	option := make(map[string]interface{})
+	err = nstmt.Select(&notifications, option)
 	if err != nil {
 		return []entities.Notification{}, err
 	}
