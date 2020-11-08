@@ -18,4 +18,6 @@ type EventStorage interface {
 	GetEventsToNotify(from time.Time, to time.Time) ([]entities.Event, error)
 	DeleteOldEvents(to time.Time) error
 	GetEvent(id entities.ID) (*entities.Event, error)
+	AddNotifications(notifications []entities.Notification) error
+	GetAllNotifications() ([]entities.Notification, error)
 }

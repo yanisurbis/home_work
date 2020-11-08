@@ -302,7 +302,7 @@ func TestIntegration(t *testing.T) {
 	t.Run("CRUD, basic validations are present", func(t *testing.T) {
 		testCRUDErrors(t, client)
 	})
-	t.Run("Check lists", func(t *testing.T) {
+	t.Run("Check getEventsDay, getEventsWeek, getEventsMonth", func(t *testing.T) {
 		testLists(t, client)
 	})
 }

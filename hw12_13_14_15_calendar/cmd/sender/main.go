@@ -31,6 +31,7 @@ func main() {
 			err := json.Unmarshal(msg.Body, &notifications)
 			if err != nil {
 				log.Println(err)
+			//	TODO: add more channels?
 			} else {
 				if len(notifications) != 0 {
 					for _, notification := range notifications {
