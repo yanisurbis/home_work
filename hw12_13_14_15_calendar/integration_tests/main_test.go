@@ -3,7 +3,9 @@ package memory
 import (
 	grpcclient "calendar/internal/client/grpc"
 	"calendar/internal/domain/entities"
+	"calendar/internal/storage/sql"
 	"context"
+	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"strconv"
@@ -289,6 +291,49 @@ func testLists(t *testing.T, client *grpcclient.Client) {
 	clearEvents(client, monthEvents)
 }
 
+func testEverything(t *testing.T, client *grpcclient.Client) {
+	storage := new(sql.Repo)
+	err := storage.Connect(context.Background(), "host=localhost port=5432 user=yanis password=yanis dbname=events sslmode=disable")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	baseTime := time.Now()
+	requests := []entities.AddEventRequest{
+		entities.AddEventRequest{
+			Title:       "Test * Test * Test",
+			StartAt:     baseTime.Add(1 * time.Minute),
+			EndAt:       baseTime.Add(3 * time.Minute),
+			Description: "Test event, description",
+			NotifyAt:    baseTime.Add(1 * time.Second),
+			UserID:      1,
+		},
+	}
+
+	for _, request := range requests {
+		err := client.AddEvent(request)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	time.Sleep(15 * time.Second)
+
+	dbNotifications, err := storage.GetAllNotifications()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//fmt.Printf("%v\n", dbNotifications)
+	for i, _ := range requests {
+		r := requests[i]
+		n := dbNotifications[i]
+		assert.Equal(t, r.UserID, n.UserID)
+		assert.Equal(t, r.Title, n.EventTitle)
+		assert.Equal(t, 0, r.StartAt.Second()-n.StartAt.Second())
+	}
+}
+
 func TestIntegration(t *testing.T) {
 	client := grpcclient.NewClient()
 	err := client.Start(context.Background())
@@ -296,13 +341,16 @@ func TestIntegration(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	t.Run("CRUD, basic cases work", func(t *testing.T) {
-		testCRUD(t, client)
-	})
-	t.Run("CRUD, basic validations are present", func(t *testing.T) {
-		testCRUDErrors(t, client)
-	})
-	t.Run("Check lists", func(t *testing.T) {
-		testLists(t, client)
+	//t.Run("CRUD, basic cases work", func(t *testing.T) {
+	//	testCRUD(t, client)
+	//})
+	//t.Run("CRUD, basic validations are present", func(t *testing.T) {
+	//	testCRUDErrors(t, client)
+	//})
+	//t.Run("Check getEventsDay, getEventsWeek, getEventsMonth", func(t *testing.T) {
+	//	testLists(t, client)
+	//})
+	t.Run("XXX", func(t *testing.T) {
+		testEverything(t, client)
 	})
 }
