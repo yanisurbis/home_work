@@ -2,12 +2,14 @@ package memory
 
 import (
 	grpcclient "calendar/internal/client/grpc"
+	"calendar/internal/config"
 	"calendar/internal/domain/entities"
 	"calendar/internal/storage/sql"
 	"context"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/stretchr/testify/assert"
 	"log"
+	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -292,8 +294,19 @@ func testLists(t *testing.T, client *grpcclient.Client) {
 }
 
 func testEverything(t *testing.T, client *grpcclient.Client) {
+	//TODO: delete when docker is set up
+	err := os.Setenv("ENV", "TEST")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	c, err := config.GetConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	storage := new(sql.Repo)
-	err := storage.Connect(context.Background(), "host=localhost port=5432 user=yanis password=yanis dbname=events sslmode=disable")
+	err = storage.Connect(context.Background(), c.PSQL.DSN)
 	if err != nil {
 		log.Fatal(err)
 	}

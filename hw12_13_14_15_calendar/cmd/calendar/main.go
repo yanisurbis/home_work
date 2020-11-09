@@ -35,7 +35,7 @@ func main() {
 	//args := getArgs()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	c, err := config.Read("./configs/local.toml")
+	c, err := config.GetConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
