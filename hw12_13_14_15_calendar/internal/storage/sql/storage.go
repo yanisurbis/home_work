@@ -209,3 +209,18 @@ func (r *Repo) GetAllNotifications() ([]entities.Notification, error) {
 
 	return notifications, err
 }
+
+func (r *Repo) DeleteAllNotifications() error {
+	var notifications []entities.Notification
+	option := make(map[string]interface{})
+
+	// TODO: replace with something simpler
+	nstmt, err := r.db.PrepareNamed("DELETE FROM notifications")
+
+	if err != nil {
+		return err
+	}
+
+	return nstmt.Select(&notifications, option)
+
+}
