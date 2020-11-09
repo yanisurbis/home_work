@@ -18,10 +18,13 @@ const interval = 5 * time.Second
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	msgs := make(chan amqp.Publishing)
-	c, _ := config.Read("./configs/local.toml")
+	c, err := config.GetConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	client := grpcclient.NewClient()
-	err := client.Start(ctx)
+	err = client.Start(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
