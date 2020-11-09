@@ -291,37 +291,33 @@ func testLists(t *testing.T, client *grpcclient.Client) {
 	clearEvents(client, monthEvents)
 }
 
-func TestIntegration(t *testing.T) {
-	//c, err := config.Read("./configs/local.toml")
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-
+func testEverything(t *testing.T, client *grpcclient.Client) {
 	storage := new(sql.Repo)
-
 	err := storage.Connect(context.Background(), "host=localhost port=5432 user=yanis password=yanis dbname=events sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	notifications := []entities.Notification{
-		entities.Notification{
-			EventID:    1,
-			UserID:     1,
-			EventTitle: "Hello",
-			StartAt:    time.Now(),
-		},
-		entities.Notification{
-			EventID:    2,
-			UserID:     1,
-			EventTitle: "Hello 2",
-			StartAt:    time.Now(),
+	baseTime := time.Now()
+	requests := []entities.AddEventRequest{
+		entities.AddEventRequest{
+			Title:       "Test * Test * Test",
+			StartAt:     baseTime.Add(1 * time.Minute),
+			EndAt:       baseTime.Add(3 * time.Minute),
+			Description: "Test event, description",
+			NotifyAt:    baseTime.Add(1 * time.Second),
+			UserID:      1,
 		},
 	}
-	err = storage.AddNotifications(notifications)
-	if err != nil {
-		log.Fatal(err)
+
+	for _, request := range requests {
+		err := client.AddEvent(request)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
+
+	time.Sleep(15 * time.Second)
 
 	dbNotifications, err := storage.GetAllNotifications()
 	if err != nil {
@@ -329,21 +325,22 @@ func TestIntegration(t *testing.T) {
 	}
 
 	//fmt.Printf("%v\n", dbNotifications)
-	for i, _ := range notifications {
-		n1 := notifications[i]
-		n2 := dbNotifications[i]
-		assert.Equal(t, n1.UserID, n2.UserID)
-		assert.Equal(t, n1.EventTitle, n2.EventTitle)
-		assert.Equal(t, n1.EventID, n2.EventID)
-		assert.Equal(t, 0, n1.StartAt.Second()-n2.StartAt.Second())
+	for i, _ := range requests {
+		r := requests[i]
+		n := dbNotifications[i]
+		assert.Equal(t, r.UserID, n.UserID)
+		assert.Equal(t, r.Title, n.EventTitle)
+		assert.Equal(t, 0, r.StartAt.Second()-n.StartAt.Second())
+	}
+}
+
+func TestIntegration(t *testing.T) {
+	client := grpcclient.NewClient()
+	err := client.Start(context.Background())
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	//client := grpcclient.NewClient()
-	//err := client.Start(context.Background())
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//
 	//t.Run("CRUD, basic cases work", func(t *testing.T) {
 	//	testCRUD(t, client)
 	//})
@@ -353,4 +350,7 @@ func TestIntegration(t *testing.T) {
 	//t.Run("Check getEventsDay, getEventsWeek, getEventsMonth", func(t *testing.T) {
 	//	testLists(t, client)
 	//})
+	t.Run("XXX", func(t *testing.T) {
+		testEverything(t, client)
+	})
 }
