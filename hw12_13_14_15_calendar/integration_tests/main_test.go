@@ -298,6 +298,10 @@ func testEverything(t *testing.T, client *grpcclient.Client) {
 		log.Fatal(err)
 	}
 
+	if err = storage.DeleteAllNotifications(); err != nil {
+		log.Fatal(err)
+	}
+
 	baseTime := time.Now()
 	requests := []entities.AddEventRequest{
 		entities.AddEventRequest{
