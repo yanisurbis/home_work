@@ -4,6 +4,7 @@ import (
 	"calendar/internal/config"
 	"calendar/internal/domain/entities"
 	"calendar/internal/queue/rabbit"
+	"calendar/internal/storage/sql"
 	"context"
 	"encoding/json"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"os/signal"
 	"time"
 
+	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/streadway/amqp"
 )
 
@@ -18,6 +20,12 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	c, err := config.Read("./configs/local.toml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	storage := new(sql.Repo)
+	err = storage.Connect(context.Background(), c.PSQL.DSN)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,6 +42,10 @@ func main() {
 			//	TODO: add more channels?
 			} else {
 				if len(notifications) != 0 {
+					err = storage.AddNotifications(notifications)
+					if err != nil {
+						log.Println(err)
+					}
 					for _, notification := range notifications {
 						log.Println(time.Now().Format(time.Stamp), notification.EventID, notification.EventTitle, notification.StartAt)
 					}
