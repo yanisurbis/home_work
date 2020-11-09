@@ -13,8 +13,6 @@ import (
 	"time"
 )
 
-const interval = 5 * time.Second
-
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	msgs := make(chan amqp.Publishing)
@@ -39,6 +37,7 @@ func main() {
 		}
 	}()
 
+	interval := time.Duration(c.Scheduler.FetchIntervalSeconds) * time.Second
 	ticker := time.NewTicker(interval)
 	for {
 		select {
