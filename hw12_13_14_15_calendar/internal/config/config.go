@@ -29,9 +29,10 @@ func GetConfig() (*Config, error) {
 }
 
 type Config struct {
-	PSQL   PSQLConfig
-	Logger LoggerConfig
-	Queue  QueueConfig
+	PSQL      PSQLConfig
+	Logger    LoggerConfig
+	Queue     QueueConfig
+	Scheduler SchedulerConfig
 }
 
 type PSQLConfig struct {
@@ -49,4 +50,8 @@ type QueueConfig struct {
 	ExchangeType string
 	Queue        string
 	BindingKey   string
+}
+
+type SchedulerConfig struct {
+	FetchIntervalSeconds int
 }

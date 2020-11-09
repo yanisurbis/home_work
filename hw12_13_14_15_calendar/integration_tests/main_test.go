@@ -293,6 +293,38 @@ func testLists(t *testing.T, client *grpcclient.Client) {
 	clearEvents(client, monthEvents)
 }
 
+func generateAddEventRequests() []entities.AddEventRequest {
+	baseTime := time.Now()
+	requests := []entities.AddEventRequest{
+		entities.AddEventRequest{
+			Title:       "Test 1",
+			StartAt:     baseTime.Add(1 * time.Minute),
+			EndAt:       baseTime.Add(2 * time.Minute),
+			Description: "Test event, description",
+			NotifyAt:    baseTime.Add(1 * time.Second),
+			UserID:      1,
+		},
+		entities.AddEventRequest{
+			Title:       "Test 2",
+			StartAt:     baseTime.Add(1 * time.Minute),
+			EndAt:       baseTime.Add(4 * time.Minute),
+			Description: "Test event, description",
+			NotifyAt:    baseTime.Add(1 * time.Second),
+			UserID:      1,
+		},
+		entities.AddEventRequest{
+			Title:       "Test 3",
+			StartAt:     baseTime.Add(1 * time.Minute),
+			EndAt:       baseTime.Add(5 * time.Minute),
+			Description: "Test event, description",
+			NotifyAt:    baseTime.Add(1 * time.Second),
+			UserID:      1,
+		},
+	}
+
+	return requests
+}
+
 func testEverything(t *testing.T, client *grpcclient.Client) {
 	//TODO: delete when docker is set up
 	err := os.Setenv("ENV", "TEST")
@@ -315,17 +347,7 @@ func testEverything(t *testing.T, client *grpcclient.Client) {
 		log.Fatal(err)
 	}
 
-	baseTime := time.Now()
-	requests := []entities.AddEventRequest{
-		entities.AddEventRequest{
-			Title:       "Test * Test * Test",
-			StartAt:     baseTime.Add(1 * time.Minute),
-			EndAt:       baseTime.Add(3 * time.Minute),
-			Description: "Test event, description",
-			NotifyAt:    baseTime.Add(1 * time.Second),
-			UserID:      1,
-		},
-	}
+	requests := generateAddEventRequests()
 
 	for _, request := range requests {
 		err := client.AddEvent(request)
@@ -334,14 +356,14 @@ func testEverything(t *testing.T, client *grpcclient.Client) {
 		}
 	}
 
-	time.Sleep(15 * time.Second)
+	secondsToSleep := time.Duration(c.Scheduler.FetchIntervalSeconds) * time.Second
+	time.Sleep(secondsToSleep)
 
 	dbNotifications, err := storage.GetAllNotifications()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	//fmt.Printf("%v\n", dbNotifications)
 	for i, _ := range requests {
 		r := requests[i]
 		n := dbNotifications[i]

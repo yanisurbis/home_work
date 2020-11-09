@@ -12,3 +12,7 @@ exchangeName = "exchange"
 exchangeType = "direct"
 queue = "events_notifications"
 bindingKey = "events"
+
+
+[scheduler]
+fetchIntervalSeconds = 5
