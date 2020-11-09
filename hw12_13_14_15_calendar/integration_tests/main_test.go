@@ -356,7 +356,7 @@ func testEverything(t *testing.T, client *grpcclient.Client) {
 		}
 	}
 
-	secondsToSleep := time.Duration(c.Scheduler.FetchIntervalSeconds) * time.Second
+	secondsToSleep := time.Duration(c.Scheduler.FetchIntervalSeconds+1) * time.Second
 	time.Sleep(secondsToSleep)
 
 	dbNotifications, err := storage.GetAllNotifications()

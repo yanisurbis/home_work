@@ -86,7 +86,6 @@ func (r *Repo) GetEvent(id entities.ID) (*entities.Event, error) {
 }
 
 func (r *Repo) DeleteEvent(eventID entities.ID) error {
-	var events []entities.Event
 	option := make(map[string]interface{})
 	option["event_id"] = eventID
 
@@ -96,7 +95,12 @@ func (r *Repo) DeleteEvent(eventID entities.ID) error {
 		return err
 	}
 
-	return nstmt.Select(&events, option)
+	_, err = nstmt.Exec(option)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *Repo) getEvents(userID entities.ID, from time.Time, to time.Time) ([]entities.Event, error) {
@@ -156,7 +160,6 @@ func (r *Repo) GetEventsToNotify(from time.Time, to time.Time) ([]entities.Event
 }
 
 func (r *Repo) DeleteOldEvents(to time.Time) error {
-	var events []entities.Event
 	option := make(map[string]interface{})
 	option["start"] = to
 
@@ -166,12 +169,15 @@ func (r *Repo) DeleteOldEvents(to time.Time) error {
 		return err
 	}
 
-	return nstmt.Select(&events, option)
+	_, err = nstmt.Exec(option)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *Repo) AddNotifications(notifications []entities.Notification) error {
-	var ntfs []entities.Notification
-
 	nstmt, err := r.db.PrepareNamed(
 		"INSERT INTO notifications (event_id, user_id, event_title, start_at) VALUES (:event_id, :user_id, :event_title, :start_at)")
 
@@ -179,9 +185,9 @@ func (r *Repo) AddNotifications(notifications []entities.Notification) error {
 		return err
 	}
 
-	// TODO: improve operation
+	// TODO: Should use batch insert
 	for _, notification := range notifications {
-		err = nstmt.Select(&ntfs, notification)
+		_, err = nstmt.Exec(notification)
 		if err != nil {
 			return err
 		}
@@ -211,16 +217,12 @@ func (r *Repo) GetAllNotifications() ([]entities.Notification, error) {
 }
 
 func (r *Repo) DeleteAllNotifications() error {
-	var notifications []entities.Notification
-	option := make(map[string]interface{})
-
-	// TODO: replace with something simpler
-	nstmt, err := r.db.PrepareNamed("DELETE FROM notifications")
+	_, err := r.db.Exec("DELETE FROM notifications")
 
 	if err != nil {
 		return err
 	}
 
-	return nstmt.Select(&notifications, option)
+	return nil
 
 }
