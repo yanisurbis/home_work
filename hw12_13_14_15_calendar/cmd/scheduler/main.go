@@ -70,10 +70,15 @@ func main() {
 					len(notifications),
 					"messages",
 				)
-				msgs <- amqp.Publishing{
+				select {
+				case <-ctx.Done():
+					continue
+				case msgs <- amqp.Publishing{
 					ContentType: "application/json",
 					Body:        msg,
+				}:
 				}
+
 			} else if len(notifications) == 0 {
 				log.Println(time.Now().Format(time.Stamp), "no notifications to send")
 			}
