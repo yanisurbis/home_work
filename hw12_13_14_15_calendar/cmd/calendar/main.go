@@ -9,10 +9,11 @@ import (
 	"calendar/internal/storage/sql"
 	"context"
 	"flag"
-	_ "github.com/jackc/pgx/v4/stdlib"
 	"log"
 	"os"
 	"os/signal"
+
+	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 type Args struct {

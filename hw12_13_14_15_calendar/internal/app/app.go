@@ -17,7 +17,12 @@ type App struct {
 	storage    domain.EventStorage
 }
 
-func New(s server.Server, grpcServer server.Server, l logger.Logger, storage domain.EventStorage) (*App, error) {
+func New(
+	s server.Server,
+	grpcServer server.Server,
+	l logger.Logger,
+	storage domain.EventStorage,
+) (*App, error) {
 	return &App{server: s, logger: l, storage: storage, grpcServer: grpcServer}, nil
 }
 

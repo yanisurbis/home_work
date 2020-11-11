@@ -72,7 +72,8 @@ func filterDates(userID entities.ID, db *DB, from time.Time, to time.Time) []ent
 
 	db.Lock()
 	for _, e := range db.events {
-		if e.UserID == userID && (e.StartAt.After(from) || e.StartAt.Equal(from)) && e.StartAt.Before(to) {
+		if e.UserID == userID && (e.StartAt.After(from) || e.StartAt.Equal(from)) &&
+			e.StartAt.Before(to) {
 			dayEvents = append(dayEvents, e)
 		}
 	}
