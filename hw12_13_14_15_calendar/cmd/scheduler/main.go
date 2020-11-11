@@ -53,12 +53,13 @@ func main() {
 				msg, err := json.Marshal(notifications)
 				if err != nil {
 					log.Println(err)
-				} else {
-					log.Println(time.Now().Format(time.Stamp), "sending", len(notifications), "messages")
-					msgs <- amqp.Publishing{
-						ContentType: "application/json",
-						Body:        msg,
-					}
+					continue
+				}
+
+				log.Println(time.Now().Format(time.Stamp), "sending", len(notifications), "messages")
+				msgs <- amqp.Publishing{
+					ContentType: "application/json",
+					Body:        msg,
 				}
 			} else if len(notifications) == 0 {
 				log.Println(time.Now().Format(time.Stamp), "no notifications to send")
