@@ -107,5 +107,6 @@ func handleSignals(cancel context.CancelFunc) {
 	defer cancel()
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt)
+	signal.Stop(sigCh)
 	<-sigCh
 }
