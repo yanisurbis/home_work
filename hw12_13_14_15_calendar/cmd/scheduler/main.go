@@ -65,10 +65,12 @@ func main() {
 				log.Println(time.Now().Format(time.Stamp), "no notifications to send")
 			}
 
-			//err = client.DeleteOldEvents(time.Now().Add(-1 * time.Minute))
-			//if err != nil {
-			//	log.Println(err)
-			//}
+			// TODO: create new table to track events which were sent
+			yearAgo := time.Now().Add(-24 * 30 * 12 * time.Hour)
+			err = client.DeleteOldEvents(yearAgo)
+			if err != nil {
+				log.Println(err)
+			}
 		case <-ctx.Done():
 			ticker.Stop()
 			close(msgs)
