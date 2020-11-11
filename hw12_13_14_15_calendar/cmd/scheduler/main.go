@@ -43,9 +43,13 @@ func main() {
 		select {
 		case <-ticker.C:
 			notifications, err := client.GetNotifications(time.Now().Add(-1*interval), time.Now())
+
 			if err != nil {
 				log.Println(err)
-			} else if len(notifications) > 0 {
+				continue
+			}
+
+			if len(notifications) > 0 {
 				msg, err := json.Marshal(notifications)
 				if err != nil {
 					log.Println(err)
