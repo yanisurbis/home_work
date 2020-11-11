@@ -5,10 +5,11 @@ import (
 	"calendar/internal/lib"
 	"calendar/internal/server/grpc/events_grpc"
 	"context"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"log"
 	"time"
+
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/wrappers"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/grpc"
@@ -68,7 +69,9 @@ func convertEventsResponseToEvents(response *events_grpc.EventsResponse) ([]enti
 	return events, nil
 }
 
-func convertEventsToNotifications(events []*events_grpc.EventResponse) ([]*entities.Notification, error) {
+func convertEventsToNotifications(
+	events []*events_grpc.EventResponse,
+) ([]*entities.Notification, error) {
 	notifications := make([]*entities.Notification, 0, len(events))
 
 	for _, event := range events {

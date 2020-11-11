@@ -7,12 +7,13 @@ import (
 	"calendar/internal/storage/sql"
 	"context"
 	"encoding/json"
-	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/streadway/amqp"
 	"log"
 	"os"
 	"os/signal"
 	"time"
+
+	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/streadway/amqp"
 )
 
 func main() {
@@ -29,7 +30,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	consumer := rabbit.CreateConsumer(c.Queue.ConsumerTag, c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
+	consumer := rabbit.CreateConsumer(
+		c.Queue.ConsumerTag,
+		c.Queue.URI,
+		c.Queue.ExchangeName,
+		c.Queue.ExchangeType,
+		c.Queue.Queue,
+		c.Queue.BindingKey,
+	)
 	go handleSignals(cancel)
 
 	err = consumer.Handle(ctx, func(msgs <-chan amqp.Delivery) {
@@ -48,7 +56,12 @@ func main() {
 					log.Println(err)
 				}
 				for _, notification := range notifications {
-					log.Println(time.Now().Format(time.Stamp), notification.EventID, notification.EventTitle, notification.StartAt)
+					log.Println(
+						time.Now().Format(time.Stamp),
+						notification.EventID,
+						notification.EventTitle,
+						notification.StartAt,
+					)
 				}
 			} else {
 				log.Println(time.Now().Format(time.Stamp), "zero events received")

@@ -6,11 +6,12 @@ import (
 	"calendar/internal/queue/rabbit"
 	"context"
 	"encoding/json"
-	"github.com/streadway/amqp"
 	"log"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/streadway/amqp"
 )
 
 func main() {
@@ -30,7 +31,14 @@ func main() {
 	go handleSignals(cancel)
 
 	go func() {
-		producer := rabbit.CreateProducer(c.Queue.ConsumerTag, c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
+		producer := rabbit.CreateProducer(
+			c.Queue.ConsumerTag,
+			c.Queue.URI,
+			c.Queue.ExchangeName,
+			c.Queue.ExchangeType,
+			c.Queue.Queue,
+			c.Queue.BindingKey,
+		)
 		err = producer.Run(msgs)
 		if err != nil {
 			log.Fatal(err)
@@ -56,7 +64,12 @@ func main() {
 					continue
 				}
 
-				log.Println(time.Now().Format(time.Stamp), "sending", len(notifications), "messages")
+				log.Println(
+					time.Now().Format(time.Stamp),
+					"sending",
+					len(notifications),
+					"messages",
+				)
 				msgs <- amqp.Publishing{
 					ContentType: "application/json",
 					Body:        msg,

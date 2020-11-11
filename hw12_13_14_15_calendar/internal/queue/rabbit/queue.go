@@ -9,9 +9,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+
 	"github.com/cenkalti/backoff/v3"
 	"github.com/streadway/amqp"
-	"log"
 )
 
 type Queue struct {
@@ -30,7 +31,9 @@ type Queue struct {
 const producer = "producer"
 const consumer = "consumer"
 
-func initialize(consumerTag, clientType, uri, exchangeName, exchangeType, queue, bindingKey string) *Queue {
+func initialize(
+	consumerTag, clientType, uri, exchangeName, exchangeType, queue, bindingKey string,
+) *Queue {
 	return &Queue{
 		consumerTag:  consumerTag,
 		clientType:   clientType,
@@ -43,11 +46,15 @@ func initialize(consumerTag, clientType, uri, exchangeName, exchangeType, queue,
 	}
 }
 
-func CreateProducer(consumerTag, uri, exchangeName, exchangeType, queue, bindingKey string) queue.Producer {
+func CreateProducer(
+	consumerTag, uri, exchangeName, exchangeType, queue, bindingKey string,
+) queue.Producer {
 	return initialize(consumerTag, producer, uri, exchangeName, exchangeType, queue, bindingKey)
 }
 
-func CreateConsumer(consumerTag, uri, exchangeName, exchangeType, queue, bindingKey string) queue.Consumer {
+func CreateConsumer(
+	consumerTag, uri, exchangeName, exchangeType, queue, bindingKey string,
+) queue.Consumer {
 	return initialize(consumerTag, consumer, uri, exchangeName, exchangeType, queue, bindingKey)
 }
 
