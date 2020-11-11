@@ -52,6 +52,7 @@ func main() {
 			}
 
 			if len(notifications) != 0 {
+				// TODO: only if TEST
 				err = storage.AddNotifications(notifications)
 				if err != nil {
 					log.Println(err)
