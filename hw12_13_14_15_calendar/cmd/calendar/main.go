@@ -65,6 +65,7 @@ func handleSignals(ctx context.Context, cancel context.CancelFunc, app *app.App)
 	defer cancel()
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt)
+	signal.Stop(sigCh)
 	<-sigCh
 	err := app.Stop(ctx)
 	if err != nil {
