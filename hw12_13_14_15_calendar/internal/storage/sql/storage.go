@@ -119,7 +119,7 @@ func (r *Repo) getEvents(userID entities.ID, from time.Time, to time.Time) ([]en
 	err = nstmt.Select(&events, option)
 
 	if events == nil {
-		return []entities.Event{}, nil
+		return nil, nil
 	}
 
 	return events, err
@@ -145,15 +145,15 @@ func (r *Repo) GetEventsToNotify(from time.Time, to time.Time) ([]entities.Event
 
 	nstmt, err := r.db.PrepareNamed("SELECT * FROM events WHERE notify_at >= :start and notify_at < :end")
 	if err != nil {
-		return []entities.Event{}, err
+		return nil, err
 	}
 
 	err = nstmt.Select(&events, option)
 	if err != nil {
-		return []entities.Event{}, err
+		return nil, err
 	}
 	if events == nil {
-		return []entities.Event{}, nil
+		return nil, nil
 	}
 
 	return events, err
@@ -201,16 +201,16 @@ func (r *Repo) GetAllNotifications() ([]entities.Notification, error) {
 
 	nstmt, err := r.db.PrepareNamed("SELECT * FROM notifications ORDER BY event_id")
 	if err != nil {
-		return []entities.Notification{}, err
+		return nil, err
 	}
 
 	option := make(map[string]interface{})
 	err = nstmt.Select(&notifications, option)
 	if err != nil {
-		return []entities.Notification{}, err
+		return nil, err
 	}
 	if notifications == nil {
-		return []entities.Notification{}, err
+		return nil, err
 	}
 
 	return notifications, err
