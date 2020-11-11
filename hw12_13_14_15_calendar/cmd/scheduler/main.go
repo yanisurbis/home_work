@@ -16,6 +16,9 @@ import (
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go handleSignals(cancel)
+
 	msgs := make(chan amqp.Publishing)
 	c, err := config.GetConfig()
 	if err != nil {
@@ -27,8 +30,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	go handleSignals(cancel)
 
 	go func() {
 		producer := rabbit.CreateProducer(

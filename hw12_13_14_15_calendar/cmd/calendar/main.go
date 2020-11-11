@@ -36,6 +36,8 @@ func main() {
 	//args := getArgs()
 
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	c, err := config.GetConfig()
 	if err != nil {
 		log.Fatal(err)
