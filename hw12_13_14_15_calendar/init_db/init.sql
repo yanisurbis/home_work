@@ -37,5 +37,15 @@ values ('Event 1', current_timestamp, current_timestamp, 'Description 1', 1, cur
        ('Event 6', current_timestamp + interval '48 hours', current_timestamp, 'Description 5', 1,
         current_timestamp + interval '250 hours');
 
+create table notifications
+(
+    event_id    int,
+    user_id     int,
+    start_at    timestamp,
+    event_title varchar(100),
+    constraint fk_event FOREIGN KEY (event_id) REFERENCES events (id),
+    constraint fk_user FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
 
 
