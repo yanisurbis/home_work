@@ -26,7 +26,7 @@ func main() {
 	}
 
 	client := grpcclient.NewClient()
-	err = client.Start(ctx)
+	err = client.Start(ctx, c.GRPCServer)
 	if err != nil {
 		log.Fatal(err)
 	}
