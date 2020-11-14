@@ -6,15 +6,13 @@ import (
 	"calendar/internal/lib"
 	"calendar/internal/server/grpc/events_grpc"
 	"context"
-	"log"
-	"net"
-	"time"
-
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"log"
+	"net"
 )
 
 type Server struct {
@@ -107,7 +105,7 @@ func (s *Server) GetEventsToNotify(
 		To:   to,
 	}
 	events, err := s.eventService.GetEventsToNotify(ctx, &getEventsRequest)
-	log.Println(time.Now().Format(time.Stamp), "rpc:", len(events), "events")
+	//log.Println(time.Now().Format(time.Stamp), "rpc:", len(events), "events")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch events")
 	}
