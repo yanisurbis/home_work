@@ -30,7 +30,7 @@ func (s *Instance) Start(eventService domain.EventService, address string) error
 		c.String(http.StatusOK, "OK")
 	})
 
-	log.Println("server starting at port", address)
+	log.Println("Starting http server on", address)
 	s.instance = &http.Server{
 		Addr:    address,
 		Handler: router,
