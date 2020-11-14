@@ -51,22 +51,24 @@ func main() {
 				continue
 			}
 
-			if len(notifications) != 0 {
-				// TODO: only if TEST
+			if len(notifications) == 0 {
+				log.Println(time.Now().Format(time.Stamp), "zero events received")
+			}
+
+			for _, notification := range notifications {
+				log.Println(
+					time.Now().Format(time.Stamp),
+					notification.EventID,
+					notification.EventTitle,
+					notification.StartAt,
+				)
+			}
+
+			if os.Getenv("ENV") == "TEST" {
 				err = storage.AddNotifications(notifications)
 				if err != nil {
 					log.Println(err)
 				}
-				for _, notification := range notifications {
-					log.Println(
-						time.Now().Format(time.Stamp),
-						notification.EventID,
-						notification.EventTitle,
-						notification.StartAt,
-					)
-				}
-			} else {
-				log.Println(time.Now().Format(time.Stamp), "zero events received")
 			}
 		}
 	})
