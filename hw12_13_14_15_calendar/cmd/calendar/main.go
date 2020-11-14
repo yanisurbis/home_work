@@ -8,7 +8,6 @@ import (
 	httpserver "calendar/internal/server/http"
 	"calendar/internal/storage/sql"
 	"context"
-	"flag"
 	"log"
 	"os"
 	"os/signal"
@@ -16,25 +15,7 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
-type Args struct {
-	configPath string
-}
-
-func getArgs() *Args {
-	configPath := flag.String("config", "", "path to config file")
-	flag.Parse()
-
-	args := Args{
-		configPath: *configPath,
-	}
-
-	return &args
-}
-
 func main() {
-	//fmt.Println("Hello world123")
-	//args := getArgs()
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -42,7 +23,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//conf, _ := config.Read(args.configPath)
 
 	s := new(httpserver.Instance)
 	grpcServer := new(grpcserver.Server)
