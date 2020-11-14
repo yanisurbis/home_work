@@ -13,7 +13,7 @@ queue = "events_notifications"
 bindingKey = "events"
 
 [grpcServer]
-address = "localhost:9000"
+address = ":9000"
 
 [httpServer]
 address = ":8080"
