@@ -12,10 +12,10 @@ exchangeType = "direct"
 queue = "events_notifications"
 bindingKey = "events"
 
-[grpc]
-address = ":9000"
+[grpcServer]
+address = "localhost:9000"
 
-[http]
+[httpServer]
 address = ":8080"
 
 [scheduler]
