@@ -6,7 +6,6 @@ import (
 	"calendar/internal/lib"
 	"calendar/internal/server/grpc/events_grpc"
 	"context"
-	"log"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -110,7 +109,7 @@ func (c *Client) GetNotifications(from, to time.Time) ([]*entities.Notification,
 }
 
 func (c *Client) DeleteOldEvents(to time.Time) error {
-	log.Println(time.Now().Format(time.Stamp), "deleting old events")
+	//log.Println(time.Now().Format(time.Stamp), "deleting old events")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 

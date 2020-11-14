@@ -51,10 +51,6 @@ func main() {
 				continue
 			}
 
-			if len(notifications) == 0 {
-				log.Println(time.Now().Format(time.Stamp), "zero events received")
-			}
-
 			for _, notification := range notifications {
 				log.Println(
 					time.Now().Format(time.Stamp),
