@@ -324,7 +324,7 @@ func generateAddEventRequests() []entities.AddEventRequest {
 	return requests
 }
 
-func testEverything(t *testing.T, client *grpcclient.Client) {
+func testNotifications(t *testing.T, client *grpcclient.Client) {
 	//TODO: delete when docker is set up
 	err := os.Setenv("ENV", "TEST")
 	if err != nil {
@@ -393,7 +393,7 @@ func TestIntegration(t *testing.T) {
 	//t.Run("Check getEventsDay, getEventsWeek, getEventsMonth", func(t *testing.T) {
 	//	testLists(t, client)
 	//})
-	t.Run("XXX", func(t *testing.T) {
-		testEverything(t, client)
+	t.Run("Check notifications are sent", func(t *testing.T) {
+		testNotifications(t, client)
 	})
 }
