@@ -32,11 +32,16 @@ func GetConfig() (*Config, error) {
 	// TODO: encapsulate env var management probably
 	env := os.Getenv("ENV")
 	path := ""
-	args := getArgs()
-
-	if args.configPath != "" {
-		path = args.configPath
-	} else if env == "TEST" {
+	//args := getArgs()
+	//
+	//if args.configPath != "" {
+	//	path = args.configPath
+	//} else if env == "TEST" {
+	//	path = "../configs/local.toml"
+	//} else {
+	//	path = "./configs/local.toml"
+	//}
+	if env == "TEST" {
 		path = "../configs/local.toml"
 	} else {
 		path = "./configs/local.toml"

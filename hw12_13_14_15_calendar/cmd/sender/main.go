@@ -7,13 +7,11 @@ import (
 	"calendar/internal/storage/sql"
 	"context"
 	"encoding/json"
+	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/streadway/amqp"
 	"log"
 	"os"
 	"os/signal"
-	"time"
-
-	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/streadway/amqp"
 )
 
 func main() {
@@ -51,20 +49,17 @@ func main() {
 				continue
 			}
 
-			for _, notification := range notifications {
-				log.Println(
-					time.Now().Format(time.Stamp),
-					notification.EventID,
-					notification.EventTitle,
-					notification.StartAt,
-				)
-			}
+			log.Println("received", len(notifications), "notifications")
 
-			if os.Getenv("ENV") == "TEST" {
-				err = storage.AddNotifications(notifications)
-				if err != nil {
-					log.Println(err)
-				}
+			//if os.Getenv("ENV") == "TEST" {
+			//	err = storage.AddNotifications(notifications)
+			//	if err != nil {
+			//		log.Println(err)
+			//	}
+			//}
+			err = storage.AddNotifications(notifications)
+			if err != nil {
+				log.Println(err)
 			}
 		}
 	})

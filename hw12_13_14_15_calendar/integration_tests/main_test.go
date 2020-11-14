@@ -53,7 +53,7 @@ func getEventsDay(client *grpcclient.Client) []entities.Event {
 
 func testCreate(t *testing.T, client *grpcclient.Client) *entities.Event {
 	location, _ := time.LoadLocation("UTC")
-	baseTime := time.Now().In(location)
+	baseTime := time.Now().Add(1 * time.Minute).In(location)
 	addEventRequest := entities.AddEventRequest{
 		Title:       "Test event, title",
 		StartAt:     baseTime,
@@ -69,7 +69,7 @@ func testCreate(t *testing.T, client *grpcclient.Client) *entities.Event {
 	}
 
 	events := getEventsDay(client)
-
+	
 	addedEvent := new(entities.Event)
 	for _, event := range events {
 		if event.Title == addEventRequest.Title {
@@ -348,7 +348,8 @@ func testNotifications(t *testing.T, client *grpcclient.Client) {
 		}
 	}
 
-	secondsToSleep := time.Duration(c.Scheduler.FetchIntervalSeconds+1) * time.Second
+	estimatedTimeToDeliverNotification := 2
+	secondsToSleep := time.Duration(c.Scheduler.FetchIntervalSeconds + estimatedTimeToDeliverNotification) * time.Second
 	time.Sleep(secondsToSleep)
 
 	dbNotifications, err := storage.GetAllNotifications()
@@ -377,15 +378,15 @@ func TestIntegration(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	//t.Run("CRUD, basic cases work", func(t *testing.T) {
-	//	testCRUD(t, client)
-	//})
-	//t.Run("CRUD, basic validations are present", func(t *testing.T) {
-	//	testCRUDErrors(t, client)
-	//})
-	//t.Run("Check getEventsDay, getEventsWeek, getEventsMonth", func(t *testing.T) {
-	//	testLists(t, client)
-	//})
+	t.Run("CRUD, basic cases work", func(t *testing.T) {
+		testCRUD(t, client)
+	})
+	t.Run("CRUD, basic validations are present", func(t *testing.T) {
+		testCRUDErrors(t, client)
+	})
+	t.Run("Check getEventsDay, getEventsWeek, getEventsMonth", func(t *testing.T) {
+		testLists(t, client)
+	})
 	t.Run("Check notifications are sent", func(t *testing.T) {
 		testNotifications(t, client)
 	})
