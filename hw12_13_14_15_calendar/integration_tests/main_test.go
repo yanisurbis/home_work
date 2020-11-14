@@ -9,7 +9,6 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/stretchr/testify/assert"
 	"log"
-	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -325,12 +324,6 @@ func generateAddEventRequests() []entities.AddEventRequest {
 }
 
 func testNotifications(t *testing.T, client *grpcclient.Client) {
-	//TODO: delete when docker is set up
-	err := os.Setenv("ENV", "TEST")
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	c, err := config.GetConfig()
 	if err != nil {
 		log.Fatal(err)
