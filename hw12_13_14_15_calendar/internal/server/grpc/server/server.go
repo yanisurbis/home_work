@@ -6,7 +6,6 @@ import (
 	"calendar/internal/lib"
 	"calendar/internal/server/grpc/events_grpc"
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"time"
@@ -278,9 +277,8 @@ func (s *Server) DeleteEvent(
 	return createEventResponse(*event)
 }
 
-func (s *Server) Start(eventService domain.EventService) error {
-	// TODO: docker
-	lsn, err := net.Listen("tcp", "localhost:9090")
+func (s *Server) Start(eventService domain.EventService, address string) error {
+	lsn, err := net.Listen("tcp", address)
 	if err != nil {
 		return err
 	}
@@ -290,7 +288,7 @@ func (s *Server) Start(eventService domain.EventService) error {
 
 	events_grpc.RegisterEventsServer(s.instance, service)
 
-	fmt.Printf("Starting server on %s\n", lsn.Addr().String())
+	log.Printf("Starting server on %s\n", lsn.Addr().String())
 	if err := s.instance.Serve(lsn); err != nil {
 		return err
 	}

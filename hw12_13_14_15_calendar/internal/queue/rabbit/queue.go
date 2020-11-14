@@ -184,7 +184,7 @@ func (c *Queue) Handle(ctx context.Context, fn func(<-chan amqp.Delivery)) error
 					if err != nil {
 						return err
 					}
-					fmt.Println("reconnected... possibly")
+					log.Println("reconnected... possibly")
 				}
 			}
 		case <-ctx.Done():
@@ -224,7 +224,7 @@ func (c *Queue) Run(msgs <-chan amqp.Publishing) error {
 			if err != nil {
 				return err
 			}
-			fmt.Println("Reconnected... possibly")
+			log.Println("Reconnected... possibly")
 		}
 	}
 }
