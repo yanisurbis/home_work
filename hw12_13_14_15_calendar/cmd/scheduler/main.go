@@ -79,9 +79,6 @@ func main() {
 					Body:        msg,
 				}:
 				}
-
-			} else if len(notifications) == 0 {
-				log.Println(time.Now().Format(time.Stamp), "no notifications to send")
 			}
 
 			// TODO: create new table to track events which were sent
