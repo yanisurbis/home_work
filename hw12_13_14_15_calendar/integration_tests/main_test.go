@@ -53,9 +53,8 @@ func getEventsDay(client *grpcclient.Client) []entities.Event {
 }
 
 func testCreate(t *testing.T, client *grpcclient.Client) *entities.Event {
-	// TODO: remove add minute
 	location, _ := time.LoadLocation("UTC")
-	baseTime := time.Now().In(location).Add(1 * time.Minute)
+	baseTime := time.Now().In(location)
 	addEventRequest := entities.AddEventRequest{
 		Title:       "Test event, title",
 		StartAt:     baseTime,
