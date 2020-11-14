@@ -13,6 +13,7 @@ func read(fpath string) (c Config, err error) {
 }
 
 func GetConfig() (*Config, error) {
+	// TODO: encapsulate probably
 	env := os.Getenv("ENV")
 	path := ""
 	if env == "TEST" {
