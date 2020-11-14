@@ -327,6 +327,7 @@ func generateAddEventRequests() []entities.AddEventRequest {
 
 func testEverything(t *testing.T, client *grpcclient.Client) {
 	//TODO: delete when docker is set up
+	// TODO: add new table in initialization script
 	err := os.Setenv("ENV", "TEST")
 	if err != nil {
 		log.Fatal(err)
