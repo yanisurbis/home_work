@@ -38,11 +38,11 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c, err := config.GetConfig()
+	conf, err := config.GetConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
-	//c, _ := config.Read(args.configPath)
+	//conf, _ := config.Read(args.configPath)
 
 	s := new(httpserver.Instance)
 	grpcServer := new(grpcserver.Server)
@@ -56,7 +56,7 @@ func main() {
 
 	go handleSignals(ctx, cancel, a)
 
-	if err := a.Run(ctx, c.Logger.Path, c.PSQL.DSN); err != nil {
+	if err := a.Run(ctx, conf); err != nil {
 		log.Fatal(err)
 	}
 }

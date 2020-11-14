@@ -35,6 +35,8 @@ type Config struct {
 	Logger    LoggerConfig
 	Queue     QueueConfig
 	Scheduler SchedulerConfig
+	GRPCServer      GRPCConfig
+	HTTPServer     HTTPConfig
 }
 
 type PSQLConfig struct {
@@ -56,4 +58,12 @@ type QueueConfig struct {
 
 type SchedulerConfig struct {
 	FetchIntervalSeconds int
+}
+
+type GRPCConfig struct {
+	Address string
+}
+
+type HTTPConfig struct {
+	Address string
 }
