@@ -1,6 +1,7 @@
 package grpcclient
 
 import (
+	"calendar/internal/config"
 	"calendar/internal/domain/entities"
 	"calendar/internal/lib"
 	"calendar/internal/server/grpc/events_grpc"
@@ -24,9 +25,8 @@ func NewClient() *Client {
 	return &Client{}
 }
 
-func (c *Client) Start(ctx context.Context) error {
-	// TODO: docker
-	conn, err := grpc.DialContext(ctx, "localhost:9090", grpc.WithInsecure())
+func (c *Client) Start(ctx context.Context, config config.GRPCConfig) error {
+	conn, err := grpc.DialContext(ctx, config.Address, grpc.WithInsecure())
 	if err != nil {
 		return err
 	}

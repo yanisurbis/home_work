@@ -374,8 +374,13 @@ func testEverything(t *testing.T, client *grpcclient.Client) {
 }
 
 func TestIntegration(t *testing.T) {
+	c, err := config.GetConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	client := grpcclient.NewClient()
-	err := client.Start(context.Background())
+	err = client.Start(context.Background(), c.GRPCServer)
 	if err != nil {
 		log.Fatal(err)
 	}
