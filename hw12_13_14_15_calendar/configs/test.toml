@@ -1,0 +1,16 @@
+[psql]
+dsn = "host=db port=5432 user=yanis password=yanis dbname=events sslmode=disable"
+
+[logger]
+path = "./logs/logs.txt"
+
+[queue]
+consumerTag = "events_consumer"
+uri = "amqp://guest:guest@queue/"
+exchangeName = "exchange"
+exchangeType = "direct"
+queue = "events_notifications"
+bindingKey = "events"
+
+[scheduler]
+fetchIntervalSeconds = 5
