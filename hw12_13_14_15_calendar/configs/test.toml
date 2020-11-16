@@ -13,10 +13,10 @@ queue = "events_notifications"
 bindingKey = "events"
 
 [grpcServer]
-address = "web"
+address = "web:9000"
 
 [httpServer]
-address = "web"
+address = "web:8080"
 
 [scheduler]
 fetchIntervalSeconds = 5

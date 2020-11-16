@@ -31,7 +31,6 @@ func getArgs() *Args {
 
 func GetConfig() (*Config, error) {
 	// TODO: encapsulate env var management probably
-	log.
 	env := os.Getenv("ENV")
 	path := ""
 	//args := getArgs()
@@ -44,6 +43,8 @@ func GetConfig() (*Config, error) {
 	//	path = "./configs/local.toml"
 	//}
 	if env == "TEST" {
+		path = "./configs/test.toml"
+	} else if env == "TEST_RUNNER" {
 		path = "../configs/test.toml"
 	} else {
 		path = "./configs/local.toml"
