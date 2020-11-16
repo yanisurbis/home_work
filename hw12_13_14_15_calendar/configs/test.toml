@@ -12,5 +12,11 @@ exchangeType = "direct"
 queue = "events_notifications"
 bindingKey = "events"
 
+[grpcServer]
+address = "web"
+
+[httpServer]
+address = "web"
+
 [scheduler]
 fetchIntervalSeconds = 5

@@ -276,6 +276,7 @@ func (s *Server) DeleteEvent(
 }
 
 func (s *Server) Start(eventService domain.EventService, address string) error {
+	log.Println("Address: ", address)
 	lsn, err := net.Listen("tcp", address)
 	if err != nil {
 		return err
