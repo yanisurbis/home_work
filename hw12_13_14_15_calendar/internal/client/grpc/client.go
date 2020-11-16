@@ -1,14 +1,15 @@
 package grpcclient
 
 import (
+	"calendar/internal/config"
 	"calendar/internal/domain/entities"
 	"calendar/internal/lib"
 	"calendar/internal/server/grpc/events_grpc"
 	"context"
+	"time"
+
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/wrappers"
-	"log"
-	"time"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/grpc"
@@ -23,9 +24,8 @@ func NewClient() *Client {
 	return &Client{}
 }
 
-func (c *Client) Start(ctx context.Context) error {
-	// TODO: docker
-	conn, err := grpc.DialContext(ctx, "localhost:9090", grpc.WithInsecure())
+func (c *Client) Start(ctx context.Context, config config.GRPCConfig) error {
+	conn, err := grpc.DialContext(ctx, config.Address, grpc.WithInsecure())
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,9 @@ func convertEventsResponseToEvents(response *events_grpc.EventsResponse) ([]enti
 	return events, nil
 }
 
-func convertEventsToNotifications(events []*events_grpc.EventResponse) ([]*entities.Notification, error) {
+func convertEventsToNotifications(
+	events []*events_grpc.EventResponse,
+) ([]*entities.Notification, error) {
 	notifications := make([]*entities.Notification, 0, len(events))
 
 	for _, event := range events {
@@ -107,7 +109,7 @@ func (c *Client) GetNotifications(from, to time.Time) ([]*entities.Notification,
 }
 
 func (c *Client) DeleteOldEvents(to time.Time) error {
-	log.Println(time.Now().Format(time.Stamp), "deleting old events")
+	//log.Println(time.Now().Format(time.Stamp), "deleting old events")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 

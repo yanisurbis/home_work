@@ -7,17 +7,16 @@ import (
 	"calendar/internal/storage/sql"
 	"context"
 	"encoding/json"
+	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/streadway/amqp"
 	"log"
 	"os"
 	"os/signal"
-	"time"
-
-	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/streadway/amqp"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	c, err := config.GetConfig()
 	if err != nil {
@@ -30,28 +29,37 @@ func main() {
 		log.Fatal(err)
 	}
 
-	consumer := rabbit.CreateConsumer(c.Queue.ConsumerTag, c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
+	consumer := rabbit.CreateConsumer(
+		c.Queue.ConsumerTag,
+		c.Queue.URI,
+		c.Queue.ExchangeName,
+		c.Queue.ExchangeType,
+		c.Queue.Queue,
+		c.Queue.BindingKey,
+	)
 	go handleSignals(cancel)
 
 	err = consumer.Handle(ctx, func(msgs <-chan amqp.Delivery) {
 		for msg := range msgs {
 			var notifications []entities.Notification
 			err := json.Unmarshal(msg.Body, &notifications)
+
 			if err != nil {
 				log.Println(err)
-				//	TODO: add more channels?
-			} else {
-				if len(notifications) != 0 {
-					err = storage.AddNotifications(notifications)
-					if err != nil {
-						log.Println(err)
-					}
-					for _, notification := range notifications {
-						log.Println(time.Now().Format(time.Stamp), notification.EventID, notification.EventTitle, notification.StartAt)
-					}
-				} else {
-					log.Println(time.Now().Format(time.Stamp), "zero events received")
-				}
+				continue
+			}
+
+			log.Println("received", len(notifications), "notifications")
+
+			//if os.Getenv("ENV") == "TEST" {
+			//	err = storage.AddNotifications(notifications)
+			//	if err != nil {
+			//		log.Println(err)
+			//	}
+			//}
+			err = storage.AddNotifications(notifications)
+			if err != nil {
+				log.Println(err)
 			}
 		}
 	})
@@ -64,5 +72,6 @@ func handleSignals(cancel context.CancelFunc) {
 	defer cancel()
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt)
+	signal.Stop(sigCh)
 	<-sigCh
 }

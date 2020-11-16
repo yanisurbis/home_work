@@ -31,7 +31,8 @@ func (r *Repo) AddEvent(event entities.Event) (err error) {
 	var events []entities.Event
 
 	nstmt, err := r.db.PrepareNamed(
-		"INSERT INTO events (title, start_at, end_at, description, user_id, notify_at) VALUES (:title, :start_at, :end_at, :description, :user_id, :notify_at)")
+		"INSERT INTO events (title, start_at, end_at, description, user_id, notify_at) VALUES (:title, :start_at, :end_at, :description, :user_id, :notify_at)",
+	)
 
 	if err != nil {
 		return
@@ -50,7 +51,8 @@ func (r *Repo) UpdateEvent(userID entities.ID, event entities.Event) (err error)
 	var events []entities.Event
 
 	nstmt, err := r.db.PrepareNamed(
-		"UPDATE events SET title=:title, start_at=:start_at, end_at = :end_at, description = :description, notify_at=:notify_at WHERE  user_id = :user_id and id=:id")
+		"UPDATE events SET title=:title, start_at=:start_at, end_at = :end_at, description = :description, notify_at=:notify_at WHERE  user_id = :user_id and id=:id",
+	)
 
 	if err != nil {
 		return
@@ -103,14 +105,20 @@ func (r *Repo) DeleteEvent(eventID entities.ID) error {
 	return nil
 }
 
-func (r *Repo) getEvents(userID entities.ID, from time.Time, to time.Time) ([]entities.Event, error) {
+func (r *Repo) getEvents(
+	userID entities.ID,
+	from time.Time,
+	to time.Time,
+) ([]entities.Event, error) {
 	var events []entities.Event
 	option := make(map[string]interface{})
 	option["start"] = from
 	option["end"] = to
 	option["user_id"] = userID
 
-	nstmt, err := r.db.PrepareNamed("SELECT * FROM events WHERE user_id = :user_id and start_at>=:start and start_at<:end")
+	nstmt, err := r.db.PrepareNamed(
+		"SELECT * FROM events WHERE user_id = :user_id and start_at>=:start and start_at<:end",
+	)
 
 	if err != nil {
 		return nil, err
@@ -119,7 +127,7 @@ func (r *Repo) getEvents(userID entities.ID, from time.Time, to time.Time) ([]en
 	err = nstmt.Select(&events, option)
 
 	if events == nil {
-		return []entities.Event{}, nil
+		return nil, nil
 	}
 
 	return events, err
@@ -143,17 +151,19 @@ func (r *Repo) GetEventsToNotify(from time.Time, to time.Time) ([]entities.Event
 	option["start"] = from
 	option["end"] = to
 
-	nstmt, err := r.db.PrepareNamed("SELECT * FROM events WHERE notify_at >= :start and notify_at < :end")
+	nstmt, err := r.db.PrepareNamed(
+		"SELECT * FROM events WHERE notify_at >= :start and notify_at < :end",
+	)
 	if err != nil {
-		return []entities.Event{}, err
+		return nil, err
 	}
 
 	err = nstmt.Select(&events, option)
 	if err != nil {
-		return []entities.Event{}, err
+		return nil, err
 	}
 	if events == nil {
-		return []entities.Event{}, nil
+		return nil, nil
 	}
 
 	return events, err
@@ -179,7 +189,8 @@ func (r *Repo) DeleteOldEvents(to time.Time) error {
 
 func (r *Repo) AddNotifications(notifications []entities.Notification) error {
 	nstmt, err := r.db.PrepareNamed(
-		"INSERT INTO notifications (event_id, user_id, event_title, start_at) VALUES (:event_id, :user_id, :event_title, :start_at)")
+		"INSERT INTO notifications (event_id, user_id, event_title, start_at) VALUES (:event_id, :user_id, :event_title, :start_at)",
+	)
 
 	if err != nil {
 		return err
@@ -201,16 +212,16 @@ func (r *Repo) GetAllNotifications() ([]entities.Notification, error) {
 
 	nstmt, err := r.db.PrepareNamed("SELECT * FROM notifications ORDER BY event_id")
 	if err != nil {
-		return []entities.Notification{}, err
+		return nil, err
 	}
 
 	option := make(map[string]interface{})
 	err = nstmt.Select(&notifications, option)
 	if err != nil {
-		return []entities.Notification{}, err
+		return nil, err
 	}
 	if notifications == nil {
-		return []entities.Notification{}, err
+		return nil, err
 	}
 
 	return notifications, err

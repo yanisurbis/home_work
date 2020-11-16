@@ -55,8 +55,8 @@ type DeleteOldEventsRequest struct {
 }
 
 type Notification struct {
-	EventID    ID `db:"event_id"`
-	UserID     ID `db:"user_id"`
-	EventTitle string `db:"event_title"`
+	EventID    ID        `db:"event_id"`
+	UserID     ID        `db:"user_id"`
+	EventTitle string    `db:"event_title"`
 	StartAt    time.Time `db:"start_at"`
 }
