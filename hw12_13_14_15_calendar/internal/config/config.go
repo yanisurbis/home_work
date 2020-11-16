@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"log"
 	"os"
 
 	"github.com/BurntSushi/toml"
@@ -30,6 +31,7 @@ func getArgs() *Args {
 
 func GetConfig() (*Config, error) {
 	// TODO: encapsulate env var management probably
+	log.
 	env := os.Getenv("ENV")
 	path := ""
 	//args := getArgs()
@@ -42,10 +44,12 @@ func GetConfig() (*Config, error) {
 	//	path = "./configs/local.toml"
 	//}
 	if env == "TEST" {
-		path = "../configs/local.toml"
+		path = "../configs/test.toml"
 	} else {
 		path = "./configs/local.toml"
 	}
+
+	log.Println(env)
 
 	c, err := read(path)
 	if err != nil {
@@ -56,12 +60,12 @@ func GetConfig() (*Config, error) {
 }
 
 type Config struct {
-	PSQL      PSQLConfig
-	Logger    LoggerConfig
-	Queue     QueueConfig
-	Scheduler SchedulerConfig
-	GRPCServer      GRPCConfig
-	HTTPServer     HTTPConfig
+	PSQL       PSQLConfig
+	Logger     LoggerConfig
+	Queue      QueueConfig
+	Scheduler  SchedulerConfig
+	GRPCServer GRPCConfig
+	HTTPServer HTTPConfig
 }
 
 type PSQLConfig struct {

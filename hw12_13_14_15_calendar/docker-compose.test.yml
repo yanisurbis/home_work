@@ -1,19 +1,22 @@
 version: "3.3"
+#TODO extend base configuration, not duplicate it
 
 services:
   db:
+    environment:
+      - ENV=TEST
+      - POSTGRES_PASSWORD=postgres
     image: postgres
     networks:
       - test_api
     volumes:
-      - /home/yanis/psqldata:/var/lib/postgresql/data
       - ./init_db:/docker-entrypoint-initdb.d/
     ports:
       - "5432:5432"
-    logging:
-      driver: none
 # TODO: rename to API
   web:
+    environment:
+      - ENV=TEST
     build:
       dockerfile: ./cmd/calendar/Dockerfile
       context: .
@@ -24,9 +27,9 @@ services:
       - "9090:9090"
     depends_on:
       - db
-    logging:
-      driver: none
   scheduler:
+    environment:
+      - ENV=TEST
     build:
       dockerfile: ./cmd/scheduler/Dockerfile
       context: .
@@ -35,9 +38,9 @@ services:
     depends_on:
       - web
       - queue
-    logging:
-      driver: none
   sender:
+    environment:
+      - ENV=TEST
     build:
       dockerfile: ./cmd/sender/Dockerfile
       context: .
@@ -45,24 +48,25 @@ services:
       - test_api
     depends_on:
       - queue
-    logging:
-      driver: none
   queue:
     image: rabbitmq:3-management
     hostname: rabbit
-    #    TODO: try volumes again
-    #    volumes:
-    #      - /home/yanis/rabbitmq/etc/:/etc/rabbitmq/
-    #      - /home/yanis/rabbitmq/data/:/var/lib/rabbitmq/
-    #      - /home/yanis/rabbitmq/logs/:/var/log/rabbitmq/
     ports:
       - "5672:5672"
       - "15672:15672"
     networks:
       - test_api
-    logging:
-      driver: none
+    environment:
+      - ENV=TEST
   sut:
+    networks:
+      - test_api
+    depends_on:
+      - web
+      - sender
+      - scheduler
+    environment:
+      - ENV=TEST
     build:
       dockerfile: ./integration_tests/Dockerfile
       context: .
