@@ -5,10 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cenkalti/backoff/v3"
 	"log"
 	"time"
 
+	"github.com/cenkalti/backoff/v3"
 	"github.com/jmoiron/sqlx"
 )
 

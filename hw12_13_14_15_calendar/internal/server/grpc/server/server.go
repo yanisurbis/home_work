@@ -6,13 +6,14 @@ import (
 	"calendar/internal/lib"
 	"calendar/internal/server/grpc/events_grpc"
 	"context"
+	"log"
+	"net"
+
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
-	"log"
-	"net"
 )
 
 type Server struct {

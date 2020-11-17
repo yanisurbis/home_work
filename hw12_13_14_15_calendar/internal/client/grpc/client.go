@@ -7,14 +7,13 @@ import (
 	"calendar/internal/server/grpc/events_grpc"
 	"context"
 	"fmt"
-	"github.com/cenkalti/backoff/v3"
 	"log"
 	"time"
 
+	"github.com/cenkalti/backoff/v3"
 	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/wrappers"
-
 	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/grpc"
 )
 
