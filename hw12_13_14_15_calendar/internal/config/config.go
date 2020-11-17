@@ -1,7 +1,6 @@
 package config
 
 import (
-	"flag"
 	"os"
 
 	"github.com/BurntSushi/toml"
@@ -13,40 +12,16 @@ func read(fpath string) (c Config, err error) {
 	return
 }
 
-type Args struct {
-	configPath string
-}
-
-func getArgs() *Args {
-	configPath := flag.String("config", "", "path to config file")
-	flag.Parse()
-
-	args := Args{
-		configPath: *configPath,
-	}
-
-	return &args
-}
-
 func GetConfig() (*Config, error) {
 	// TODO: encapsulate env var management probably
 	env := os.Getenv("ENV")
-	path := ""
-	//args := getArgs()
-	//
-	//if args.configPath != "" {
-	//	path = args.configPath
-	//} else if env == "TEST" {
-	//	path = "../configs/local.toml"
-	//} else {
-	//	path = "./configs/local.toml"
-	//}
-	if env == "TEST" {
+
+	path := "./configs/local.toml"
+	switch env {
+	case "TEST":
 		path = "./configs/test.toml"
-	} else if env == "TEST_RUNNER" {
+	case "TEST_RUNNER":
 		path = "../configs/test.toml"
-	} else {
-		path = "./configs/local.toml"
 	}
 
 	c, err := read(path)
