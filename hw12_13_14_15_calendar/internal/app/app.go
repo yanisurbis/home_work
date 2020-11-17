@@ -8,6 +8,7 @@ import (
 	"calendar/internal/server"
 	"context"
 	"log"
+	"time"
 )
 
 type App struct {
@@ -33,11 +34,20 @@ func (a *App) Run(ctx context.Context, config *config.Config) error {
 		return err
 	}
 
+	log.Println("sleeping")
+	time.Sleep(10*time.Second)
+	log.Printf("db config: %v", config.PSQL)
 	// storage
 	err = a.storage.Connect(ctx, config.PSQL.DSN)
 	if err != nil {
 		return err
 	}
+
+	events, err := a.storage.GetEventsMonth(1, time.Now().Add(-1 * time.Hour))
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("events: %v", events)
 
 	// service
 	eventService := domain2.EventService{

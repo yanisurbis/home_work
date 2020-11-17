@@ -69,7 +69,7 @@ func testCreate(t *testing.T, client *grpcclient.Client) *entities.Event {
 	}
 
 	events := getEventsDay(client)
-	
+
 	addedEvent := new(entities.Event)
 	for _, event := range events {
 		if event.Title == addEventRequest.Title {
@@ -372,6 +372,7 @@ func TestIntegration(t *testing.T) {
 		log.Fatal(err)
 	}
 
+	time.Sleep(10*time.Second)
 	client := grpcclient.NewClient()
 	err = client.Start(context.Background(), c.GRPCServer)
 	if err != nil {
