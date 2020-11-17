@@ -10,7 +10,7 @@ services:
     networks:
       - test_api
     volumes:
-      - ./database_data:/var/lib/postgresql/data
+#      - ./database_data:/var/lib/postgresql/data
       - ./init_db:/docker-entrypoint-initdb.d/
     ports:
       - "5432:5432"
