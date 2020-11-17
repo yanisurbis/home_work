@@ -51,12 +51,6 @@ func main() {
 
 			log.Println("received", len(notifications), "notifications")
 
-			//if os.Getenv("ENV") == "TEST" {
-			//	err = storage.AddNotifications(notifications)
-			//	if err != nil {
-			//		log.Println(err)
-			//	}
-			//}
 			err = storage.AddNotifications(notifications)
 			if err != nil {
 				log.Println(err)

@@ -2,7 +2,6 @@ package config
 
 import (
 	"flag"
-	"log"
 	"os"
 
 	"github.com/BurntSushi/toml"
@@ -49,8 +48,6 @@ func GetConfig() (*Config, error) {
 	} else {
 		path = "./configs/local.toml"
 	}
-
-	log.Println(env)
 
 	c, err := read(path)
 	if err != nil {

@@ -6,6 +6,9 @@ import (
 	"calendar/internal/lib"
 	"calendar/internal/server/grpc/events_grpc"
 	"context"
+	"fmt"
+	"github.com/cenkalti/backoff/v3"
+	"log"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -25,15 +28,21 @@ func NewClient() *Client {
 }
 
 func (c *Client) Start(ctx context.Context, config config.GRPCConfig) error {
-	conn, err := grpc.DialContext(ctx, config.Address, grpc.WithInsecure())
-	if err != nil {
-		return err
+	ticker := backoff.NewTicker(backoff.NewExponentialBackOff())
+
+	for range ticker.C {
+		conn, err := grpc.DialContext(ctx, config.Address, grpc.WithInsecure())
+		if err != nil {
+			log.Printf("could not connect to grpc server: %+v", err)
+			continue
+		}
+		log.Printf("connected successfully to grpc sever")
+		c.conn = conn
+		c.client = events_grpc.NewEventsClient(c.conn)
+		return nil
 	}
 
-	c.conn = conn
-	c.client = events_grpc.NewEventsClient(c.conn)
-
-	return err
+	return fmt.Errorf("failed to connect to grpc server")
 }
 
 func convertEventsResponseToEvents(response *events_grpc.EventsResponse) ([]entities.Event, error) {
