@@ -34,9 +34,6 @@ func (a *App) Run(ctx context.Context, config *config.Config) error {
 		return err
 	}
 
-	log.Println("sleeping")
-	time.Sleep(10*time.Second)
-	log.Printf("db config: %v", config.PSQL)
 	// storage
 	err = a.storage.Connect(ctx, config.PSQL.DSN)
 	if err != nil {
