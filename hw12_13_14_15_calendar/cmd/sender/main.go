@@ -12,7 +12,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"time"
 )
 
 func main() {
@@ -24,7 +23,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	time.Sleep(10*time.Second)
 	storage := new(sql.Repo)
 	err = storage.Connect(context.Background(), c.PSQL.DSN)
 	if err != nil {

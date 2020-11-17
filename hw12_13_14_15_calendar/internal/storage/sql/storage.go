@@ -4,6 +4,9 @@ import (
 	"calendar/internal/domain/entities"
 	"context"
 	"errors"
+	"fmt"
+	"github.com/cenkalti/backoff/v3"
+	"log"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -18,9 +21,19 @@ type Repo struct {
 }
 
 func (r *Repo) Connect(ctx context.Context, dsn string) (err error) {
-	r.db, err = sqlx.Connect("pgx", dsn)
+	ticker := backoff.NewTicker(backoff.NewExponentialBackOff())
 
-	return
+	for range ticker.C {
+		r.db, err = sqlx.Connect("pgx", dsn)
+		if err != nil {
+			log.Printf("could not connect to database: %+v", err)
+			continue
+		}
+		log.Printf("connected successfully to database")
+		return nil
+	}
+
+	return fmt.Errorf("failed to connect to database")
 }
 
 func (r *Repo) Close() error {
