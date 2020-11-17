@@ -43,11 +43,6 @@ services:
   queue:
     image: rabbitmq:3-management
     hostname: rabbit
-#    TODO: try volumes again
-#    volumes:
-#      - /home/yanis/rabbitmq/etc/:/etc/rabbitmq/
-#      - /home/yanis/rabbitmq/data/:/var/lib/rabbitmq/
-#      - /home/yanis/rabbitmq/logs/:/var/log/rabbitmq/
     ports:
       - "5672:5672"
       - "15672:15672"

@@ -16,7 +16,6 @@ services:
     logging:
       driver: none
     container_name: calendar_test_db
-# TODO: rename to API
   web:
     environment:
       - ENV=TEST
