@@ -6,12 +6,13 @@ import (
 	"calendar/internal/domain/entities"
 	"calendar/internal/storage/sql"
 	"context"
-	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/stretchr/testify/assert"
 	"log"
 	"strconv"
 	"testing"
 	"time"
+
+	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/stretchr/testify/assert"
 )
 
 func getEvents(client *grpcclient.Client, request entities.GetEventsRequest) []entities.Event {

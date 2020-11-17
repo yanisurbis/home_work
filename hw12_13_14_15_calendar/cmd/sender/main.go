@@ -7,11 +7,12 @@ import (
 	"calendar/internal/storage/sql"
 	"context"
 	"encoding/json"
-	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/streadway/amqp"
 	"log"
 	"os"
 	"os/signal"
+
+	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/streadway/amqp"
 )
 
 func main() {
