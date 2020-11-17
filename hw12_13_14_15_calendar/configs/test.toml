@@ -1,5 +1,7 @@
 [psql]
-dsn = "host=db port=5432 user=yanis password=yanis dbname=events sslmode=disable"
+# TODO: should be yanis
+#dsn = "host=db port=5432 user=yanis password=yanis dbname=events sslmode=disable"
+dsn = "host=db port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"
 
 [logger]
 path = "./logs/logs.txt"

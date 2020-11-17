@@ -38,7 +38,9 @@ proto:
 	protoc --proto_path=./internal/server/grpc/protobufs --go_out=./internal/server/grpc/events_grpc --plugin=$(GOPATH)/bin/protoc-gen-go --go_opt=paths=source_relative events.proto
 
 integration-tests:
-	docker-compose -f docker-compose.test.yml -p tests build -q
-	docker-compose -f docker-compose.test.yml -p tests up --abort-on-container-exit --exit-code-from sut
+	#docker-compose -f docker-compose.test.yml -p tests build -q
+	docker-compose -f docker-compose.test.yml -p tests build
+	#docker-compose -f docker-compose.test.yml -p tests up --abort-on-container-exit --exit-code-from sut
+	docker-compose -f docker-compose.test.yml -p tests up
 
 .PHONY: build test lint
