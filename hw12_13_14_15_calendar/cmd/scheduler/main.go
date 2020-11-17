@@ -3,6 +3,7 @@ package main
 import (
 	grpcclient "calendar/internal/client/grpc"
 	"calendar/internal/config"
+	"calendar/internal/domain/entities"
 	"calendar/internal/queue/rabbit"
 	"context"
 	"encoding/json"
@@ -13,6 +14,30 @@ import (
 
 	"github.com/streadway/amqp"
 )
+
+func createAndRunProducer(c *config.Config, msgs chan amqp.Publishing) {
+	producer := rabbit.CreateProducer(
+		c.Queue.ConsumerTag,
+		c.Queue.URI,
+		c.Queue.ExchangeName,
+		c.Queue.ExchangeType,
+		c.Queue.Queue,
+		c.Queue.BindingKey,
+	)
+	err := producer.Run(msgs)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func logNotifications(notifications []*entities.Notification) {
+	log.Println(
+		time.Now().Format(time.Stamp),
+		"sending",
+		len(notifications),
+		"messages",
+	)
+}
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -31,46 +56,24 @@ func main() {
 		log.Fatal(err)
 	}
 
-	go func() {
-		producer := rabbit.CreateProducer(
-			c.Queue.ConsumerTag,
-			c.Queue.URI,
-			c.Queue.ExchangeName,
-			c.Queue.ExchangeType,
-			c.Queue.Queue,
-			c.Queue.BindingKey,
-		)
-		err = producer.Run(msgs)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
-
+	go createAndRunProducer(c, msgs)
 	interval := time.Duration(c.Scheduler.FetchIntervalSeconds) * time.Second
 	ticker := time.NewTicker(interval)
 	for {
 		select {
 		case <-ticker.C:
 			notifications, err := client.GetNotifications(time.Now().Add(-1*interval), time.Now())
-
 			if err != nil {
 				log.Println(err)
 				continue
 			}
-
 			if len(notifications) > 0 {
 				msg, err := json.Marshal(notifications)
 				if err != nil {
 					log.Println(err)
 					continue
 				}
-
-				log.Println(
-					time.Now().Format(time.Stamp),
-					"sending",
-					len(notifications),
-					"messages",
-				)
+				logNotifications(notifications)
 				select {
 				case <-ctx.Done():
 					continue
@@ -80,7 +83,6 @@ func main() {
 				}:
 				}
 			}
-
 			// TODO: create new table to track events which were sent
 			yearAgo := time.Now().Add(-24 * 30 * 12 * time.Hour)
 			err = client.DeleteOldEvents(yearAgo)
