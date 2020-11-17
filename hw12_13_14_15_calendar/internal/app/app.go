@@ -8,7 +8,6 @@ import (
 	"calendar/internal/server"
 	"context"
 	"log"
-	"time"
 )
 
 type App struct {
@@ -39,12 +38,6 @@ func (a *App) Run(ctx context.Context, config *config.Config) error {
 	if err != nil {
 		return err
 	}
-
-	events, err := a.storage.GetEventsMonth(1, time.Now().Add(-1 * time.Hour))
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("events: %v", events)
 
 	// service
 	eventService := domain2.EventService{
