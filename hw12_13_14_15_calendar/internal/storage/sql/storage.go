@@ -248,5 +248,4 @@ func (r *Repo) DeleteAllNotifications() error {
 	}
 
 	return nil
-
 }

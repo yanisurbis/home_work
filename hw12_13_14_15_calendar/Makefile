@@ -20,13 +20,13 @@ gci:
 install-lint-deps:
 	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.30.0
 
-lint: install-lint-deps
-	golangci-lint run ./...
+#lint: install-lint-deps
+#	golangci-lint run ./...
 
-#lint:
-#	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0
-#		go mod tidy
-#	$(GOPATH)/bin/golangci-lint run ./...
+lint:
+	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.30.0
+		go mod tidy
+	$(GOPATH)/bin/golangci-lint run ./...
 
 resetdb:
 	GO111MODULE=off go get -u github.com/pressly/goose/cmd/goose

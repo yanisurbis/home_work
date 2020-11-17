@@ -216,7 +216,6 @@ func (c *Client) GetEventsDay(request entities.GetEventsRequest) ([]entities.Eve
 	}
 
 	return convertEventsResponseToEvents(eventsResponse)
-
 }
 
 func (c *Client) GetEventsWeek(request entities.GetEventsRequest) ([]entities.Event, error) {
@@ -236,7 +235,6 @@ func (c *Client) GetEventsWeek(request entities.GetEventsRequest) ([]entities.Ev
 	}
 
 	return convertEventsResponseToEvents(eventsResponse)
-
 }
 
 func (c *Client) GetEventsMonth(request entities.GetEventsRequest) ([]entities.Event, error) {
@@ -256,7 +254,6 @@ func (c *Client) GetEventsMonth(request entities.GetEventsRequest) ([]entities.E
 	}
 
 	return convertEventsResponseToEvents(eventsResponse)
-
 }
 
 func (c *Client) Stop() error {
