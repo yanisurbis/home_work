@@ -10,10 +10,12 @@ services:
     networks:
       - test_api
     volumes:
-#      - ./database_data:/var/lib/postgresql/data
       - ./init_db:/docker-entrypoint-initdb.d/
     ports:
       - "5432:5432"
+    logging:
+      driver: none
+    container_name: calendar_test_db
 # TODO: rename to API
   web:
     environment:
@@ -28,6 +30,8 @@ services:
       - "9090:9090"
     depends_on:
       - db
+    logging:
+      driver: none
   scheduler:
     environment:
       - ENV=TEST
@@ -39,6 +43,8 @@ services:
     depends_on:
       - web
       - queue
+    logging:
+      driver: none
   sender:
     environment:
       - ENV=TEST
@@ -49,6 +55,8 @@ services:
       - test_api
     depends_on:
       - queue
+    logging:
+      driver: none
   queue:
     image: rabbitmq:3-management
     hostname: rabbit
@@ -59,6 +67,8 @@ services:
       - test_api
     environment:
       - ENV=TEST
+    logging:
+      driver: none
   sut:
     networks:
       - test_api

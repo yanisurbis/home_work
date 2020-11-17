@@ -349,7 +349,9 @@ func testNotifications(t *testing.T, client *grpcclient.Client) {
 	}
 
 	estimatedTimeToDeliverNotification := 2
-	secondsToSleep := time.Duration(c.Scheduler.FetchIntervalSeconds + estimatedTimeToDeliverNotification) * time.Second
+	// made up number to incorporate time for all services to bootstrap, bad idea
+	backoffCoefficient := 2
+	secondsToSleep := time.Duration((c.Scheduler.FetchIntervalSeconds + estimatedTimeToDeliverNotification) * backoffCoefficient) * time.Second
 	time.Sleep(secondsToSleep)
 
 	dbNotifications, err := storage.GetAllNotifications()
@@ -372,7 +374,6 @@ func TestIntegration(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	time.Sleep(10*time.Second)
 	client := grpcclient.NewClient()
 	err = client.Start(context.Background(), c.GRPCServer)
 	if err != nil {
