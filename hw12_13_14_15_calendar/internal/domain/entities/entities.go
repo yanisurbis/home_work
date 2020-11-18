@@ -43,3 +43,20 @@ type GetEventsRequest struct {
 	Type   string
 	From   time.Time
 }
+
+type GetEventsToNotifyRequest struct {
+	UserID ID
+	From   time.Time
+	To     time.Time
+}
+
+type DeleteOldEventsRequest struct {
+	To time.Time
+}
+
+type Notification struct {
+	EventID    ID
+	UserID     ID
+	EventTitle string
+	StartAt    time.Time
+}

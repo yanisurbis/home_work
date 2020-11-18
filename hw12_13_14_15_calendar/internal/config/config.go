@@ -1,6 +1,8 @@
 package config
 
-import "github.com/BurntSushi/toml"
+import (
+	"github.com/BurntSushi/toml"
+)
 
 func Read(fpath string) (c Config, err error) {
 	_, err = toml.DecodeFile(fpath, &c)
@@ -11,6 +13,7 @@ func Read(fpath string) (c Config, err error) {
 type Config struct {
 	PSQL   PSQLConfig
 	Logger LoggerConfig
+	Queue  QueueConfig
 }
 
 type PSQLConfig struct {
@@ -19,4 +22,13 @@ type PSQLConfig struct {
 
 type LoggerConfig struct {
 	Path string
+}
+
+type QueueConfig struct {
+	ConsumerTag  string
+	URI          string
+	ExchangeName string
+	ExchangeType string
+	Queue        string
+	BindingKey   string
 }

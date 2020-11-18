@@ -45,7 +45,6 @@ func main() {
 	storage := new(sql.Repo)
 
 	a, err := app.New(s, grpcServer, l, storage)
-
 	if err != nil {
 		log.Fatal(err)
 	}

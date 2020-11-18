@@ -2,7 +2,6 @@ package sql
 
 import (
 	"calendar/internal/domain/entities"
-	"calendar/internal/storage"
 	"context"
 	"errors"
 	"time"
@@ -43,7 +42,7 @@ func (r *Repo) AddEvent(event entities.Event) (err error) {
 	return err
 }
 
-func (r *Repo) UpdateEvent(userID storage.ID, event entities.Event) (err error) {
+func (r *Repo) UpdateEvent(userID entities.ID, event entities.Event) (err error) {
 	if userID != event.UserID {
 		return ErrForbidden
 	}
@@ -62,7 +61,7 @@ func (r *Repo) UpdateEvent(userID storage.ID, event entities.Event) (err error) 
 	return
 }
 
-func (r *Repo) GetEvent(id storage.ID) (*entities.Event, error) {
+func (r *Repo) GetEvent(id entities.ID) (*entities.Event, error) {
 	var events []entities.Event
 	option := make(map[string]interface{})
 	option["id"] = id
@@ -86,7 +85,7 @@ func (r *Repo) GetEvent(id storage.ID) (*entities.Event, error) {
 	return &events[0], nil
 }
 
-func (r *Repo) DeleteEvent(eventID storage.ID) error {
+func (r *Repo) DeleteEvent(eventID entities.ID) error {
 	var events []entities.Event
 	option := make(map[string]interface{})
 	option["event_id"] = eventID
@@ -100,7 +99,7 @@ func (r *Repo) DeleteEvent(eventID storage.ID) error {
 	return nstmt.Select(&events, option)
 }
 
-func (r *Repo) getEvents(userID storage.ID, from time.Time, to time.Time) ([]entities.Event, error) {
+func (r *Repo) getEvents(userID entities.ID, from time.Time, to time.Time) ([]entities.Event, error) {
 	var events []entities.Event
 	option := make(map[string]interface{})
 	option["start"] = from
@@ -122,14 +121,50 @@ func (r *Repo) getEvents(userID storage.ID, from time.Time, to time.Time) ([]ent
 	return events, err
 }
 
-func (r *Repo) GetEventsDay(userID storage.ID, from time.Time) ([]entities.Event, error) {
+func (r *Repo) GetEventsDay(userID entities.ID, from time.Time) ([]entities.Event, error) {
 	return r.getEvents(userID, from, from.Add(time.Hour*24))
 }
 
-func (r *Repo) GetEventsWeek(userID storage.ID, from time.Time) ([]entities.Event, error) {
+func (r *Repo) GetEventsWeek(userID entities.ID, from time.Time) ([]entities.Event, error) {
 	return r.getEvents(userID, from, from.AddDate(0, 0, 7))
 }
 
-func (r *Repo) GetEventsMonth(userID storage.ID, from time.Time) ([]entities.Event, error) {
+func (r *Repo) GetEventsMonth(userID entities.ID, from time.Time) ([]entities.Event, error) {
 	return r.getEvents(userID, from, from.AddDate(0, 1, 0))
+}
+
+func (r *Repo) GetEventsToNotify(from time.Time, to time.Time) ([]entities.Event, error) {
+	var events []entities.Event
+	option := make(map[string]interface{})
+	option["start"] = from
+	option["end"] = to
+
+	nstmt, err := r.db.PrepareNamed("SELECT * FROM events WHERE notify_at >= :start and notify_at < :end")
+	if err != nil {
+		return []entities.Event{}, err
+	}
+
+	err = nstmt.Select(&events, option)
+	if err != nil {
+		return []entities.Event{}, err
+	}
+	if events == nil {
+		return []entities.Event{}, nil
+	}
+
+	return events, err
+}
+
+func (r *Repo) DeleteOldEvents(to time.Time) error {
+	var events []entities.Event
+	option := make(map[string]interface{})
+	option["start"] = to
+
+	nstmt, err := r.db.PrepareNamed("DELETE FROM events WHERE start_at < :start")
+
+	if err != nil {
+		return err
+	}
+
+	return nstmt.Select(&events, option)
 }

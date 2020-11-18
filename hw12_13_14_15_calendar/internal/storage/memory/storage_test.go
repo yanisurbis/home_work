@@ -1,7 +1,7 @@
 package memory
 
 import (
-	"calendar/internal/storage"
+	"calendar/internal/domain/entities"
 	"testing"
 	"time"
 
@@ -121,8 +121,8 @@ func TestImMemoryImplementation(t *testing.T) {
 	})
 }
 
-func createEvent(initialTime time.Time) storage.Event {
-	return storage.Event{
+func createEvent(initialTime time.Time) entities.Event {
+	return entities.Event{
 		ID:          0,
 		Title:       "title",
 		StartAt:     initialTime,

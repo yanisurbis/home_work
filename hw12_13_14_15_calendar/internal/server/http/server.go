@@ -4,12 +4,12 @@ import (
 	"calendar/internal/domain/entities"
 	domain3 "calendar/internal/domain/errors"
 	domain "calendar/internal/domain/services"
+	"calendar/internal/lib"
 	"context"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -143,17 +143,6 @@ func (s *Instance) Stop(ctx context.Context) error {
 	return s.instance.Shutdown(ctx)
 }
 
-func timestampToTime(timestamp string) (time.Time, error) {
-	fromInt, err := strconv.Atoi(timestamp)
-	if err != nil {
-		return time.Now(), errors.New("can't convert from value")
-	}
-
-	from := time.Unix(int64(fromInt), 0)
-
-	return from, nil
-}
-
 func prepareDeleteEventRequest(c *gin.Context) (*entities.DeleteEventRequest, error) {
 	deleteEventRequest := entities.DeleteEventRequest{}
 
@@ -177,7 +166,7 @@ func prepareGetEventsRequest(c *gin.Context) (*entities.GetEventsRequest, error)
 	getEventsRequest.Type = c.Query("period")
 
 	fromStr := c.Query("from")
-	from, err := timestampToTime(fromStr)
+	from, err := lib.TimestampStrToTime(fromStr)
 	if err != nil {
 		c.String(http.StatusBadRequest, "check from parameter")
 
@@ -194,7 +183,7 @@ func prepareAddEventRequest(c *gin.Context) (*entities.AddEventRequest, error) {
 
 	addEventRequest.Title = c.PostForm("title")
 
-	startAt, err := timestampToTime(c.PostForm("start_at"))
+	startAt, err := lib.TimestampStrToTime(c.PostForm("start_at"))
 	if err != nil {
 		c.String(http.StatusBadRequest, "StartAt wrong format")
 
@@ -203,7 +192,7 @@ func prepareAddEventRequest(c *gin.Context) (*entities.AddEventRequest, error) {
 
 	addEventRequest.StartAt = startAt
 
-	endAt, err := timestampToTime(c.PostForm("end_at"))
+	endAt, err := lib.TimestampStrToTime(c.PostForm("end_at"))
 	if err != nil {
 		c.String(http.StatusBadRequest, "EndAt wrong format")
 
@@ -216,7 +205,7 @@ func prepareAddEventRequest(c *gin.Context) (*entities.AddEventRequest, error) {
 
 	notifyAtStr := c.PostForm("notify_at")
 	if notifyAtStr != "" {
-		notifyAt, err := timestampToTime(notifyAtStr)
+		notifyAt, err := lib.TimestampStrToTime(notifyAtStr)
 		if err != nil {
 			c.String(http.StatusBadRequest, "NotifyAt wrong format")
 
@@ -246,7 +235,7 @@ func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, er
 
 	startAtStr := c.DefaultPostForm("start_at", domain.ValueNotPresent)
 	if startAtStr != domain.ValueNotPresent {
-		startAt, err := timestampToTime(startAtStr)
+		startAt, err := lib.TimestampStrToTime(startAtStr)
 		if err != nil {
 			c.String(http.StatusBadRequest, "start_at wrong format")
 
@@ -258,7 +247,7 @@ func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, er
 
 	endAtStr := c.DefaultPostForm("end_at", domain.ValueNotPresent)
 	if endAtStr != domain.ValueNotPresent {
-		endAt, err := timestampToTime(endAtStr)
+		endAt, err := lib.TimestampStrToTime(endAtStr)
 		if err != nil {
 			c.String(http.StatusBadRequest, "end_at wrong format")
 
@@ -275,7 +264,7 @@ func prepareUpdateEventRequest(c *gin.Context) (*entities.UpdateEventRequest, er
 		if notifyAtStr == "" {
 			eventUpdate.NotifyAt = domain.ShouldResetTime
 		} else {
-			notifyAt, err := timestampToTime(notifyAtStr)
+			notifyAt, err := lib.TimestampStrToTime(notifyAtStr)
 
 			if err != nil {
 				c.String(http.StatusBadRequest, "notify_at wrong format")
