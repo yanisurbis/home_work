@@ -6,21 +6,28 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
+const Test = "TEST"
+const TestRunner = "TEST_RUNNER"
+
 func read(fpath string) (c Config, err error) {
 	_, err = toml.DecodeFile(fpath, &c)
 
 	return
 }
 
+func Environment() string {
+	return os.Getenv("ENV")
+}
+
 func GetConfig() (*Config, error) {
-	// TODO: encapsulate env var management probably
-	env := os.Getenv("ENV")
+	env := Environment()
 
 	path := "./configs/local.toml"
 	switch env {
-	case "TEST":
+	case Test:
 		path = "./configs/test.toml"
-	case "TEST_RUNNER":
+	// TODO: hack, try absolute path instead
+	case TestRunner:
 		path = "../configs/test.toml"
 	}
 
