@@ -15,6 +15,32 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestIntegration(t *testing.T) {
+	c, err := config.GetConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	client := grpcclient.NewClient()
+	err = client.Start(context.Background(), c.GRPCServer)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	t.Run("CRUD, basic cases work", func(t *testing.T) {
+		testCRUD(t, client)
+	})
+	t.Run("CRUD, basic validations are present", func(t *testing.T) {
+		testCRUDErrors(t, client)
+	})
+	t.Run("Check getEventsDay, getEventsWeek, getEventsMonth", func(t *testing.T) {
+		testLists(t, client)
+	})
+	t.Run("Check notifications are sent", func(t *testing.T) {
+		testNotifications(t, client)
+	})
+}
+
 func getEvents(client *grpcclient.Client, request entities.GetEventsRequest) []entities.Event {
 	switch request.Type {
 	case "day":
@@ -367,30 +393,4 @@ func testNotifications(t *testing.T, client *grpcclient.Client) {
 		assert.Equal(t, r.Title, n.EventTitle)
 		assert.Equal(t, 0, r.StartAt.Second()-n.StartAt.Second())
 	}
-}
-
-func TestIntegration(t *testing.T) {
-	c, err := config.GetConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	client := grpcclient.NewClient()
-	err = client.Start(context.Background(), c.GRPCServer)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	t.Run("CRUD, basic cases work", func(t *testing.T) {
-		testCRUD(t, client)
-	})
-	t.Run("CRUD, basic validations are present", func(t *testing.T) {
-		testCRUDErrors(t, client)
-	})
-	t.Run("Check getEventsDay, getEventsWeek, getEventsMonth", func(t *testing.T) {
-		testLists(t, client)
-	})
-	t.Run("Check notifications are sent", func(t *testing.T) {
-		testNotifications(t, client)
-	})
 }
