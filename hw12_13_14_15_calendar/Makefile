@@ -41,7 +41,7 @@ integration-tests:
 	# there should be a better way
 	docker rm calendar_test_db || true
 	docker rm calendar_test_queue || true
-	docker-compose -f docker-compose.test.yml -p tests build
-	docker-compose -f docker-compose.test.yml -p tests up --abort-on-container-exit --exit-code-from sut
+	docker-compose -f docker-compose.yml -f docker-compose.test.yml -p tests build
+	docker-compose -f docker-compose.yml -f docker-compose.test.yml -p tests up --abort-on-container-exit --exit-code-from sut
 
 .PHONY: build test lint
