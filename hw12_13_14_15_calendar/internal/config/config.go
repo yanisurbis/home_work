@@ -7,6 +7,7 @@ import (
 )
 
 const Test = "TEST"
+const Dev = "DEV"
 const TestRunner = "TEST_RUNNER"
 
 func read(fpath string) (c Config, err error) {
@@ -26,6 +27,8 @@ func GetConfig() (*Config, error) {
 	switch env {
 	case Test:
 		path = "./configs/test.toml"
+	case Dev:
+		path = "./configs/dev.toml"
 	// TODO: hack, try absolute path instead
 	case TestRunner:
 		path = "../configs/test.toml"
