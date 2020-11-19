@@ -39,8 +39,8 @@ proto:
 
 integration-tests:
 	# there should be a better way
-    # TODO: remove queue container as well?
 	docker rm calendar_test_db || true
+	docker rm calendar_test_queue || true
 	docker-compose -f docker-compose.test.yml -p tests build
 	docker-compose -f docker-compose.test.yml -p tests up --abort-on-container-exit --exit-code-from sut
 

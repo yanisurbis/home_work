@@ -3,6 +3,7 @@ version: "3.3"
 
 services:
   db:
+    container_name: calendar_test_db
     environment:
       - ENV=TEST
       - POSTGRES_PASSWORD=postgres
@@ -15,7 +16,6 @@ services:
       - "5432:5432"
     logging:
       driver: none
-    container_name: calendar_test_db
   web:
     environment:
       - ENV=TEST
@@ -57,6 +57,7 @@ services:
     logging:
       driver: none
   queue:
+    container_name: calendar_test_queue
     image: rabbitmq:3-management
     hostname: rabbit
     ports:
