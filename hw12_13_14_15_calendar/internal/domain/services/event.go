@@ -6,7 +6,6 @@ import (
 	domain "calendar/internal/domain/interfaces"
 	"context"
 	"errors"
-	"log"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -114,21 +113,16 @@ func (es *EventService) UpdateEvent(
 	eventUpdate *entities.UpdateEventRequest,
 ) (*entities.Event, error) {
 	currEvent, err := es.GetEvent(ctx, eventUpdate.UserID, eventUpdate.ID)
-
 	if err != nil {
 		return nil, err
 	}
 
 	updatedEvent, err := mergeEvents(currEvent, eventUpdate)
-
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("updatedEvent: %v", updatedEvent)
-
 	err = es.EventStorage.UpdateEvent(eventUpdate.UserID, *updatedEvent)
-
 	if err != nil {
 		return nil, err
 	}
