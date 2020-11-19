@@ -376,7 +376,7 @@ func testNotifications(t *testing.T, client *grpcclient.Client) {
 	}
 
 	estimatedTimeToDeliverNotification := 2
-	// made up number to incorporate time for all services to bootstrap, bad idea
+	// TODO: remove after creation of healthcheck scripts, made up number to incorporate time for all services to bootstrap
 	backoffCoefficient := 2
 	secondsToSleep := time.Duration((c.Scheduler.FetchIntervalSeconds + estimatedTimeToDeliverNotification) * backoffCoefficient) * time.Second
 	time.Sleep(secondsToSleep)
