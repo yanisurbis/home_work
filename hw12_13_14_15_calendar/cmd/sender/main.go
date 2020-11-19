@@ -52,9 +52,11 @@ func main() {
 
 			log.Println("received", len(notifications), "notifications")
 
-			err = storage.AddNotifications(notifications)
-			if err != nil {
-				log.Println(err)
+			if config.Environment() == config.Test {
+				err = storage.AddNotifications(notifications)
+				if err != nil {
+					log.Println(err)
+				}
 			}
 		}
 	})
