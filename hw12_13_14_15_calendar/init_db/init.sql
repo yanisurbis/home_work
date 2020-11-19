@@ -36,6 +36,3 @@ create table notifications
     constraint fk_event FOREIGN KEY (event_id) REFERENCES events (id),
     constraint fk_user FOREIGN KEY (user_id) REFERENCES users (id)
 );
-
-
-
