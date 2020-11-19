@@ -6,8 +6,7 @@ services:
     networks:
       - test_api
     volumes:
-#      - TODO: change volume
-      - /home/yanis/psqldata:/var/lib/postgresql/data
+      - /database_data:/var/lib/postgresql/data
       - ./init_db:/docker-entrypoint-initdb.d/
     environment:
       - POSTGRES_PASSWORD=postgres
