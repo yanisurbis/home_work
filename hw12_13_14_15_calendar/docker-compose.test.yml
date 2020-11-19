@@ -4,7 +4,6 @@ services:
   db:
     container_name: calendar_test_db
     environment:
-      - ENV=TEST
       - POSTGRES_PASSWORD=postgres
     volumes:
       - ./init_db:/docker-entrypoint-initdb.d/
@@ -29,8 +28,6 @@ services:
       driver: none
   queue:
     container_name: calendar_test_queue
-    environment:
-      - ENV=TEST
     logging:
       driver: none
   sut:
