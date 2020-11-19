@@ -195,7 +195,7 @@ func testCRUDErrors(t *testing.T, client *grpcclient.Client) {
 
 	requests := []entities.AddEventRequest{
 		// Notify after Start
-		entities.AddEventRequest{
+		{
 			Title:       "Event from test",
 			StartAt:     startAt,
 			EndAt:       endAt,
@@ -204,7 +204,7 @@ func testCRUDErrors(t *testing.T, client *grpcclient.Client) {
 			UserID:      1,
 		},
 		// Notify after Start
-		entities.AddEventRequest{
+		{
 			Title:       "Event from test",
 			StartAt:     startAt,
 			EndAt:       startAt.Add(-2 * time.Minute),
@@ -213,7 +213,7 @@ func testCRUDErrors(t *testing.T, client *grpcclient.Client) {
 			UserID:      1,
 		},
 		// Long title
-		entities.AddEventRequest{
+		{
 			Title:       "01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890",
 			StartAt:     startAt,
 			EndAt:       endAt,
@@ -223,7 +223,7 @@ func testCRUDErrors(t *testing.T, client *grpcclient.Client) {
 		},
 	}
 
-	responses := []error{}
+	var responses []error
 
 	for _, request := range requests {
 		responses = append(responses, client.AddEvent(request))
@@ -321,7 +321,7 @@ func testLists(t *testing.T, client *grpcclient.Client) {
 func generateAddEventRequests() []entities.AddEventRequest {
 	baseTime := time.Now()
 	requests := []entities.AddEventRequest{
-		entities.AddEventRequest{
+		{
 			Title:       "Test 1",
 			StartAt:     baseTime.Add(1 * time.Minute),
 			EndAt:       baseTime.Add(2 * time.Minute),
@@ -329,7 +329,7 @@ func generateAddEventRequests() []entities.AddEventRequest {
 			NotifyAt:    baseTime.Add(1 * time.Second),
 			UserID:      1,
 		},
-		entities.AddEventRequest{
+		{
 			Title:       "Test 2",
 			StartAt:     baseTime.Add(1 * time.Minute),
 			EndAt:       baseTime.Add(4 * time.Minute),
@@ -337,7 +337,7 @@ func generateAddEventRequests() []entities.AddEventRequest {
 			NotifyAt:    baseTime.Add(1 * time.Second),
 			UserID:      1,
 		},
-		entities.AddEventRequest{
+		{
 			Title:       "Test 3",
 			StartAt:     baseTime.Add(1 * time.Minute),
 			EndAt:       baseTime.Add(5 * time.Minute),
@@ -386,7 +386,7 @@ func testNotifications(t *testing.T, client *grpcclient.Client) {
 		log.Fatal(err)
 	}
 
-	for i, _ := range requests {
+	for i := range requests {
 		r := requests[i]
 		n := dbNotifications[i]
 		assert.Equal(t, r.UserID, n.UserID)
