@@ -6,7 +6,7 @@ import (
 	"calendar/internal/lib"
 	"calendar/internal/server/grpc/events_grpc"
 	"context"
-	"fmt"
+	"log"
 	"net"
 
 	"github.com/golang/protobuf/ptypes"
@@ -64,7 +64,11 @@ func convertToEventResponse(events []entities.Event) (*events_grpc.EventsRespons
 	return &events_grpc.EventsResponse{Events: eventsResponse}, nil
 }
 
-func (s *Server) GetEvents(ctx context.Context, query *events_grpc.GetEventsRequest, period string) (*events_grpc.EventsResponse, error) {
+func (s *Server) GetEvents(
+	ctx context.Context,
+	query *events_grpc.GetEventsRequest,
+	period string,
+) (*events_grpc.EventsResponse, error) {
 	from, err := lib.TimestampToTime(query.From)
 	if err != nil {
 		return nil, errors.Wrap(err, "from field conversion error")
@@ -83,7 +87,10 @@ func (s *Server) GetEvents(ctx context.Context, query *events_grpc.GetEventsRequ
 	return convertToEventResponse(events)
 }
 
-func (s *Server) GetEventsToNotify(ctx context.Context, query *events_grpc.GetEventsToNotifyRequest) (*events_grpc.EventsResponse, error) {
+func (s *Server) GetEventsToNotify(
+	ctx context.Context,
+	query *events_grpc.GetEventsToNotifyRequest,
+) (*events_grpc.EventsResponse, error) {
 	from, err := lib.TimestampToTime(query.From)
 	if err != nil {
 		return nil, errors.Wrap(err, "'from' field conversion error")
@@ -99,6 +106,7 @@ func (s *Server) GetEventsToNotify(ctx context.Context, query *events_grpc.GetEv
 		To:   to,
 	}
 	events, err := s.eventService.GetEventsToNotify(ctx, &getEventsRequest)
+	//log.Println(time.Now().Format(time.Stamp), "rpc:", len(events), "events")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch events")
 	}
@@ -106,7 +114,10 @@ func (s *Server) GetEventsToNotify(ctx context.Context, query *events_grpc.GetEv
 	return convertToEventResponse(events)
 }
 
-func (s *Server) DeleteOldEvents(ctx context.Context, query *events_grpc.DeleteOldEventsRequest) (*empty.Empty, error) {
+func (s *Server) DeleteOldEvents(
+	ctx context.Context,
+	query *events_grpc.DeleteOldEventsRequest,
+) (*empty.Empty, error) {
 	to, err := lib.TimestampToTime(query.To)
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "'to' field conversion error")
@@ -118,19 +129,30 @@ func (s *Server) DeleteOldEvents(ctx context.Context, query *events_grpc.DeleteO
 	return &empty.Empty{}, s.eventService.DeleteOldEvents(ctx, &getEventsRequest)
 }
 
-func (s *Server) GetEventsDay(ctx context.Context, query *events_grpc.GetEventsRequest) (*events_grpc.EventsResponse, error) {
+func (s *Server) GetEventsDay(
+	ctx context.Context,
+	query *events_grpc.GetEventsRequest,
+) (*events_grpc.EventsResponse, error) {
 	return s.GetEvents(ctx, query, domain.PeriodDay)
 }
 
-func (s *Server) GetEventsWeek(ctx context.Context, query *events_grpc.GetEventsRequest) (*events_grpc.EventsResponse, error) {
+func (s *Server) GetEventsWeek(
+	ctx context.Context,
+	query *events_grpc.GetEventsRequest,
+) (*events_grpc.EventsResponse, error) {
 	return s.GetEvents(ctx, query, domain.PeriodWeek)
 }
 
-func (s *Server) GetEventsMonth(ctx context.Context, query *events_grpc.GetEventsRequest) (*events_grpc.EventsResponse, error) {
+func (s *Server) GetEventsMonth(
+	ctx context.Context,
+	query *events_grpc.GetEventsRequest,
+) (*events_grpc.EventsResponse, error) {
 	return s.GetEvents(ctx, query, domain.PeriodMonth)
 }
 
-func prepareAddEventRequest(eventGrpc *events_grpc.AddEventRequest) (*entities.AddEventRequest, error) {
+func prepareAddEventRequest(
+	eventGrpc *events_grpc.AddEventRequest,
+) (*entities.AddEventRequest, error) {
 	startAt, err := lib.TimestampToTime(eventGrpc.StartAt)
 	if err != nil {
 		return nil, errors.New("error converting event.startAt")
@@ -156,7 +178,10 @@ func prepareAddEventRequest(eventGrpc *events_grpc.AddEventRequest) (*entities.A
 	}, nil
 }
 
-func (s *Server) AddEvent(ctx context.Context, query *events_grpc.AddEventRequest) (*events_grpc.EventResponse, error) {
+func (s *Server) AddEvent(
+	ctx context.Context,
+	query *events_grpc.AddEventRequest,
+) (*events_grpc.EventResponse, error) {
 	addEventRequest, err := prepareAddEventRequest(query)
 
 	if err != nil {
@@ -172,7 +197,9 @@ func (s *Server) AddEvent(ctx context.Context, query *events_grpc.AddEventReques
 	return createEventResponse(*event)
 }
 
-func prepareUpdateEventRequest(eventGrpc *events_grpc.UpdateEventRequest) (*entities.UpdateEventRequest, error) {
+func prepareUpdateEventRequest(
+	eventGrpc *events_grpc.UpdateEventRequest,
+) (*entities.UpdateEventRequest, error) {
 	updateEventRequest := entities.UpdateEventRequest{}
 
 	updateEventRequest.ID = entities.ID(eventGrpc.Id)
@@ -212,7 +239,10 @@ func prepareUpdateEventRequest(eventGrpc *events_grpc.UpdateEventRequest) (*enti
 	return &updateEventRequest, nil
 }
 
-func (s *Server) UpdateEvent(ctx context.Context, query *events_grpc.UpdateEventRequest) (*events_grpc.EventResponse, error) {
+func (s *Server) UpdateEvent(
+	ctx context.Context,
+	query *events_grpc.UpdateEventRequest,
+) (*events_grpc.EventResponse, error) {
 	updateEventRequest, err := prepareUpdateEventRequest(query)
 
 	if err != nil {
@@ -228,7 +258,10 @@ func (s *Server) UpdateEvent(ctx context.Context, query *events_grpc.UpdateEvent
 	return createEventResponse(*event)
 }
 
-func (s *Server) DeleteEvent(ctx context.Context, query *events_grpc.DeleteEventRequest) (*events_grpc.EventResponse, error) {
+func (s *Server) DeleteEvent(
+	ctx context.Context,
+	query *events_grpc.DeleteEventRequest,
+) (*events_grpc.EventResponse, error) {
 	deleteEventRequest := entities.DeleteEventRequest{
 		ID:     entities.ID(query.EventId),
 		UserID: entities.ID(query.UserId),
@@ -243,8 +276,8 @@ func (s *Server) DeleteEvent(ctx context.Context, query *events_grpc.DeleteEvent
 	return createEventResponse(*event)
 }
 
-func (s *Server) Start(eventService domain.EventService) error {
-	lsn, err := net.Listen("tcp", "localhost:9090")
+func (s *Server) Start(eventService domain.EventService, address string) error {
+	lsn, err := net.Listen("tcp", address)
 	if err != nil {
 		return err
 	}
@@ -254,7 +287,7 @@ func (s *Server) Start(eventService domain.EventService) error {
 
 	events_grpc.RegisterEventsServer(s.instance, service)
 
-	fmt.Printf("Starting server on %s\n", lsn.Addr().String())
+	log.Printf("Starting grpc server on %s\n", lsn.Addr().String())
 	if err := s.instance.Serve(lsn); err != nil {
 		return err
 	}

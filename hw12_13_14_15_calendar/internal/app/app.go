@@ -1,12 +1,12 @@
 package app
 
 import (
+	"calendar/internal/config"
 	domain "calendar/internal/domain/interfaces"
 	domain2 "calendar/internal/domain/services"
 	"calendar/internal/logger"
 	"calendar/internal/server"
 	"context"
-	"fmt"
 	"log"
 )
 
@@ -17,19 +17,24 @@ type App struct {
 	storage    domain.EventStorage
 }
 
-func New(s server.Server, grpcServer server.Server, l logger.Logger, storage domain.EventStorage) (*App, error) {
+func New(
+	s server.Server,
+	grpcServer server.Server,
+	l logger.Logger,
+	storage domain.EventStorage,
+) (*App, error) {
 	return &App{server: s, logger: l, storage: storage, grpcServer: grpcServer}, nil
 }
 
-func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
+func (a *App) Run(ctx context.Context, config *config.Config) error {
 	// logger
-	err := a.logger.Init(logPath)
+	err := a.logger.Init(config.Logger.Path)
 	if err != nil {
 		return err
 	}
 
 	// storage
-	err = a.storage.Connect(ctx, dsn)
+	err = a.storage.Connect(ctx, config.PSQL.DSN)
 	if err != nil {
 		return err
 	}
@@ -41,7 +46,7 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 
 	// http server
 	go func() {
-		err = a.server.Start(eventService)
+		err = a.server.Start(eventService, config.HTTPServer.Address)
 		if err != nil {
 			// TODO: handle fatal
 			log.Fatal(err)
@@ -49,7 +54,7 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 	}()
 
 	// grpc server
-	err = a.grpcServer.Start(eventService)
+	err = a.grpcServer.Start(eventService, config.GRPCServer.Address)
 	if err != nil {
 		return err
 	}
@@ -58,7 +63,7 @@ func (a *App) Run(ctx context.Context, logPath string, dsn string) error {
 }
 
 func (a *App) Stop(ctx context.Context) error {
-	fmt.Println("Shutting down...")
+	log.Println("Shutting down...")
 
 	if err := a.server.Stop(ctx); err != nil {
 		return err

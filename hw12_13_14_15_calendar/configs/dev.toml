@@ -1,22 +1,22 @@
 [psql]
-dsn = "host=localhost port=5432 user=yanis password=yanis dbname=events sslmode=disable"
+dsn = "host=db port=5432 user=postgres password=postgres dbname=postgres sslmode=disable"
 
 [logger]
 path = "./logs/logs.txt"
 
 [queue]
 consumerTag = "events_consumer"
-uri = "amqp://guest:guest@localhost:5672/"
+uri = "amqp://guest:guest@queue/"
 exchangeName = "exchange"
 exchangeType = "direct"
 queue = "events_notifications"
 bindingKey = "events"
 
 [grpcServer]
-address = ":9000"
+address = "web:9000"
 
 [httpServer]
-address = ":8080"
+address = "web:8080"
 
 [scheduler]
 fetchIntervalSeconds = 5

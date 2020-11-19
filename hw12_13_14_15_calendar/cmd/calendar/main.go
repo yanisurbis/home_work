@@ -8,7 +8,6 @@ import (
 	httpserver "calendar/internal/server/http"
 	"calendar/internal/storage/sql"
 	"context"
-	"flag"
 	"log"
 	"os"
 	"os/signal"
@@ -16,28 +15,14 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
-type Args struct {
-	configPath string
-}
-
-func getArgs() *Args {
-	configPath := flag.String("config", "", "path to config file")
-	flag.Parse()
-
-	args := Args{
-		configPath: *configPath,
-	}
-
-	return &args
-}
-
 func main() {
-	args := getArgs()
-
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	//c, _ := config.Read("./configs/local.toml")
-	c, _ := config.Read(args.configPath)
+	conf, err := config.GetConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	s := new(httpserver.Instance)
 	grpcServer := new(grpcserver.Server)
@@ -51,7 +36,7 @@ func main() {
 
 	go handleSignals(ctx, cancel, a)
 
-	if err := a.Run(ctx, c.Logger.Path, c.PSQL.DSN); err != nil {
+	if err := a.Run(ctx, conf); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -60,6 +45,7 @@ func handleSignals(ctx context.Context, cancel context.CancelFunc, app *app.App)
 	defer cancel()
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt)
+	signal.Stop(sigCh)
 	<-sigCh
 	err := app.Stop(ctx)
 	if err != nil {

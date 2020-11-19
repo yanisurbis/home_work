@@ -6,6 +6,6 @@ import (
 )
 
 type Server interface {
-	Start(eventService domain2.EventService) error
+	Start(eventService domain2.EventService, address string) error
 	Stop(ctx context.Context) error
 }

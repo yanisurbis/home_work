@@ -3,6 +3,7 @@ package main
 import (
 	grpcclient "calendar/internal/client/grpc"
 	"calendar/internal/config"
+	"calendar/internal/domain/entities"
 	"calendar/internal/queue/rabbit"
 	"context"
 	"encoding/json"
@@ -14,47 +15,77 @@ import (
 	"github.com/streadway/amqp"
 )
 
-const interval = 5 * time.Second
+func createAndRunProducer(c *config.Config, msgs chan amqp.Publishing) {
+	producer := rabbit.CreateProducer(
+		c.Queue.ConsumerTag,
+		c.Queue.URI,
+		c.Queue.ExchangeName,
+		c.Queue.ExchangeType,
+		c.Queue.Queue,
+		c.Queue.BindingKey,
+	)
+	err := producer.Run(msgs)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func logNotifications(notifications []*entities.Notification) {
+	log.Println(
+		time.Now().Format(time.Stamp),
+		"sending",
+		len(notifications),
+		"messages",
+	)
+}
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	msgs := make(chan amqp.Publishing)
-	c, _ := config.Read("./configs/local.toml")
+	defer cancel()
+	go handleSignals(cancel)
 
-	client := grpcclient.NewClient()
-	err := client.Start(ctx)
+	msgs := make(chan amqp.Publishing)
+	c, err := config.GetConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	go handleSignals(cancel)
-	go func() {
-		producer := rabbit.CreateProducer(c.Queue.ConsumerTag, c.Queue.URI, c.Queue.ExchangeName, c.Queue.ExchangeType, c.Queue.Queue, c.Queue.BindingKey)
-		_ = producer.Run(msgs)
-	}()
+	client := grpcclient.NewClient()
+	err = client.Start(ctx, c.GRPCServer)
+	if err != nil {
+		log.Fatal(err)
+	}
 
+	go createAndRunProducer(c, msgs)
+	interval := time.Duration(c.Scheduler.FetchIntervalSeconds) * time.Second
 	ticker := time.NewTicker(interval)
 	for {
 		select {
 		case <-ticker.C:
 			notifications, err := client.GetNotifications(time.Now().Add(-1*interval), time.Now())
-			//notifications, err := client.GetNotifications(time.Now().Add(-2*time.Hour), time.Now())
 			if err != nil {
 				log.Println(err)
-			} else if len(notifications) > 0 {
+				continue
+			}
+			if len(notifications) > 0 {
 				msg, err := json.Marshal(notifications)
 				if err != nil {
 					log.Println(err)
-				} else {
-					log.Println(time.Now().Format(time.Stamp), "sending", len(notifications), "messages")
-					msgs <- amqp.Publishing{
-						ContentType: "application/json",
-						Body:        msg,
-					}
+					continue
+				}
+				logNotifications(notifications)
+				select {
+				case <-ctx.Done():
+					continue
+				case msgs <- amqp.Publishing{
+					ContentType: "application/json",
+					Body:        msg,
+				}:
 				}
 			}
-
-			err = client.DeleteOldEvents(time.Now().Add(-1 * time.Minute))
+			// TODO: create new table to track events which were sent
+			yearAgo := time.Now().Add(-24 * 30 * 12 * time.Hour)
+			err = client.DeleteOldEvents(yearAgo)
 			if err != nil {
 				log.Println(err)
 			}
@@ -75,5 +106,6 @@ func handleSignals(cancel context.CancelFunc) {
 	defer cancel()
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt)
+	signal.Stop(sigCh)
 	<-sigCh
 }

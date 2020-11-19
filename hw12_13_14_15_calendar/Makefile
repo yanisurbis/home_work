@@ -37,4 +37,20 @@ proto:
 	#protoc protobufs/events.proto --go_out=plugins=grpc:.
 	protoc --proto_path=./internal/server/grpc/protobufs --go_out=./internal/server/grpc/events_grpc --plugin=$(GOPATH)/bin/protoc-gen-go --go_opt=paths=source_relative events.proto
 
+build:
+	docker-compose -f docker-compose.yml build
+
+up:
+	docker-compose -f docker-compose.yml up
+
+down:
+	docker-compose -f docker-compose.yml down
+
+integration-tests:
+	# there should be a better way
+	docker rm calendar_test_db || true
+	docker rm calendar_test_queue || true
+	docker-compose -f docker-compose.yml -f docker-compose.test.yml -p tests build
+	docker-compose -f docker-compose.yml -f docker-compose.test.yml -p tests up --abort-on-container-exit --exit-code-from sut
+
 .PHONY: build test lint

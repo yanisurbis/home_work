@@ -7,7 +7,7 @@ import (
 	"calendar/internal/lib"
 	"context"
 	"errors"
-	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -18,7 +18,7 @@ type Instance struct {
 	instance *http.Server
 }
 
-func (s *Instance) Start(eventService domain.EventService) error {
+func (s *Instance) Start(eventService domain.EventService, address string) error {
 	router := gin.Default()
 	router.Use(UserIDMiddleware())
 
@@ -26,10 +26,13 @@ func (s *Instance) Start(eventService domain.EventService) error {
 	router.GET("/events", createGetEventsHandler(eventService))
 	router.POST("/event", createAddEventHandler(eventService))
 	router.PUT("/event/:id", createUpdateEventHandler(eventService))
+	router.GET("/status", func(c *gin.Context) {
+		c.String(http.StatusOK, "OK")
+	})
 
-	fmt.Println("server starting at port :8080")
+	log.Println("Starting http server on", address)
 	s.instance = &http.Server{
-		Addr:    ":8080",
+		Addr:    address,
 		Handler: router,
 	}
 

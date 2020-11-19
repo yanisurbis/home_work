@@ -28,7 +28,8 @@ type EventService struct {
 }
 
 func validateEvent(e entities.Event) error {
-	if e.StartAt.Before(time.Now()) {
+	possibleTimeToDeliverEvent := time.Minute
+	if e.StartAt.Before(time.Now().Add(-1 * possibleTimeToDeliverEvent)) {
 		return errors.New("start_at should be grater than current date")
 	}
 
@@ -36,8 +37,8 @@ func validateEvent(e entities.Event) error {
 		return errors.New("end_at should not be less than start_at")
 	}
 
-	if !e.NotifyAt.IsZero() && e.NotifyAt.Before(e.StartAt) {
-		return errors.New("notify_at should not be less than start_at")
+	if !e.NotifyAt.IsZero() && e.NotifyAt.After(e.StartAt) {
+		return errors.New("notify_at should be less than start_at")
 	}
 
 	return validation.ValidateStruct(&e,
@@ -49,7 +50,10 @@ func validateEvent(e entities.Event) error {
 	)
 }
 
-func (es *EventService) AddEvent(ctx context.Context, addEventRequest *entities.AddEventRequest) (*entities.Event, error) {
+func (es *EventService) AddEvent(
+	ctx context.Context,
+	addEventRequest *entities.AddEventRequest,
+) (*entities.Event, error) {
 	event := entities.Event{
 		Title:       addEventRequest.Title,
 		StartAt:     addEventRequest.StartAt,
@@ -74,12 +78,18 @@ func (es *EventService) AddEvent(ctx context.Context, addEventRequest *entities.
 	return &event, nil
 }
 
-func mergeEvents(currEvent *entities.Event, e *entities.UpdateEventRequest) (*entities.Event, error) {
+func mergeEvents(
+	currEvent *entities.Event,
+	e *entities.UpdateEventRequest,
+) (*entities.Event, error) {
 	if !e.StartAt.IsZero() {
 		currEvent.StartAt = e.StartAt
 	}
 	if !e.EndAt.IsZero() {
 		currEvent.EndAt = e.EndAt
+	}
+	if e.Title != ShouldResetString {
+		currEvent.Title = e.Title
 	}
 	if e.Description != ShouldResetString {
 		currEvent.Description = e.Description
@@ -99,21 +109,21 @@ func mergeEvents(currEvent *entities.Event, e *entities.UpdateEventRequest) (*en
 	return currEvent, nil
 }
 
-func (es *EventService) UpdateEvent(ctx context.Context, eventUpdate *entities.UpdateEventRequest) (*entities.Event, error) {
+func (es *EventService) UpdateEvent(
+	ctx context.Context,
+	eventUpdate *entities.UpdateEventRequest,
+) (*entities.Event, error) {
 	currEvent, err := es.GetEvent(ctx, eventUpdate.UserID, eventUpdate.ID)
-
 	if err != nil {
 		return nil, err
 	}
 
 	updatedEvent, err := mergeEvents(currEvent, eventUpdate)
-
 	if err != nil {
 		return nil, err
 	}
 
 	err = es.EventStorage.UpdateEvent(eventUpdate.UserID, *updatedEvent)
-
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +131,11 @@ func (es *EventService) UpdateEvent(ctx context.Context, eventUpdate *entities.U
 	return updatedEvent, nil
 }
 
-func (es *EventService) GetEvent(ctx context.Context, userID entities.ID, eventID entities.ID) (*entities.Event, error) {
+func (es *EventService) GetEvent(
+	ctx context.Context,
+	userID entities.ID,
+	eventID entities.ID,
+) (*entities.Event, error) {
 	event, err := es.EventStorage.GetEvent(eventID)
 
 	if err != nil {
@@ -139,7 +153,10 @@ func (es *EventService) GetEvent(ctx context.Context, userID entities.ID, eventI
 	return event, nil
 }
 
-func (es *EventService) DeleteEvent(ctx context.Context, deleteEventRequest *entities.DeleteEventRequest) (*entities.Event, error) {
+func (es *EventService) DeleteEvent(
+	ctx context.Context,
+	deleteEventRequest *entities.DeleteEventRequest,
+) (*entities.Event, error) {
 	event, err := es.GetEvent(ctx, deleteEventRequest.UserID, deleteEventRequest.ID)
 
 	if err != nil {
@@ -155,7 +172,10 @@ func (es *EventService) DeleteEvent(ctx context.Context, deleteEventRequest *ent
 	return event, nil
 }
 
-func (es *EventService) GetEvents(ctx context.Context, getEventsRequest *entities.GetEventsRequest) ([]entities.Event, error) {
+func (es *EventService) GetEvents(
+	ctx context.Context,
+	getEventsRequest *entities.GetEventsRequest,
+) ([]entities.Event, error) {
 	period := getEventsRequest.Type
 	userID := getEventsRequest.UserID
 	from := getEventsRequest.From
@@ -172,10 +192,16 @@ func (es *EventService) GetEvents(ctx context.Context, getEventsRequest *entitie
 	}
 }
 
-func (es *EventService) GetEventsToNotify(ctx context.Context, getEventsRequest *entities.GetEventsToNotifyRequest) ([]entities.Event, error) {
+func (es *EventService) GetEventsToNotify(
+	ctx context.Context,
+	getEventsRequest *entities.GetEventsToNotifyRequest,
+) ([]entities.Event, error) {
 	return es.EventStorage.GetEventsToNotify(getEventsRequest.From, getEventsRequest.To)
 }
 
-func (es *EventService) DeleteOldEvents(ctx context.Context, deleteEventsRequest *entities.DeleteOldEventsRequest) error {
+func (es *EventService) DeleteOldEvents(
+	ctx context.Context,
+	deleteEventsRequest *entities.DeleteOldEventsRequest,
+) error {
 	return es.EventStorage.DeleteOldEvents(deleteEventsRequest.To)
 }
