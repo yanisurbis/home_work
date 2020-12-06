@@ -36,4 +36,16 @@ func TestGetDomainStat(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, DomainStat{}, result)
 	})
+
+	t.Run("regexp compilation error", func(t *testing.T) {
+		result, err := GetDomainStat(bytes.NewBufferString(data), "^\\/(?!\\/)(.*?)")
+		require.Error(t, err)
+		require.Equal(t, DomainStat{}, result)
+	})
+
+	//t.Run("bad source", func(t *testing.T) {
+	//	result, err := GetDomainStat(bytes.NewBufferString("???"), "any")
+	//	require.Error(t, err)
+	//	require.Equal(t, DomainStat{}, result)
+	//})
 }
